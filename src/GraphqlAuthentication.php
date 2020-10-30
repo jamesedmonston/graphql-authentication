@@ -494,7 +494,7 @@ class GraphqlAuthentication extends Plugin
                     continue;
                 }
 
-                $authorOnlySections = $settings->queries;
+                $authorOnlySections = $settings->queries ?? [];
 
                 if ((string) $event->sender->authorId === (string) $user->id) {
                     continue;

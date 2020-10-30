@@ -46,7 +46,7 @@ class Entry extends ElementResolver
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                 unset($arguments['authorId']);
-                $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->queries;
+                $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->queries ?? [];
 
                 foreach ($authorOnlySections as $section => $value) {
                     if (!(bool) $value) {
