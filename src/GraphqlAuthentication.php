@@ -520,7 +520,7 @@ class GraphqlAuthentication extends Plugin
                     continue;
                 }
 
-                if ((string) $asset->uploader !== (string) $user->id) {
+                if ((string) $asset->uploaderId !== (string) $user->id) {
                     throw new Error($error);
                 }
             }
