@@ -17,6 +17,7 @@ use craft\elements\User;
 use craft\events\ModelEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
+use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\GqlEntityRegistry;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
@@ -232,12 +233,15 @@ class GraphqlAuthentication extends Plugin
         $event->mutations['register'] = [
             'description' => 'Registers a user. Returns user and token.',
             'type' => $tokenAndUser,
-            'args' => [
-                'email' => Type::nonNull(Type::string()),
-                'password' => Type::nonNull(Type::string()),
-                'firstName' => Type::nonNull(Type::string()),
-                'lastName' => Type::nonNull(Type::string()),
-            ],
+            'args' => array_merge(
+                [
+                    'email' => Type::nonNull(Type::string()),
+                    'password' => Type::nonNull(Type::string()),
+                    'firstName' => Type::nonNull(Type::string()),
+                    'lastName' => Type::nonNull(Type::string()),
+                ],
+                UserArguments::getContentArguments(),
+            ),
             'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
@@ -250,6 +254,16 @@ class GraphqlAuthentication extends Plugin
                 $user->newPassword = $password;
                 $user->firstName = $firstName;
                 $user->lastName = $lastName;
+
+                $customFields = UserArguments::getContentArguments();
+
+                foreach ($customFields as $key => $value) {
+                    if (!isset($arguments[$key]) || !count($arguments[$key])) {
+                        continue;
+                    }
+
+                    $user->{$key} = $arguments[$key][0];
+                }
 
                 if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
@@ -358,11 +372,14 @@ class GraphqlAuthentication extends Plugin
         $event->mutations['updateUser'] = [
             'description' => 'Updates authenticated user. Returns user.',
             'type' => UserType::generateType(User::class),
-            'args' => [
-                'email' => Type::string(),
-                'firstName' => Type::string(),
-                'lastName' => Type::string(),
-            ],
+            'args' => array_merge(
+                [
+                    'email' => Type::nonNull(Type::string()),
+                    'firstName' => Type::nonNull(Type::string()),
+                    'lastName' => Type::nonNull(Type::string()),
+                ],
+                UserArguments::getContentArguments(),
+            ),
             'resolve' => function ($source, array $arguments) use ($elements) {
                 $user = $this->getUserFromToken();
 
@@ -385,6 +402,16 @@ class GraphqlAuthentication extends Plugin
 
                 if ($lastName) {
                     $user->lastName = $lastName;
+                }
+
+                $customFields = UserArguments::getContentArguments();
+
+                foreach ($customFields as $key => $value) {
+                    if (!isset($arguments[$key]) || !count($arguments[$key])) {
+                        continue;
+                    }
+
+                    $user->{$key} = $arguments[$key][0];
                 }
 
                 if (!$elements->saveElement($user)) {
