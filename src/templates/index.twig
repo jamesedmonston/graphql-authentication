@@ -1,0 +1,102 @@
+{% import '_includes/forms' as forms %}
+
+{% set schemaInput = schemaOptions ? forms.selectField({
+    name: 'schemaId',
+    options: schemaOptions,
+    value: settings.schemaId,
+  }) : tag('p', {
+    class: ['warning', 'with-icon'],
+    text: 'No schemas exist yet.'|t('app'),
+  })
+%}
+
+{{ forms.field({
+  label: 'GraphQL Schema',
+  instructions: 'The schema that access tokens will be assigned to.',
+  name: 'schemaId',
+  required: true,
+  first: true,
+}, schemaInput) }}
+
+{{ forms.selectField({
+  label: 'Access Token Expiration',
+  instructions: 'The length of time before access tokens expire.',
+  name: 'expiration',
+  value: settings.expiration,
+  options: [
+    { value: '', label: 'Never' },
+    { value: '1 hour', label: '1 hour' },
+    { value: '1 day', label: '1 day' },
+    { value: '1 week', label: '1 week' },
+    { value: '1 month', label: '1 month' },
+    { value: '3 months', label: '3 months' },
+    { value: '6 months', label: '6 months' },
+    { value: '1 year', label: '1 year' },
+  ],
+  required: true,
+}) }}
+
+{{ forms.selectField({
+  label: 'User Group',
+  instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
+  name: 'userGroup',
+  value: settings.userGroup,
+  options: userOptions,
+}) }}
+
+{% if not settings.schemaId %}
+  {{ forms.field({
+    label: 'User Permissions',
+    instructions: 'Select your desired schema and save to modify user permissions.',
+  }, null) }}
+{% else %}
+  {% if queries %}
+    <div class="field">
+      <div class="heading">
+        <label>Restricted Queries</label>
+
+        <div class="instructions">
+          <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
+        </div>
+      </div>
+
+      <div class="input">
+        {% for query in queries %}
+          <div>
+            {{ forms.checkbox({
+              label: query.label,
+              name: 'queries[' ~ query.handle ~ ']',
+              value: true,
+              checked: settings.queries[query.handle] ?? false,
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if mutations %}
+    <div class="field">
+      <div class="heading">
+        <label>Restricted Mutations</label>
+
+        <div class="instructions">
+          <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
+        </div>
+      </div>
+
+      <div class="input">
+        {% for mutation in mutations %}
+          <div>
+            {{ forms.checkbox({
+              label: mutation.label,
+              name: 'mutations[' ~ mutation.handle ~ ']',
+              value: true,
+              checked: settings.mutations[mutation.handle] ?? false,
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endif %}

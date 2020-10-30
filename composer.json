@@ -1,0 +1,43 @@
+{
+  "name": "jamesedmonston/graphql-authentication",
+  "description": "GraphQL authentication for your headless Craft CMS applications.",
+  "type": "craft-plugin",
+  "version": "1.0.0",
+  "keywords": [
+    "craft",
+    "cms",
+    "craftcms",
+    "craft-plugin",
+    "graphql",
+    "authentication",
+    "graphql-authentication"
+  ],
+  "support": {
+    "docs": "https://github.com/jamesedmonston/graphql-authentication/blob/master/README.md",
+    "issues": "https://github.com/jamesedmonston/graphql-authentication/issues"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "James Edmonston",
+      "homepage": "jamesedmonston.co.uk"
+    }
+  ],
+  "require": {
+    "craftcms/cms": "^3.5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "jamesedmonston\\graphqlauthentication\\": "src/"
+    }
+  },
+  "extra": {
+    "name": "GraphQL Authentication",
+    "handle": "graphql-authentication",
+    "developer": "James Edmonston",
+    "developerUrl": "https://github.com/jamesedmonston",
+    "documentationUrl": "https://github.com/jamesedmonston/graphql-authentication/blob/master/README.md",
+    "changelogUrl": "https://raw.githubusercontent.com/jamesedmonston/graphql-authentication/master/CHANGELOG.md",
+    "class": "jamesedmonston\\graphqlauthentication\\GraphqlAuthentication"
+  }
+}
