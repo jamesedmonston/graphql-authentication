@@ -11,6 +11,8 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -39,26 +41,28 @@ class Entry extends ElementResolver
             return $query;
         }
 
-        $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+        if (!StringHelper::contains(Craft::$app->getRequest()->getReferrer(), UrlHelper::cpUrl() . '/graphiql')) {
+            $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
 
-        if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-            unset($arguments['authorId']);
-            $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->queries;
+            if (isset($arguments['section']) || isset($arguments['sectionId'])) {
+                unset($arguments['authorId']);
+                $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->queries;
 
-            foreach ($authorOnlySections as $section => $value) {
-                if (!(bool) $value) {
-                    continue;
+                foreach ($authorOnlySections as $section => $value) {
+                    if (!(bool) $value) {
+                        continue;
+                    }
+
+                    if (isset($arguments['section']) && trim($arguments['section'][0]) !== $section) {
+                        continue;
+                    }
+
+                    if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
+                        continue;
+                    }
+
+                    $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
                 }
-
-                if (isset($arguments['section']) && trim($arguments['section'][0]) !== $section) {
-                    continue;
-                }
-
-                if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
-                    continue;
-                }
-
-                $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
             }
         }
 

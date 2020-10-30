@@ -5,11 +5,14 @@
 
 namespace jamesedmonston\graphqlauthentication\resolvers;
 
+use Craft;
 use craft\db\Table;
 use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -38,7 +41,9 @@ class Asset extends ElementResolver
             return $query;
         }
 
-        $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+        if (!StringHelper::contains(Craft::$app->getRequest()->getReferrer(), UrlHelper::cpUrl() . '/graphiql')) {
+            $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+        }
 
         foreach ($arguments as $key => $value) {
             $query->$key($value);
