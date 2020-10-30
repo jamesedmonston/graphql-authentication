@@ -176,6 +176,12 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
+        $elements = Craft::$app->getElements();
+        $users = Craft::$app->getUsers();
+        $permissions = Craft::$app->getUserPermissions();
+        $gql = Craft::$app->getGql();
+        $settings = $this->getSettings();
+
         $tokenAndUser = Type::nonNull(
             GqlEntityRegistry::createEntity('Auth', new ObjectType([
                 'name' => 'Auth',
@@ -193,28 +199,28 @@ class GraphqlAuthentication extends Plugin
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($users, $permissions) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
-                $user = Craft::$app->getUsers()->getUserByUsernameOrEmail($email);
+                $user = $users->getUserByUsernameOrEmail($email);
                 $error = "We couldn't log you in with the provided details";
 
                 if (!$user) {
                     throw new Error($error);
                 }
 
-                $userPermissions = Craft::$app->getUserPermissions()->getPermissionsByUserId($user->id);
+                $userPermissions = $permissions->getPermissionsByUserId($user->id);
 
                 if (!in_array('accessCp', $userPermissions)) {
-                    Craft::$app->getUserPermissions()->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                    $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
                 }
 
                 if (!$user->authenticate($password)) {
-                    Craft::$app->getUserPermissions()->saveUserPermissions($user->id, $userPermissions);
+                    $permissions->saveUserPermissions($user->id, $userPermissions);
                     throw new Error($error);
                 }
 
-                Craft::$app->getUserPermissions()->saveUserPermissions($user->id, $userPermissions);
+                $permissions->saveUserPermissions($user->id, $userPermissions);
 
                 return [
                     'accessToken' => $this->_generateToken($user),
@@ -232,7 +238,7 @@ class GraphqlAuthentication extends Plugin
                 'firstName' => Type::nonNull(Type::string()),
                 'lastName' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $firstName = $arguments['firstName'];
@@ -245,12 +251,12 @@ class GraphqlAuthentication extends Plugin
                 $user->firstName = $firstName;
                 $user->lastName = $lastName;
 
-                if (!Craft::$app->getElements()->saveElement($user)) {
+                if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
                 }
 
-                if ($this->getSettings()->userGroup) {
-                    Craft::$app->getUsers()->assignUserToGroups($user->id, [$this->getSettings()->userGroup]);
+                if ($settings->userGroup) {
+                    $users->assignUserToGroups($user->id, [$settings->userGroup]);
                 }
 
                 return [
@@ -266,16 +272,16 @@ class GraphqlAuthentication extends Plugin
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($users) {
                 $email = $arguments['email'];
-                $user = Craft::$app->getUsers()->getUserByUsernameOrEmail($email);
+                $user = $users->getUserByUsernameOrEmail($email);
                 $message = 'You will receive an email if it matches an account in our system';
 
                 if (!$user) {
                     return $message;
                 }
 
-                Craft::$app->getUsers()->sendPasswordResetEmail($user);
+                $users->sendPasswordResetEmail($user);
 
                 return $message;
             },
@@ -289,20 +295,20 @@ class GraphqlAuthentication extends Plugin
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users) {
                 $password = $arguments['password'];
                 $code = $arguments['code'];
                 $id = $arguments['id'];
 
-                $user = Craft::$app->getUsers()->getUserByUid($id);
+                $user = $users->getUserByUid($id);
 
-                if (!$user || !Craft::$app->getUsers()->isVerificationCodeValidForUser($user, $code)) {
+                if (!$user || !$users->isVerificationCodeValidForUser($user, $code)) {
                     throw new Error('Cannot validate request');
                 }
 
                 $user->newPassword = $password;
 
-                if (!Craft::$app->getElements()->saveElement($user)) {
+                if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
                 }
 
@@ -318,7 +324,7 @@ class GraphqlAuthentication extends Plugin
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($elements) {
                 $user = $this->getUserFromToken();
                 $error = "We couldn't update the password with the provided details";
 
@@ -341,7 +347,7 @@ class GraphqlAuthentication extends Plugin
 
                 $user->newPassword = $newPassword;
 
-                if (!Craft::$app->getElements()->saveElement($user)) {
+                if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
                 }
 
@@ -357,7 +363,7 @@ class GraphqlAuthentication extends Plugin
                 'firstName' => Type::string(),
                 'lastName' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) {
+            'resolve' => function ($source, array $arguments) use ($elements) {
                 $user = $this->getUserFromToken();
 
                 if (!$user) {
@@ -381,7 +387,7 @@ class GraphqlAuthentication extends Plugin
                     $user->lastName = $lastName;
                 }
 
-                if (!Craft::$app->getElements()->saveElement($user)) {
+                if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
                 }
 
@@ -393,14 +399,14 @@ class GraphqlAuthentication extends Plugin
             'description' => 'Deletes authenticated user access token. Useful for logging out of current device. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function () use ($gql) {
                 $token = $this->_getHeaderToken();
 
                 if (!$token) {
                     throw new Error("We couldn't find any matching tokens");
                 }
 
-                Craft::$app->getGql()->deleteTokenById($token->id);
+                $gql->deleteTokenById($token->id);
 
                 return true;
             },
@@ -410,7 +416,7 @@ class GraphqlAuthentication extends Plugin
             'description' => 'Deletes all access tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function () use ($gql) {
                 $user = $this->getUserFromToken();
                 $error = "We couldn't find any matching tokens";
 
@@ -418,7 +424,7 @@ class GraphqlAuthentication extends Plugin
                     throw new Error($error);
                 }
 
-                $savedTokens = Craft::$app->getGql()->getTokens();
+                $savedTokens = $gql->getTokens();
 
                 if (!$savedTokens || !count($savedTokens)) {
                     throw new Error($error);
@@ -426,7 +432,7 @@ class GraphqlAuthentication extends Plugin
 
                 foreach ($savedTokens as $savedToken) {
                     if (strpos($savedToken->name, "user-{$user->id}") !== false) {
-                        Craft::$app->getGql()->deleteTokenById($savedToken->id);
+                        $gql->deleteTokenById($savedToken->id);
                     }
                 }
 
@@ -441,6 +447,10 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
+        $elements = Craft::$app->getElements();
+        $sections = Craft::$app->getSections();
+        $assets = Craft::$app->getAssets();
+        $settings = $this->getSettings();
         $user = $this->getUserFromToken();
         $fields = $event->sender->getFieldValues();
         $error = "User doesn't have permission to perform this mutation";
@@ -451,13 +461,13 @@ class GraphqlAuthentication extends Plugin
             }
 
             if ($field->elementType === 'craft\\elements\\Entry') {
-                $entry = Craft::$app->getElements()->getElementById($field->id[0]);
+                $entry = $elements->getElementById($field->id[0]);
 
                 if (!$entry) {
                     continue;
                 }
 
-                $authorOnlySections = $this->getSettings()->queries;
+                $authorOnlySections = $settings->queries;
 
                 if ((string) $event->sender->authorId === (string) $user->id) {
                     continue;
@@ -468,7 +478,7 @@ class GraphqlAuthentication extends Plugin
                         continue;
                     }
 
-                    if ($entry->sectionId !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
+                    if ($entry->sectionId !== $sections->getSectionByHandle($section)->id) {
                         continue;
                     }
 
@@ -477,7 +487,7 @@ class GraphqlAuthentication extends Plugin
             }
 
             if ($field->elementType === 'craft\\elements\\Asset') {
-                $asset = Craft::$app->getAssets()->getAssetById($field->id[0]);
+                $asset = $assets->getAssetById($field->id[0]);
 
                 if (!$asset || !$asset->uploaderId) {
                     continue;
@@ -494,8 +504,8 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        $authorOnlySections = $this->getSettings()->mutations ?? [];
-        $entrySection = Craft::$app->getSections()->getSectionById($event->sender->sectionId)->handle;
+        $authorOnlySections = $settings->mutations ?? [];
+        $entrySection = $sections->getSectionById($event->sender->sectionId)->handle;
 
         if (in_array($entrySection, array_keys($authorOnlySections))) {
             foreach ($authorOnlySections as $key => $value) {
@@ -601,10 +611,12 @@ class GraphqlAuthentication extends Plugin
 
     protected function settingsHtml()
     {
+        $gql = Craft::$app->getGql();
+        $sections = Craft::$app->getSections();
         $settings = $this->getSettings();
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
-        $schemas = Craft::$app->getGql()->getSchemas();
-        $publicSchema = Craft::$app->getGql()->getPublicSchema();
+        $schemas = $gql->getSchemas();
+        $publicSchema = $gql->getPublicSchema();
 
         $userOptions = [
             [
@@ -642,8 +654,8 @@ class GraphqlAuthentication extends Plugin
         $mutations = null;
 
         if ($settings->schemaId) {
-            $selectedSchema = Craft::$app->getGql()->getSchemaById($settings->schemaId);
-            $entryTypes = Craft::$app->getSections()->getAllEntryTypes();
+            $selectedSchema = $gql->getSchemaById($settings->schemaId);
+            $entryTypes = $sections->getAllEntryTypes();
             $queries = [];
             $mutations = [];
 
