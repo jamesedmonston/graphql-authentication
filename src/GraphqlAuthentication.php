@@ -112,6 +112,12 @@ class GraphqlAuthentication extends Plugin
             Asset::EVENT_BEFORE_SAVE,
             [$this, 'ensureAssetMutationAllowed']
         );
+
+        Event::on(
+            Asset::class,
+            Asset::EVENT_BEFORE_DELETE,
+            [$this, 'ensureAssetMutationAllowed']
+        );
     }
 
     public function registerGqlQueries(Event $event)
