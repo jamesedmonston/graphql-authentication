@@ -23,6 +23,8 @@ use craft\gql\GqlEntityRegistry;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\gql\types\generators\UserType;
+use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
 use craft\services\Gql;
 use DateTime;
@@ -483,7 +485,7 @@ class GraphqlAuthentication extends Plugin
 
     public function restrictEntryMutationFields(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query')) {
+        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
             return;
         }
 
@@ -548,7 +550,7 @@ class GraphqlAuthentication extends Plugin
 
     public function ensureEntryMutationAllowed(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query')) {
+        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
             return;
         }
 
@@ -579,7 +581,7 @@ class GraphqlAuthentication extends Plugin
 
     public function ensureAssetMutationAllowed(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query')) {
+        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
             return;
         }
 
@@ -598,6 +600,11 @@ class GraphqlAuthentication extends Plugin
     public function getUserFromToken(): User
     {
         return Craft::$app->getUsers()->getUserById($this->_extractUserIdFromToken($this->_getHeaderToken()));
+    }
+
+    public function isGraphiqlRequest(): bool
+    {
+        return StringHelper::contains(Craft::$app->getRequest()->getReferrer(), UrlHelper::cpUrl() . '/graphiql');
     }
 
     // Protected Methods

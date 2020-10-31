@@ -11,8 +11,6 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\helpers\StringHelper;
-use craft\helpers\UrlHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -41,7 +39,7 @@ class Entry extends ElementResolver
             return $query;
         }
 
-        if (!StringHelper::contains(Craft::$app->getRequest()->getReferrer(), UrlHelper::cpUrl() . '/graphiql')) {
+        if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
             $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
