@@ -9,14 +9,16 @@ class Settings extends Model
     public $schemaId = null;
     public $expiration = null;
     public $userGroup = null;
-    public $queries = null;
-    public $mutations = null;
+    public $entryQueries = null;
+    public $entryMutations = null;
+    public $assetQueries = null;
+    public $assetMutations = null;
 
     public function rules()
     {
         return [
             [['schemaId', 'expiration'], 'required'],
-            [['userGroup', 'queries', 'mutations'], 'default'],
+            [['userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default'],
         ];
     }
 }

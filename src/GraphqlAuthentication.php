@@ -88,37 +88,43 @@ class GraphqlAuthentication extends Plugin
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
-            [$this, 'registerGqlQueries']
+            [$this, 'registerGqlQueries'],
         );
 
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_MUTATIONS,
-            [$this, 'registerGqlMutations']
+            [$this, 'registerGqlMutations'],
         );
 
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_SAVE,
-            [$this, 'restrictEntryMutationFields']
+            function (ModelEvent $event) {
+                $this->restrictMutationFields($event);
+                $this->ensureEntryMutationAllowed($event);
+            },
         );
 
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_DELETE,
-            [$this, 'ensureEntryMutationAllowed']
+            [$this, 'ensureEntryMutationAllowed'],
         );
 
         Event::on(
             Asset::class,
             Asset::EVENT_BEFORE_SAVE,
-            [$this, 'ensureAssetMutationAllowed']
+            function (ModelEvent $event) {
+                $this->restrictMutationFields($event);
+                $this->ensureAssetMutationAllowed($event);
+            },
         );
 
         Event::on(
             Asset::class,
             Asset::EVENT_BEFORE_DELETE,
-            [$this, 'ensureAssetMutationAllowed']
+            [$this, 'ensureAssetMutationAllowed'],
         );
     }
 
@@ -483,7 +489,7 @@ class GraphqlAuthentication extends Plugin
         ];
     }
 
-    public function restrictEntryMutationFields(ModelEvent $event)
+    public function restrictMutationFields(ModelEvent $event)
     {
         if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
             return;
@@ -513,7 +519,7 @@ class GraphqlAuthentication extends Plugin
                     throw new Error($error);
                 }
 
-                $authorOnlySections = $settings->queries ?? [];
+                $authorOnlySections = $settings->entryQueries ?? [];
 
                 if ((string) $event->sender->authorId === (string) $user->id) {
                     continue;
@@ -548,8 +554,6 @@ class GraphqlAuthentication extends Plugin
                 }
             }
         }
-
-        $this->ensureEntryMutationAllowed($event);
     }
 
     public function ensureEntryMutationAllowed(ModelEvent $event)
@@ -565,15 +569,15 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        $authorOnlySections = $this->getSettings()->mutations ?? [];
+        $authorOnlySections = $this->getSettings()->entryMutations ?? [];
         $entrySection = Craft::$app->getSections()->getSectionById($event->sender->sectionId)->handle;
 
         if (!in_array($entrySection, array_keys($authorOnlySections))) {
             return;
         }
 
-        foreach ($authorOnlySections as $key => $value) {
-            if (!(bool) $value || $key !== $entrySection) {
+        foreach ($authorOnlySections as $section => $value) {
+            if (!(bool) $value || $section !== $entrySection) {
                 continue;
             }
 
@@ -596,8 +600,21 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        if ((string) $event->sender->uploaderId !== (string) $user->id) {
-            throw new Error("User doesn't have permission to perform this mutation");
+        $authorOnlyVolumes = $this->getSettings()->assetMutations ?? [];
+        $assetVolume = Craft::$app->getVolumes()->getVolumeById($event->sender->volumeId)->handle;
+
+        if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
+            return;
+        }
+
+        foreach ($authorOnlyVolumes as $volume => $value) {
+            if (!(bool) $value || $volume !== $assetVolume) {
+                continue;
+            }
+
+            if ((string) $event->sender->uploaderId !== (string) $user->id) {
+                throw new Error("User doesn't have permission to perform this mutation");
+            }
         }
     }
 
@@ -699,6 +716,7 @@ class GraphqlAuthentication extends Plugin
     {
         $gql = Craft::$app->getGql();
         $sections = Craft::$app->getSections();
+        $volumes = Craft::$app->getVolumes();
         $settings = $this->getSettings();
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
         $schemas = $gql->getSchemas();
@@ -736,14 +754,17 @@ class GraphqlAuthentication extends Plugin
             ];
         }
 
-        $queries = null;
-        $mutations = null;
+        $entryQueries = null;
+        $entryMutations = null;
+        $assetQueries = null;
+        $assetMutations = null;
 
         if ($settings->schemaId) {
             $selectedSchema = $gql->getSchemaById($settings->schemaId);
+
             $entryTypes = $sections->getAllEntryTypes();
-            $queries = [];
-            $mutations = [];
+            $entryQueries = [];
+            $entryMutations = [];
 
             $scopes = array_filter($selectedSchema->scope, function ($key) {
                 return StringHelper::contains($key, 'entrytypes');
@@ -760,11 +781,11 @@ class GraphqlAuthentication extends Plugin
                 $handle = $entryType->handle;
 
                 if (StringHelper::contains($scope, ':read')) {
-                    if (isset($queries[$name])) {
+                    if (isset($entryQueries[$name])) {
                         continue;
                     }
 
-                    $queries[$name] = [
+                    $entryQueries[$name] = [
                         'label' => $name,
                         'handle' => $handle,
                     ];
@@ -772,11 +793,52 @@ class GraphqlAuthentication extends Plugin
                     continue;
                 }
 
-                if (isset($mutations[$name])) {
+                if (isset($entryMutations[$name])) {
                     continue;
                 }
 
-                $mutations[$name] = [
+                $entryMutations[$name] = [
+                    'label' => $name,
+                    'handle' => $handle,
+                ];
+            }
+
+            $assetVolumes = $volumes->getAllVolumes();
+            $assetQueries = [];
+            $assetMutations = [];
+
+            $scopes = array_filter($selectedSchema->scope, function ($key) {
+                return StringHelper::contains($key, 'volumes');
+            });
+
+            foreach ($scopes as $scope) {
+                $scopeId = explode(':', explode('.', $scope)[1])[0];
+
+                $volume = array_values(array_filter($assetVolumes, function ($type) use ($scopeId) {
+                    return $type['uid'] ?? null === $scopeId;
+                }))[0];
+
+                $name = $volume->name;
+                $handle = $volume->handle;
+
+                if (StringHelper::contains($scope, ':read')) {
+                    if (isset($assetQueries[$name])) {
+                        continue;
+                    }
+
+                    $assetQueries[$name] = [
+                        'label' => $name,
+                        'handle' => $handle,
+                    ];
+
+                    continue;
+                }
+
+                if (isset($assetMutations[$name])) {
+                    continue;
+                }
+
+                $assetMutations[$name] = [
                     'label' => $name,
                     'handle' => $handle,
                 ];
@@ -787,8 +849,10 @@ class GraphqlAuthentication extends Plugin
             'settings' => $settings,
             'userOptions' => $userOptions,
             'schemaOptions' => $schemaOptions,
-            'queries' => $queries,
-            'mutations' => $mutations,
+            'entryQueries' => $entryQueries,
+            'entryMutations' => $entryMutations,
+            'assetQueries' => $assetQueries,
+            'assetMutations' => $assetMutations,
         ]);
     }
 }

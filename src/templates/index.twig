@@ -50,10 +50,10 @@
     instructions: 'Select your desired schema and save to modify user permissions.',
   }, null) }}
 {% else %}
-  {% if queries %}
+  {% if entryQueries %}
     <div class="field">
       <div class="heading">
-        <label>Restricted Queries</label>
+        <label>Restricted Entry Queries</label>
 
         <div class="instructions">
           <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
@@ -61,13 +61,13 @@
       </div>
 
       <div class="input">
-        {% for query in queries %}
+        {% for query in entryQueries %}
           <div>
             {{ forms.checkbox({
               label: query.label,
-              name: 'queries[' ~ query.handle ~ ']',
+              name: 'entryQueries[' ~ query.handle ~ ']',
               value: true,
-              checked: settings.queries[query.handle] ?? false,
+              checked: settings.entryQueries[query.handle] ?? false,
             }) }}
           </div>
         {% endfor %}
@@ -75,10 +75,10 @@
     </div>
   {% endif %}
 
-  {% if mutations %}
+  {% if entryMutations %}
     <div class="field">
       <div class="heading">
-        <label>Restricted Mutations</label>
+        <label>Restricted Entry Mutations</label>
 
         <div class="instructions">
           <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
@@ -86,13 +86,63 @@
       </div>
 
       <div class="input">
-        {% for mutation in mutations %}
+        {% for mutation in entryMutations %}
           <div>
             {{ forms.checkbox({
               label: mutation.label,
-              name: 'mutations[' ~ mutation.handle ~ ']',
+              name: 'entryMutations[' ~ mutation.handle ~ ']',
               value: true,
-              checked: settings.mutations[mutation.handle] ?? false,
+              checked: settings.entryMutations[mutation.handle] ?? false,
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if assetQueries %}
+    <div class="field">
+      <div class="heading">
+        <label>Restricted Asset Queries</label>
+
+        <div class="instructions">
+          <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
+        </div>
+      </div>
+
+      <div class="input">
+        {% for query in assetQueries %}
+          <div>
+            {{ forms.checkbox({
+              label: query.label,
+              name: 'assetQueries[' ~ query.handle ~ ']',
+              value: true,
+              checked: settings.assetQueries[query.handle] ?? false,
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if assetMutations %}
+    <div class="field">
+      <div class="heading">
+        <label>Restricted Asset Mutations</label>
+
+        <div class="instructions">
+          <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
+        </div>
+      </div>
+
+      <div class="input">
+        {% for mutation in assetMutations %}
+          <div>
+            {{ forms.checkbox({
+              label: mutation.label,
+              name: 'assetMutations[' ~ mutation.handle ~ ']',
+              value: true,
+              checked: settings.assetMutations[mutation.handle] ?? false,
             }) }}
           </div>
         {% endfor %}
