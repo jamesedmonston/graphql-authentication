@@ -509,6 +509,10 @@ class GraphqlAuthentication extends Plugin
                     throw new Error("We couldn't find any matching entries");
                 }
 
+                if (!in_array("sections.{$entry->section->uid}:read", $this->_getHeaderToken()->getScope())) {
+                    throw new Error($error);
+                }
+
                 $authorOnlySections = $settings->queries ?? [];
 
                 if ((string) $event->sender->authorId === (string) $user->id) {
