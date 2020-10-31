@@ -473,7 +473,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 foreach ($savedTokens as $savedToken) {
-                    if (strpos($savedToken->name, "user-{$user->id}") !== false) {
+                    if (StringHelper::contains($savedToken->name, "user-{$user->id}")) {
                         $gql->deleteTokenById($savedToken->id);
                     }
                 }
@@ -746,7 +746,7 @@ class GraphqlAuthentication extends Plugin
             $mutations = [];
 
             $scopes = array_filter($selectedSchema->scope, function ($key) {
-                return strpos($key, 'entrytypes') !== false;
+                return StringHelper::contains($key, 'entrytypes');
             });
 
             foreach ($scopes as $scope) {
@@ -759,7 +759,7 @@ class GraphqlAuthentication extends Plugin
                 $name = $entryType->name;
                 $handle = $entryType->handle;
 
-                if (strpos($scope, ':read') !== false) {
+                if (StringHelper::contains($scope, ':read')) {
                     if (isset($queries[$name])) {
                         continue;
                     }
