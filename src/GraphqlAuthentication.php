@@ -12,6 +12,7 @@ namespace jamesedmonston\graphqlauthentication;
 
 use Craft;
 use craft\base\Plugin;
+use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\User;
 use craft\events\ModelEvent;
@@ -97,13 +98,19 @@ class GraphqlAuthentication extends Plugin
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_SAVE,
-            [$this, 'restrictMutations']
+            [$this, 'restrictEntryMutationFields']
         );
 
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_DELETE,
-            [$this, 'restrictMutations']
+            [$this, 'ensureEntryMutationAllowed']
+        );
+
+        Event::on(
+            Asset::class,
+            Asset::EVENT_BEFORE_SAVE,
+            [$this, 'ensureAssetMutationAllowed']
         );
     }
 
@@ -468,7 +475,7 @@ class GraphqlAuthentication extends Plugin
         ];
     }
 
-    public function restrictMutations(ModelEvent $event)
+    public function restrictEntryMutationFields(ModelEvent $event)
     {
         if (!Craft::$app->getRequest()->getBodyParam('query')) {
             return;
@@ -483,7 +490,7 @@ class GraphqlAuthentication extends Plugin
         $error = "User doesn't have permission to perform this mutation";
 
         foreach ($fields as $key => $field) {
-            if (!isset($field->elementType) || !isset($field->id)) {
+            if (!isset($field->elementType) || !$field->id) {
                 continue;
             }
 
@@ -491,7 +498,7 @@ class GraphqlAuthentication extends Plugin
                 $entry = $elements->getElementById($field->id[0]);
 
                 if (!$entry) {
-                    continue;
+                    throw new Error("We couldn't find any matching entries");
                 }
 
                 $authorOnlySections = $settings->queries ?? [];
@@ -516,7 +523,11 @@ class GraphqlAuthentication extends Plugin
             if ($field->elementType === 'craft\\elements\\Asset') {
                 $asset = $assets->getAssetById($field->id[0]);
 
-                if (!$asset || !$asset->uploaderId) {
+                if (!$asset) {
+                    throw new Error("We couldn't find any matching entries");
+                }
+
+                if (!$asset->uploaderId) {
                     continue;
                 }
 
@@ -526,24 +537,55 @@ class GraphqlAuthentication extends Plugin
             }
         }
 
+        $this->ensureEntryMutationAllowed($event);
+    }
+
+    public function ensureEntryMutationAllowed(ModelEvent $event)
+    {
+        if (!Craft::$app->getRequest()->getBodyParam('query')) {
+            return;
+        }
+
+        $user = $this->getUserFromToken();
+
         if ($event->isNew) {
             $event->sender->authorId = $user->id;
             return;
         }
 
-        $authorOnlySections = $settings->mutations ?? [];
-        $entrySection = $sections->getSectionById($event->sender->sectionId)->handle;
+        $authorOnlySections = $this->getSettings()->mutations ?? [];
+        $entrySection = Craft::$app->getSections()->getSectionById($event->sender->sectionId)->handle;
 
-        if (in_array($entrySection, array_keys($authorOnlySections))) {
-            foreach ($authorOnlySections as $key => $value) {
-                if (!(bool) $value || $key !== $entrySection) {
-                    continue;
-                }
+        if (!in_array($entrySection, array_keys($authorOnlySections))) {
+            return;
+        }
 
-                if ((string) $event->sender->authorId !== (string) $user->id) {
-                    throw new Error($error);
-                }
+        foreach ($authorOnlySections as $key => $value) {
+            if (!(bool) $value || $key !== $entrySection) {
+                continue;
             }
+
+            if ((string) $event->sender->authorId !== (string) $user->id) {
+                throw new Error("User doesn't have permission to perform this mutation");
+            }
+        }
+    }
+
+    public function ensureAssetMutationAllowed(ModelEvent $event)
+    {
+        if (!Craft::$app->getRequest()->getBodyParam('query')) {
+            return;
+        }
+
+        $user = $this->getUserFromToken();
+
+        if ($event->isNew) {
+            $event->sender->uploaderId = $user->id;
+            return;
+        }
+
+        if ((string) $event->sender->uploaderId !== (string) $user->id) {
+            throw new Error("User doesn't have permission to perform this mutation");
         }
     }
 
