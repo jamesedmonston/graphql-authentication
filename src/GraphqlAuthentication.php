@@ -799,7 +799,7 @@ class GraphqlAuthentication extends Plugin
     protected function settingsHtml()
     {
         $gql = Craft::$app->getGql();
-        $sections = Craft::$app->getSections();
+        $sections = Craft::$app->getSections()->getAllSections();
         $volumes = Craft::$app->getVolumes()->getAllVolumes();
         $settings = $this->getSettings();
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
@@ -846,23 +846,26 @@ class GraphqlAuthentication extends Plugin
         if ($settings->schemaId) {
             $selectedSchema = $gql->getSchemaById($settings->schemaId);
 
-            $entryTypes = $sections->getAllEntryTypes();
             $entryQueries = [];
             $entryMutations = [];
 
             $scopes = array_filter($selectedSchema->scope, function ($key) {
-                return StringHelper::contains($key, 'entrytypes');
+                return StringHelper::contains($key, 'sections');
             });
 
             foreach ($scopes as $scope) {
                 $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-                $entryType = array_values(array_filter($entryTypes, function ($type) use ($scopeId) {
+                $section = array_values(array_filter($sections, function ($type) use ($scopeId) {
                     return $type['uid'] === $scopeId;
                 }))[0];
 
-                $name = $entryType->name;
-                $handle = $entryType->handle;
+                if ($section->type === 'single') {
+                    continue;
+                }
+
+                $name = $section->name;
+                $handle = $section->handle;
 
                 if (StringHelper::contains($scope, ':read')) {
                     if (isset($entryQueries[$name])) {
