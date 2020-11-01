@@ -498,6 +498,7 @@ class GraphqlAuthentication extends Plugin
         $elements = Craft::$app->getElements();
         $sections = Craft::$app->getSections();
         $assets = Craft::$app->getAssets();
+        $volumes = Craft::$app->getVolumes()->getAllVolumes();
         $settings = $this->getSettings();
         $user = $this->getUserFromToken();
         $scope = $this->_getHeaderToken()->getScope();
@@ -518,7 +519,11 @@ class GraphqlAuthentication extends Plugin
                             throw new Error("We couldn't find any matching entries");
                         }
 
-                        if ((string) $event->sender->authorId === (string) $user->id) {
+                        if (!$entry->authorId) {
+                            continue;
+                        }
+
+                        if ((string) $entry->authorId === (string) $user->id) {
                             continue;
                         }
 
@@ -547,14 +552,32 @@ class GraphqlAuthentication extends Plugin
                         $asset = $assets->getAssetById($id);
 
                         if (!$asset) {
-                            throw new Error("We couldn't find any matching entries");
+                            throw new Error("We couldn't find any matching assets");
                         }
 
                         if (!$asset->uploaderId) {
                             continue;
                         }
 
-                        if ((string) $asset->uploaderId !== (string) $user->id) {
+                        if ((string) $asset->uploaderId === (string) $user->id) {
+                            continue;
+                        }
+
+                        if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
+                            throw new Error($error);
+                        }
+
+                        $authorOnlyVolumes = $settings->assetQueries ?? [];
+
+                        foreach ($authorOnlyVolumes as $volume => $value) {
+                            if (!(bool) $value) {
+                                continue;
+                            }
+
+                            if ($asset->volumeId !== $volumes->getVolumeByHandle($volume)->id) {
+                                continue;
+                            }
+
                             throw new Error($error);
                         }
                     }
@@ -727,7 +750,7 @@ class GraphqlAuthentication extends Plugin
     {
         $gql = Craft::$app->getGql();
         $sections = Craft::$app->getSections();
-        $volumes = Craft::$app->getVolumes();
+        $volumes = Craft::$app->getVolumes()->getAllVolumes();
         $settings = $this->getSettings();
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
         $schemas = $gql->getSchemas();
@@ -814,7 +837,6 @@ class GraphqlAuthentication extends Plugin
                 ];
             }
 
-            $assetVolumes = $volumes->getAllVolumes();
             $assetQueries = [];
             $assetMutations = [];
 
@@ -825,7 +847,7 @@ class GraphqlAuthentication extends Plugin
             foreach ($scopes as $scope) {
                 $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-                $volume = array_values(array_filter($assetVolumes, function ($type) use ($scopeId) {
+                $volume = array_values(array_filter($volumes, function ($type) use ($scopeId) {
                     return $type['uid'] === $scopeId;
                 }))[0];
 
