@@ -711,13 +711,7 @@ class GraphqlAuthentication extends Plugin
 
     protected function _ensureValidEntry(int $id)
     {
-        $elements = Craft::$app->getElements();
-        $entry = $elements->getElementById($id);
-        $sections = Craft::$app->getSections();
-        $settings = $this->getSettings();
-        $user = $this->getUserFromToken();
-        $scope = $this->_getHeaderToken()->getScope();
-        $error = "User doesn't have permission to perform this mutation";
+        $entry = Craft::$app->getElements()->getElementById($id);
 
         if (!$entry) {
             throw new Error("We couldn't find any matching entries");
@@ -727,15 +721,21 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
+        $user = $this->getUserFromToken();
+
         if ((string) $entry->authorId === (string) $user->id) {
             return;
         }
+
+        $scope = $this->_getHeaderToken()->getScope();
+        $error = "User doesn't have permission to perform this mutation";
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             throw new Error($error);
         }
 
-        $authorOnlySections = $settings->entryQueries ?? [];
+        $sections = Craft::$app->getSections();
+        $authorOnlySections = $this->getSettings()->entryQueries ?? [];
 
         foreach ($authorOnlySections as $section => $value) {
             if (!(bool) $value) {
@@ -752,13 +752,7 @@ class GraphqlAuthentication extends Plugin
 
     protected function _ensureValidAsset(int $id)
     {
-        $assets = Craft::$app->getAssets();
-        $asset = $assets->getAssetById($id);
-        $volumes = Craft::$app->getVolumes()->getAllVolumes();
-        $settings = $this->getSettings();
-        $user = $this->getUserFromToken();
-        $scope = $this->_getHeaderToken()->getScope();
-        $error = "User doesn't have permission to perform this mutation";
+        $asset = Craft::$app->getAssets()->getAssetById($id);
 
         if (!$asset) {
             throw new Error("We couldn't find any matching assets");
@@ -768,15 +762,21 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
+        $user = $this->getUserFromToken();
+
         if ((string) $asset->uploaderId === (string) $user->id) {
             return;
         }
+
+        $scope = $this->_getHeaderToken()->getScope();
+        $error = "User doesn't have permission to perform this mutation";
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             throw new Error($error);
         }
 
-        $authorOnlyVolumes = $settings->assetQueries ?? [];
+        $volumes = Craft::$app->getVolumes()->getAllVolumes();
+        $authorOnlyVolumes = $this->getSettings()->assetQueries ?? [];
 
         foreach ($authorOnlyVolumes as $volume => $value) {
             if (!(bool) $value) {
@@ -789,8 +789,6 @@ class GraphqlAuthentication extends Plugin
 
             throw new Error($error);
         }
-
-        return;
     }
 
     protected function createSettingsModel()
