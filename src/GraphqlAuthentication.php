@@ -495,94 +495,62 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        $elements = Craft::$app->getElements();
-        $sections = Craft::$app->getSections();
-        $assets = Craft::$app->getAssets();
-        $volumes = Craft::$app->getVolumes()->getAllVolumes();
-        $settings = $this->getSettings();
-        $user = $this->getUserFromToken();
-        $scope = $this->_getHeaderToken()->getScope();
         $fields = $event->sender->getFieldValues();
-        $error = "User doesn't have permission to perform this mutation";
 
-        foreach ($fields as $key => $field) {
-            if (!isset($field->elementType) || !$field->id) {
+        foreach ($fields as $field) {
+            if (!isset($field->elementType)) {
+                continue;
+            }
+
+            if ($field->elementType !== 'craft\\elements\\MatrixBlock' && !$field->id) {
                 continue;
             }
 
             switch ($field->elementType) {
                 case 'craft\\elements\\Entry':
                     foreach ($field->id as $id) {
-                        $entry = $elements->getElementById($id);
-
-                        if (!$entry) {
-                            throw new Error("We couldn't find any matching entries");
-                        }
-
-                        if (!$entry->authorId) {
-                            continue;
-                        }
-
-                        if ((string) $entry->authorId === (string) $user->id) {
-                            continue;
-                        }
-
-                        if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-                            throw new Error($error);
-                        }
-
-                        $authorOnlySections = $settings->entryQueries ?? [];
-
-                        foreach ($authorOnlySections as $section => $value) {
-                            if (!(bool) $value) {
-                                continue;
-                            }
-
-                            if ($entry->sectionId !== $sections->getSectionByHandle($section)->id) {
-                                continue;
-                            }
-
-                            throw new Error($error);
-                        }
+                        $this->_ensureValidEntry($id);
                     }
                     break;
 
-                case 'craft\\elements\\Asset': {
+                case 'craft\\elements\\Asset':
                     foreach ($field->id as $id) {
-                        $asset = $assets->getAssetById($id);
+                        $this->_ensureValidAsset($id);
+                    }
+                    break;
 
-                        if (!$asset) {
-                            throw new Error("We couldn't find any matching assets");
-                        }
-
-                        if (!$asset->uploaderId) {
-                            continue;
-                        }
-
-                        if ((string) $asset->uploaderId === (string) $user->id) {
-                            continue;
-                        }
-
-                        if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-                            throw new Error($error);
-                        }
-
-                        $authorOnlyVolumes = $settings->assetQueries ?? [];
-
-                        foreach ($authorOnlyVolumes as $volume => $value) {
-                            if (!(bool) $value) {
+                case 'craft\\elements\\MatrixBlock':
+                    foreach ($field as $matrixBlock) {
+                        foreach ($matrixBlock as $key => $value) {
+                            if (!$value) {
                                 continue;
                             }
 
-                            if ($asset->volumeId !== $volumes->getVolumeByHandle($volume)->id) {
+                            $matrixField = $matrixBlock[$key];
+
+                            if (!isset($matrixField->elementType) || !$matrixField->id) {
                                 continue;
                             }
 
-                            throw new Error($error);
+                            switch ($matrixField->elementType) {
+                                case 'craft\\elements\\Entry':
+                                    foreach ($matrixField->id as $id) {
+                                        $this->_ensureValidEntry($id);
+                                    }
+                                    break;
+
+                                case 'craft\\elements\\Asset':
+                                    foreach ($matrixField->id as $id) {
+                                        $this->_ensureValidAsset($id);
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
                     }
                     break;
-                }
 
                 default:
                     break;
@@ -739,6 +707,90 @@ class GraphqlAuthentication extends Plugin
     protected function _extractUserIdFromToken(GqlToken $token): string
     {
         return explode('-', $token->name)[1];
+    }
+
+    protected function _ensureValidEntry(int $id)
+    {
+        $elements = Craft::$app->getElements();
+        $entry = $elements->getElementById($id);
+        $sections = Craft::$app->getSections();
+        $settings = $this->getSettings();
+        $user = $this->getUserFromToken();
+        $scope = $this->_getHeaderToken()->getScope();
+        $error = "User doesn't have permission to perform this mutation";
+
+        if (!$entry) {
+            throw new Error("We couldn't find any matching entries");
+        }
+
+        if (!$entry->authorId) {
+            return;
+        }
+
+        if ((string) $entry->authorId === (string) $user->id) {
+            return;
+        }
+
+        if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
+            throw new Error($error);
+        }
+
+        $authorOnlySections = $settings->entryQueries ?? [];
+
+        foreach ($authorOnlySections as $section => $value) {
+            if (!(bool) $value) {
+                continue;
+            }
+
+            if ($entry->sectionId !== $sections->getSectionByHandle($section)->id) {
+                continue;
+            }
+
+            throw new Error($error);
+        }
+    }
+
+    protected function _ensureValidAsset(int $id)
+    {
+        $assets = Craft::$app->getAssets();
+        $asset = $assets->getAssetById($id);
+        $volumes = Craft::$app->getVolumes()->getAllVolumes();
+        $settings = $this->getSettings();
+        $user = $this->getUserFromToken();
+        $scope = $this->_getHeaderToken()->getScope();
+        $error = "User doesn't have permission to perform this mutation";
+
+        if (!$asset) {
+            throw new Error("We couldn't find any matching assets");
+        }
+
+        if (!$asset->uploaderId) {
+            return;
+        }
+
+        if ((string) $asset->uploaderId === (string) $user->id) {
+            return;
+        }
+
+        if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
+            throw new Error($error);
+        }
+
+        $authorOnlyVolumes = $settings->assetQueries ?? [];
+
+        foreach ($authorOnlyVolumes as $volume => $value) {
+            if (!(bool) $value) {
+                continue;
+            }
+
+            if ($asset->volumeId !== $volumes->getVolumeByHandle($volume)->id) {
+                continue;
+            }
+
+            throw new Error($error);
+        }
+
+        return;
     }
 
     protected function createSettingsModel()
