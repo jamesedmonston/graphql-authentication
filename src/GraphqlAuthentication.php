@@ -500,6 +500,7 @@ class GraphqlAuthentication extends Plugin
         $assets = Craft::$app->getAssets();
         $settings = $this->getSettings();
         $user = $this->getUserFromToken();
+        $scope = $this->_getHeaderToken()->getScope();
         $fields = $event->sender->getFieldValues();
         $error = "User doesn't have permission to perform this mutation";
 
@@ -517,15 +518,15 @@ class GraphqlAuthentication extends Plugin
                             throw new Error("We couldn't find any matching entries");
                         }
 
-                        if (!in_array("sections.{$entry->section->uid}:read", $this->_getHeaderToken()->getScope())) {
+                        if ((string) $event->sender->authorId === (string) $user->id) {
+                            continue;
+                        }
+
+                        if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
                             throw new Error($error);
                         }
 
                         $authorOnlySections = $settings->entryQueries ?? [];
-
-                        if ((string) $event->sender->authorId === (string) $user->id) {
-                            continue;
-                        }
 
                         foreach ($authorOnlySections as $section => $value) {
                             if (!(bool) $value) {
@@ -539,7 +540,7 @@ class GraphqlAuthentication extends Plugin
                             throw new Error($error);
                         }
                     }
-                break;
+                    break;
 
                 case 'craft\\elements\\Asset': {
                     foreach ($field->id as $id) {
