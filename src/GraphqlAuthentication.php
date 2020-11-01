@@ -508,54 +508,60 @@ class GraphqlAuthentication extends Plugin
                 continue;
             }
 
-            if ($field->elementType === 'craft\\elements\\Entry') {
-                foreach ($field->id as $id) {
-                    $entry = $elements->getElementById($id);
+            switch ($field->elementType) {
+                case 'craft\\elements\\Entry':
+                    foreach ($field->id as $id) {
+                        $entry = $elements->getElementById($id);
 
-                    if (!$entry) {
-                        throw new Error("We couldn't find any matching entries");
-                    }
+                        if (!$entry) {
+                            throw new Error("We couldn't find any matching entries");
+                        }
 
-                    if (!in_array("sections.{$entry->section->uid}:read", $this->_getHeaderToken()->getScope())) {
-                        throw new Error($error);
-                    }
+                        if (!in_array("sections.{$entry->section->uid}:read", $this->_getHeaderToken()->getScope())) {
+                            throw new Error($error);
+                        }
 
-                    $authorOnlySections = $settings->entryQueries ?? [];
+                        $authorOnlySections = $settings->entryQueries ?? [];
 
-                    if ((string) $event->sender->authorId === (string) $user->id) {
-                        continue;
-                    }
-
-                    foreach ($authorOnlySections as $section => $value) {
-                        if (!(bool) $value) {
+                        if ((string) $event->sender->authorId === (string) $user->id) {
                             continue;
                         }
 
-                        if ($entry->sectionId !== $sections->getSectionByHandle($section)->id) {
+                        foreach ($authorOnlySections as $section => $value) {
+                            if (!(bool) $value) {
+                                continue;
+                            }
+
+                            if ($entry->sectionId !== $sections->getSectionByHandle($section)->id) {
+                                continue;
+                            }
+
+                            throw new Error($error);
+                        }
+                    }
+                break;
+
+                case 'craft\\elements\\Asset': {
+                    foreach ($field->id as $id) {
+                        $asset = $assets->getAssetById($id);
+
+                        if (!$asset) {
+                            throw new Error("We couldn't find any matching entries");
+                        }
+
+                        if (!$asset->uploaderId) {
                             continue;
                         }
 
-                        throw new Error($error);
+                        if ((string) $asset->uploaderId !== (string) $user->id) {
+                            throw new Error($error);
+                        }
                     }
+                    break;
                 }
-            }
 
-            if ($field->elementType === 'craft\\elements\\Asset') {
-                foreach ($field->id as $id) {
-                    $asset = $assets->getAssetById($id);
-
-                    if (!$asset) {
-                        throw new Error("We couldn't find any matching entries");
-                    }
-
-                    if (!$asset->uploaderId) {
-                        continue;
-                    }
-
-                    if ((string) $asset->uploaderId !== (string) $user->id) {
-                        throw new Error($error);
-                    }
-                }
+                default:
+                    break;
             }
         }
     }
