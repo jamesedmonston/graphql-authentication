@@ -815,7 +815,7 @@ class GraphqlAuthentication extends Plugin
                 $scopeId = explode(':', explode('.', $scope)[1])[0];
 
                 $volume = array_values(array_filter($assetVolumes, function ($type) use ($scopeId) {
-                    return $type['uid'] ?? null === $scopeId;
+                    return $type['uid'] === $scopeId;
                 }))[0];
 
                 $name = $volume->name;
