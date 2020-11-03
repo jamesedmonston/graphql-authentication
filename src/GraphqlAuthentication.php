@@ -285,7 +285,7 @@ class GraphqlAuthentication extends Plugin
 
                 $customFields = UserArguments::getContentArguments();
 
-                foreach ($customFields as $key => $value) {
+                foreach ($customFields as $key) {
                     if (!isset($arguments[$key]) || !count($arguments[$key])) {
                         continue;
                     }
@@ -443,7 +443,7 @@ class GraphqlAuthentication extends Plugin
 
                 $customFields = UserArguments::getContentArguments();
 
-                foreach ($customFields as $key => $value) {
+                foreach ($customFields as $key) {
                     if (!isset($arguments[$key]) || !count($arguments[$key])) {
                         continue;
                     }
