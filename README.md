@@ -60,14 +60,14 @@ Hopefully by this point you've got everything installed and configured as needed
 
 We offer the following mutations for handling user authentication:
 
-- `authenticate`
-- `register`
-- `forgottenPassword`
-- `setPassword`
-- `updatePassword`
-- `updateUser`
-- `deleteCurrentToken`
-- `deleteAllTokens`
+- [`authenticate`](#authenticate-mutation)
+- [`register`](#register-mutation)
+- [`forgottenPassword`](#forgottenpassword-mutation)
+- [`setPassword`](#setpassword-mutation)
+- [`updatePassword`](#updatepassword-mutation)
+- [`updateUser`](#updateuser-mutation)
+- [`deleteCurrentToken`](#deletecurrenttoken-mutation)
+- [`deleteAllTokens`](#deletealltokens-mutation)
 
 #### `authenticate` mutation
 
@@ -178,7 +178,12 @@ mutation {
   )
 }
 
-
+// returns
+{
+  "data": {
+    "setPassword": "Successfully saved password"
+  }
+}
 ```
 
 #### `updatePassword` mutation
@@ -275,7 +280,7 @@ mutation {
 
 We offer the following queries for pulling user data:
 
-- `getUser`
+- [`getUser`](#getuser-query)
 
 #### `getUser` query
 
