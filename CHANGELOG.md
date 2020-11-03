@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## 1.0.1 - 2020-11-03
 
+### Added
+
 - Update `lastLoginDate` on users when running `authenticate`/`register` mutations
 
 ## 1.0.0 - 2020-11-03
