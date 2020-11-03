@@ -48,6 +48,20 @@ use yii\web\BadRequestHttpException;
  * @since     1.0.0
  *
  */
+
+const INVALID_HEADER = 'Invalid Authorization Header';
+const INVALID_LOGIN = "We couldn't log you in with the provided details";
+const INVALID_PASSWORD_UPDATE = "We couldn't update the password with the provided details";
+const INVALID_USER_UPDATE = "We couldn't update the user with the provided details";
+const INVALID_REQUEST = 'Cannot validate request';
+const INVALID_PASSWORD_MATCH = 'New passwords do not match';
+const INVALID_SCHEMA = 'No schema has been created';
+const FORBIDDEN_MUTATION = "User doesn't have permission to perform this mutation";
+const TOKEN_NOT_FOUND = "We couldn't find any matching tokens";
+const USER_NOT_FOUND = "We couldn't find any matching users";
+const ENTRY_NOT_FOUND = "We couldn't find any matching entries";
+const ASSET_NOT_FOUND = "We couldn't find any matching assets";
+
 class GraphqlAuthentication extends Plugin
 {
     // Static Properties
@@ -186,7 +200,7 @@ class GraphqlAuthentication extends Plugin
                 $user = $this->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error("We couldn't find any matching users");
+                    throw new Error(USER_NOT_FOUND);
                 }
 
                 return $user;
@@ -227,10 +241,9 @@ class GraphqlAuthentication extends Plugin
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $user = $users->getUserByUsernameOrEmail($email);
-                $error = "We couldn't log you in with the provided details";
 
                 if (!$user) {
-                    throw new Error($error);
+                    throw new Error(INVALID_LOGIN);
                 }
 
                 $userPermissions = $permissions->getPermissionsByUserId($user->id);
@@ -241,7 +254,7 @@ class GraphqlAuthentication extends Plugin
 
                 if (!$user->authenticate($password)) {
                     $permissions->saveUserPermissions($user->id, $userPermissions);
-                    throw new Error($error);
+                    throw new Error(INVALID_LOGIN);
                 }
 
                 $permissions->saveUserPermissions($user->id, $userPermissions);
@@ -350,7 +363,7 @@ class GraphqlAuthentication extends Plugin
                 $user = $users->getUserByUid($id);
 
                 if (!$user || !$users->isVerificationCodeValidForUser($user, $code)) {
-                    throw new Error('Cannot validate request');
+                    throw new Error(INVALID_REQUEST);
                 }
 
                 $user->newPassword = $password;
@@ -373,17 +386,16 @@ class GraphqlAuthentication extends Plugin
             ],
             'resolve' => function ($source, array $arguments) use ($elements, $permissions) {
                 $user = $this->getUserFromToken();
-                $error = "We couldn't update the password with the provided details";
 
                 if (!$user) {
-                    throw new Error($error);
+                    throw new Error(INVALID_PASSWORD_UPDATE);
                 }
 
                 $newPassword = $arguments['newPassword'];
                 $confirmPassword = $arguments['confirmPassword'];
 
                 if ($newPassword !== $confirmPassword) {
-                    throw new Error('New passwords do not match');
+                    throw new Error(INVALID_PASSWORD_MATCH);
                 }
 
                 $currentPassword = $arguments['currentPassword'];
@@ -395,7 +407,7 @@ class GraphqlAuthentication extends Plugin
 
                 if (!$user->authenticate($currentPassword)) {
                     $permissions->saveUserPermissions($user->id, $userPermissions);
-                    throw new Error($error);
+                    throw new Error(INVALID_PASSWORD_UPDATE);
                 }
 
                 $permissions->saveUserPermissions($user->id, $userPermissions);
@@ -425,7 +437,7 @@ class GraphqlAuthentication extends Plugin
                 $user = $this->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error("We couldn't update the user with the provided details");
+                    throw new Error(INVALID_USER_UPDATE);
                 }
 
                 if (isset($arguments['email'])) {
@@ -467,7 +479,7 @@ class GraphqlAuthentication extends Plugin
                 $token = $this->_getHeaderToken();
 
                 if (!$token) {
-                    throw new Error("We couldn't find any matching tokens");
+                    throw new Error(TOKEN_NOT_FOUND);
                 }
 
                 $gql->deleteTokenById($token->id);
@@ -482,16 +494,15 @@ class GraphqlAuthentication extends Plugin
             'args' => [],
             'resolve' => function () use ($gql) {
                 $user = $this->getUserFromToken();
-                $error = "We couldn't find any matching tokens";
 
                 if (!$user) {
-                    throw new Error($error);
+                    throw new Error(TOKEN_NOT_FOUND);
                 }
 
                 $savedTokens = $gql->getTokens();
 
                 if (!$savedTokens || !count($savedTokens)) {
-                    throw new Error($error);
+                    throw new Error(TOKEN_NOT_FOUND);
                 }
 
                 foreach ($savedTokens as $savedToken) {
@@ -600,7 +611,7 @@ class GraphqlAuthentication extends Plugin
             }
 
             if ((string) $event->sender->authorId !== (string) $user->id) {
-                throw new Error("User doesn't have permission to perform this mutation");
+                throw new Error(FORBIDDEN_MUTATION);
             }
         }
     }
@@ -631,7 +642,7 @@ class GraphqlAuthentication extends Plugin
             }
 
             if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                throw new Error("User doesn't have permission to perform this mutation");
+                throw new Error(FORBIDDEN_MUTATION);
             }
         }
     }
@@ -671,7 +682,7 @@ class GraphqlAuthentication extends Plugin
                     }
 
                     if (!$token) {
-                        throw new BadRequestHttpException('Invalid Authorization header');
+                        throw new BadRequestHttpException(INVALID_HEADER);
                     }
 
                     break 2;
@@ -680,11 +691,11 @@ class GraphqlAuthentication extends Plugin
         }
 
         if (!isset($token)) {
-            throw new BadRequestHttpException('Missing Authorization header');
+            throw new BadRequestHttpException(INVALID_HEADER);
         }
 
         if (strtotime(date('y-m-d H:i:s')) >= strtotime($token->expiryDate->format('y-m-d H:i:s'))) {
-            throw new BadRequestHttpException('Invalid Authorization header');
+            throw new BadRequestHttpException(INVALID_HEADER);
         }
 
         return $token;
@@ -693,7 +704,7 @@ class GraphqlAuthentication extends Plugin
     protected function _generateToken(User $user): string
     {
         if (!$this->_isSchemaSet()) {
-            throw new Error('No schema has been created');
+            throw new Error(INVALID_SCHEMA);
         }
 
         $settings = $this->getSettings();
@@ -730,7 +741,7 @@ class GraphqlAuthentication extends Plugin
         $entry = Craft::$app->getElements()->getElementById($id);
 
         if (!$entry) {
-            throw new Error("We couldn't find any matching entries");
+            throw new Error(ENTRY_NOT_FOUND);
         }
 
         if (!$entry->authorId) {
@@ -744,10 +755,9 @@ class GraphqlAuthentication extends Plugin
         }
 
         $scope = $this->_getHeaderToken()->getScope();
-        $error = "User doesn't have permission to perform this mutation";
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-            throw new Error($error);
+            throw new Error(FORBIDDEN_MUTATION);
         }
 
         $sections = Craft::$app->getSections();
@@ -762,7 +772,7 @@ class GraphqlAuthentication extends Plugin
                 continue;
             }
 
-            throw new Error($error);
+            throw new Error(FORBIDDEN_MUTATION);
         }
     }
 
@@ -771,7 +781,7 @@ class GraphqlAuthentication extends Plugin
         $asset = Craft::$app->getAssets()->getAssetById($id);
 
         if (!$asset) {
-            throw new Error("We couldn't find any matching assets");
+            throw new Error(ASSET_NOT_FOUND);
         }
 
         if (!$asset->uploaderId) {
@@ -785,10 +795,9 @@ class GraphqlAuthentication extends Plugin
         }
 
         $scope = $this->_getHeaderToken()->getScope();
-        $error = "User doesn't have permission to perform this mutation";
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-            throw new Error($error);
+            throw new Error(FORBIDDEN_MUTATION);
         }
 
         $volumes = Craft::$app->getVolumes()->getAllVolumes();
@@ -803,7 +812,7 @@ class GraphqlAuthentication extends Plugin
                 continue;
             }
 
-            throw new Error($error);
+            throw new Error(FORBIDDEN_MUTATION);
         }
     }
 
