@@ -395,9 +395,9 @@ class GraphqlAuthentication extends Plugin
             'type' => UserType::generateType(User::class),
             'args' => array_merge(
                 [
-                    'email' => Type::nonNull(Type::string()),
-                    'firstName' => Type::nonNull(Type::string()),
-                    'lastName' => Type::nonNull(Type::string()),
+                    'email' => Type::string(),
+                    'firstName' => Type::string(),
+                    'lastName' => Type::string(),
                 ],
                 UserArguments::getContentArguments(),
             ),
@@ -408,21 +408,17 @@ class GraphqlAuthentication extends Plugin
                     throw new Error("We couldn't update the user with the provided details");
                 }
 
-                $email = $arguments['email'];
-                $firstName = $arguments['firstName'];
-                $lastName = $arguments['lastName'];
-
-                if ($email) {
-                    $user->username = $email;
-                    $user->email = $email;
+                if (isset($arguments['email'])) {
+                    $user->username = $arguments['email'];
+                    $user->email = $arguments['email'];
                 }
 
-                if ($firstName) {
-                    $user->firstName = $firstName;
+                if (isset($arguments['firstName'])) {
+                    $user->firstName = $arguments['firstName'];
                 }
 
-                if ($lastName) {
-                    $user->lastName = $lastName;
+                if (isset($arguments['lastName'])) {
+                    $user->lastName = $arguments['lastName'];
                 }
 
                 $customFields = UserArguments::getContentArguments();
