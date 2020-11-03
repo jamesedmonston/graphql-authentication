@@ -323,7 +323,7 @@ class GraphqlAuthentication extends Plugin
         ];
 
         $event->mutations['setPassword'] = [
-            'description' => 'Sets password for unauthenticated users. Requires `code` and `id` from Craft reset password email. Returns success message.',
+            'description' => 'Sets password for unauthenticated user. Requires `code` and `id` from Craft reset password email. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [
                 'password' => Type::nonNull(Type::string()),
@@ -352,7 +352,7 @@ class GraphqlAuthentication extends Plugin
         ];
 
         $event->mutations['updatePassword'] = [
-            'description' => 'Updates password for authenticated users. Requires access token and current password. Returns success message.',
+            'description' => 'Updates password for authenticated user. Requires access token and current password. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [
                 'currentPassword' => Type::nonNull(Type::string()),
