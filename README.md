@@ -32,9 +32,9 @@ Once you've got the plugin installed, there are a few things that you'll need to
 
 ### Schema
 
-First up, create a separate schema for users with the desired permissions. This schema will be assigned to user tokens upon authenticating.
+First up, create a separate schema for users with the desired permissions. This schema will be assigned to user tokens upon authentication.
 
-Once you've got a schema you're happy with, head to the plugin settings (Settings → GraphQL Authentication) and select it.
+Once you're happy with your schema, head to the plugin settings (Settings → GraphQL Authentication) and select it.
 
 ### Token Expiration
 
