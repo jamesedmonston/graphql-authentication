@@ -8,6 +8,7 @@ class Settings extends Model
 {
     public $schemaId = null;
     public $expiration = null;
+    public $setCookie = null;
     public $userGroup = null;
     public $entryQueries = null;
     public $entryMutations = null;
@@ -18,7 +19,7 @@ class Settings extends Model
     {
         return [
             [['schemaId', 'expiration'], 'required'],
-            [['userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default'],
+            [['setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default'],
         ];
     }
 }

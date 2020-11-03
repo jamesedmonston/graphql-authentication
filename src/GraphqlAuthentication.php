@@ -220,7 +220,7 @@ class GraphqlAuthentication extends Plugin
         $gql = Craft::$app->getGql();
         $settings = $this->getSettings();
 
-        $tokenAndUser = Type::nonNull(
+        $tokenAndUserType = Type::nonNull(
             GqlEntityRegistry::createEntity('Auth', new ObjectType([
                 'name' => 'Auth',
                 'fields' => [
@@ -230,14 +230,23 @@ class GraphqlAuthentication extends Plugin
             ]))
         );
 
+        $userType = Type::nonNull(
+            GqlEntityRegistry::createEntity('Auth', new ObjectType([
+                'name' => 'Auth',
+                'fields' => [
+                    'user' => UserType::generateType(User::class),
+                ],
+            ]))
+        );
+
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
-            'type' => $tokenAndUser,
+            'type' => $this->getSettings()->setCookie ? $userType : $tokenAndUserType,
             'args' => [
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($users, $permissions) {
+            'resolve' => function ($source, array $arguments) use ($users, $permissions, $settings) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $user = $users->getUserByUsernameOrEmail($email);
@@ -264,8 +273,18 @@ class GraphqlAuthentication extends Plugin
                 $userRecord->lastLoginDate = $now;
                 $userRecord->save();
 
+                $token = $this->_generateToken($user);
+
+                if ($settings->setCookie) {
+                    $this->_setTokenCookie($token);
+
+                    return [
+                        'user' => $user,
+                    ];
+                }
+
                 return [
-                    'accessToken' => $this->_generateToken($user),
+                    'accessToken' => $token,
                     'user' => $user,
                 ];
             },
@@ -273,7 +292,7 @@ class GraphqlAuthentication extends Plugin
 
         $event->mutations['register'] = [
             'description' => 'Registers a user. Returns user and token.',
-            'type' => $tokenAndUser,
+            'type' => $this->getSettings()->setCookie ? $userType : $tokenAndUserType,
             'args' => array_merge(
                 [
                     'email' => Type::nonNull(Type::string()),
@@ -319,8 +338,18 @@ class GraphqlAuthentication extends Plugin
                 $userRecord->lastLoginDate = $now;
                 $userRecord->save();
 
+                $token = $this->_generateToken($user);
+
+                if ($settings->setCookie) {
+                    $this->_setTokenCookie($token);
+
+                    return [
+                        'user' => $user,
+                    ];
+                }
+
                 return [
-                    'accessToken' => $this->_generateToken($user),
+                    'accessToken' => $token,
                     'user' => $user,
                 ];
             },
@@ -667,6 +696,21 @@ class GraphqlAuthentication extends Plugin
 
     protected function _getHeaderToken(): GqlToken
     {
+        if ($this->getSettings()->setCookie && isset($_COOKIE['gql_accessToken'])) {
+            try {
+                $token = Craft::$app->getGql()->getTokenByAccessToken($_COOKIE['gql_accessToken']);
+            } catch (InvalidArgumentException $e) {
+                throw new InvalidArgumentException($e);
+            }
+
+            if (!isset($token)) {
+                throw new BadRequestHttpException(INVALID_HEADER);
+            }
+
+            $this->_validateTokenExpiry($token);
+            return $token;
+        }
+
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
@@ -694,11 +738,17 @@ class GraphqlAuthentication extends Plugin
             throw new BadRequestHttpException(INVALID_HEADER);
         }
 
-        if (strtotime(date('y-m-d H:i:s')) >= strtotime($token->expiryDate->format('y-m-d H:i:s'))) {
-            throw new BadRequestHttpException(INVALID_HEADER);
+        $this->_validateTokenExpiry($token);
+        return $token;
+    }
+
+    protected function _validateTokenExpiry(GqlToken $token)
+    {
+        if (strtotime(date('y-m-d H:i:s')) < strtotime($token->expiryDate->format('y-m-d H:i:s'))) {
+            return;
         }
 
-        return $token;
+        throw new BadRequestHttpException(INVALID_HEADER);
     }
 
     protected function _generateToken(User $user): string
@@ -729,6 +779,11 @@ class GraphqlAuthentication extends Plugin
         }
 
         return $accessToken;
+    }
+
+    protected function _setTokenCookie(string $token): bool
+    {
+        return setcookie('gql_accessToken', $token, '', null, '/', true, true);
     }
 
     protected function _extractUserIdFromToken(GqlToken $token): string

@@ -36,6 +36,15 @@
   required: true,
 }) }}
 
+{{ forms.field({
+  label: 'Use HTTP-Only cookie',
+  instructions: "Whether or not the `authenticate` and `register` mutations should set an HTTP-Only cookie (named `gql_accessToken`) which will be used for signing subsequent requests. If enabled, tokens won't be returned in the mutation responses.",
+  name: 'setCookie',
+}, forms.lightswitch({
+  name: 'setCookie',
+  on: settings.setCookie,
+})) }}
+
 {{ forms.selectField({
   label: 'User Group',
   instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
