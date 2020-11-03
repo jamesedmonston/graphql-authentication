@@ -223,7 +223,7 @@ class GraphqlAuthentication extends Plugin
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions) {
+            'resolve' => function ($source, array $arguments) use ($users, $permissions) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $user = $users->getUserByUsernameOrEmail($email);
