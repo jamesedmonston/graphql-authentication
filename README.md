@@ -306,3 +306,36 @@ query {
   }
 }
 ```
+
+## Things to be aware of
+
+### `authenticate` mutation
+
+When running the `authenticate` mutation, the parameters are passed directly to the [authenticate function](https://docs.craftcms.com/api/v3/craft-elements-user.html#method-authenticate) from Craft's `User` model. This function will fail validation if the user attempting to log in doesn't have access to the control panel.
+
+Because of this, the `authenticate` mutation temporarily grants control panel access, and removes it upon success or failure.
+
+The logic should run _very_ quickly, so users shouldn't ever _actually_ be able to access the control panel, but it's something to be aware of.
+
+```php
+// the logic behind temporarily granting control panel access
+
+$userPermissions = $permissions->getPermissionsByUserId($user->id);
+
+if (!in_array('accessCp', $userPermissions)) {
+    $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+}
+
+if (!$user->authenticate($password)) {
+    $permissions->saveUserPermissions($user->id, $userPermissions);
+    throw new Error($error);
+}
+
+$permissions->saveUserPermissions($user->id, $userPermissions);
+```
+
+### Category restrictions
+
+Due to the fact that categories don't have an `author`, it isn't currently possible to restrict categories in the same way as entries and assets.
+
+An alternative path would be to use entry sections as a replacement for categories, as this enables granular permission control.
