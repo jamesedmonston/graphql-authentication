@@ -359,7 +359,7 @@ class GraphqlAuthentication extends Plugin
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements) {
+            'resolve' => function ($source, array $arguments) use ($elements, $permissions) {
                 $user = $this->getUserFromToken();
                 $error = "We couldn't update the password with the provided details";
 
@@ -375,10 +375,18 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 $currentPassword = $arguments['currentPassword'];
+                $userPermissions = $permissions->getPermissionsByUserId($user->id);
+
+                if (!in_array('accessCp', $userPermissions)) {
+                    $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                }
 
                 if (!$user->authenticate($currentPassword)) {
+                    $permissions->saveUserPermissions($user->id, $userPermissions);
                     throw new Error($error);
                 }
+
+                $permissions->saveUserPermissions($user->id, $userPermissions);
 
                 $user->newPassword = $newPassword;
 
