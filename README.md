@@ -26,9 +26,9 @@ To install the plugin, follow these instructions.
 
 ## Configuring GraphQL Authentication
 
-![Plugin Settings](assets/plugin-settings.png)
-
 Once you've got the plugin installed, there are a few things that you'll need to tweak to get up and running:
+
+![Plugin Settings](assets/plugin-settings.png)
 
 ### Schema
 
