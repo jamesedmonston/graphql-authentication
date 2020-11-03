@@ -23,9 +23,11 @@ use craft\gql\GqlEntityRegistry;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\gql\types\generators\UserType;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
+use craft\records\User as UserRecord;
 use craft\services\Gql;
 use DateTime;
 use GraphQL\Error\Error;
@@ -221,7 +223,7 @@ class GraphqlAuthentication extends Plugin
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($users, $permissions) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $user = $users->getUserByUsernameOrEmail($email);
@@ -243,6 +245,11 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 $permissions->saveUserPermissions($user->id, $userPermissions);
+
+                $now = DateTimeHelper::currentUTCDateTime();
+                $userRecord = UserRecord::findOne($user->id);
+                $userRecord->lastLoginDate = $now;
+                $userRecord->save();
 
                 return [
                     'accessToken' => $this->_generateToken($user),
@@ -293,6 +300,11 @@ class GraphqlAuthentication extends Plugin
                 if ($settings->userGroup) {
                     $users->assignUserToGroups($user->id, [$settings->userGroup]);
                 }
+
+                $now = DateTimeHelper::currentUTCDateTime();
+                $userRecord = UserRecord::findOne($user->id);
+                $userRecord->lastLoginDate = $now;
+                $userRecord->save();
 
                 return [
                     'accessToken' => $this->_generateToken($user),
