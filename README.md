@@ -58,7 +58,7 @@ Hopefully by this point you've got everything installed and configured as needed
 
 ### Mutations
 
-We offer the following mutations for handling user authentication:
+The following mutations are available for handling user authentication:
 
 - [`authenticate`](#authenticate-mutation)
 - [`register`](#register-mutation)
@@ -278,7 +278,7 @@ mutation {
 
 ### Queries
 
-We offer the following queries for pulling user data:
+The following queries are available for pulling user data:
 
 - [`getUser`](#getuser-query)
 
@@ -336,6 +336,6 @@ $permissions->saveUserPermissions($user->id, $userPermissions);
 
 ### Category restrictions
 
-Due to the fact that categories don't have an `author`, it isn't currently possible to restrict categories in the same way as entries and assets.
+Due to the fact that categories don't have an `author`, it isn't currently possible to restrict them in the same way as entries and assets.
 
 An alternative path would be to use entry sections as a replacement for categories, as this enables granular permission control.
