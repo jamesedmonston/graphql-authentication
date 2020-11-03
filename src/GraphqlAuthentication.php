@@ -230,18 +230,9 @@ class GraphqlAuthentication extends Plugin
             ]))
         );
 
-        $userType = Type::nonNull(
-            GqlEntityRegistry::createEntity('Auth', new ObjectType([
-                'name' => 'Auth',
-                'fields' => [
-                    'user' => UserType::generateType(User::class),
-                ],
-            ]))
-        );
-
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
-            'type' => $this->getSettings()->setCookie ? $userType : $tokenAndUserType,
+            'type' => $tokenAndUserType,
             'args' => [
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
@@ -277,10 +268,6 @@ class GraphqlAuthentication extends Plugin
 
                 if ($settings->setCookie) {
                     $this->_setTokenCookie($token);
-
-                    return [
-                        'user' => $user,
-                    ];
                 }
 
                 return [
@@ -292,7 +279,7 @@ class GraphqlAuthentication extends Plugin
 
         $event->mutations['register'] = [
             'description' => 'Registers a user. Returns user and token.',
-            'type' => $this->getSettings()->setCookie ? $userType : $tokenAndUserType,
+            'type' => $tokenAndUserType,
             'args' => array_merge(
                 [
                     'email' => Type::nonNull(Type::string()),
@@ -342,10 +329,6 @@ class GraphqlAuthentication extends Plugin
 
                 if ($settings->setCookie) {
                     $this->_setTokenCookie($token);
-
-                    return [
-                        'user' => $user,
-                    ];
                 }
 
                 return [
