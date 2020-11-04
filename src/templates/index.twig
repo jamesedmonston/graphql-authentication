@@ -38,7 +38,7 @@
 
 {{ forms.field({
   label: 'Use HTTP-Only cookie',
-  instructions: "Whether or not the `authenticate` and `register` mutations should set an HTTP-Only cookie (named `gql_accessToken`) which will be used for signing subsequent requests automatically. Tokens are still returned in the mutation responses for use in mobile applications (e.g. iOS Keychain).",
+  instructions: "Whether or not the `authenticate` and `register` mutations should set an HTTP-Only cookie (named `gql_accessToken`) which will be used for signing subsequent requests automatically.",
   name: 'setCookie',
 }, forms.lightswitch({
   name: 'setCookie',

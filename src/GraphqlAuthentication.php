@@ -766,7 +766,25 @@ class GraphqlAuthentication extends Plugin
 
     protected function _setTokenCookie(string $token): bool
     {
-        return setcookie('gql_accessToken', $token, '', null, '/', true, true);
+        $settings = $this->getSettings();
+        $expiry = 0;
+
+        if ($settings->expiration) {
+            $expiry = strtotime((new DateTime())->modify("+ {$settings->expiration}")->format('Y-m-d H:i'));
+        }
+
+        if (PHP_VERSION_ID < 70300) {
+            return setcookie('gql_accessToken', $token, $expiry, '/; samesite=none', '', true, true);
+        }
+
+        return setcookie('gql_accessToken', $token, [
+            'expires' => $expiry,
+            'path' => '/',
+            'domain' => '',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'none',
+        ]);
     }
 
     protected function _extractUserIdFromToken(GqlToken $token): string
