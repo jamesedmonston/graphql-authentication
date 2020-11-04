@@ -39,6 +39,7 @@
 {{ forms.field({
   label: 'Use HTTP-Only cookie',
   instructions: "Whether or not the `authenticate` and `register` mutations should set an HTTP-Only cookie (named `gql_accessToken`) which will be used for signing subsequent requests automatically.",
+  warning: "If you're going to be authenticating from a remote origin, you will need to add that origin to the `allowedGraphqlOrigins` config setting in `general.php`.",
   name: 'setCookie',
 }, forms.lightswitch({
   name: 'setCookie',
