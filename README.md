@@ -42,6 +42,12 @@ Now you've got your schema set up, you'll need to set how long you'd like your t
 
 If requests are made with an expired token, responses will `throw` with `Invalid Authorization Header`.
 
+### HTTP-Only Cookie
+
+Here you can choose wether or not the `authenticate` and `register` mutations should set an HTTP-Only cookie (named `gql_accessToken`) which will be used for signing subsequent requests automatically. Doing this prevents the token being accessible through JavaScript.
+
+Tokens can still be retrieved from the response of these mutations, for use in native apps – where cookies aren't available.
+
 ### User Group
 
 If users will also have access to the Craft control panel, you can choose which user group they will be assigned to at registration time.
