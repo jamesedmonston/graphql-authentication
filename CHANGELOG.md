@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- Added support for HTTP-Only cookie tokens, improving security (thanks @timkelty)
+- Added support for HTTP-Only cookie tokens, improving security (thanks [@timkelty](https://github.com/timkelty))
 
 ## 1.0.1 - 2020-11-03
 
