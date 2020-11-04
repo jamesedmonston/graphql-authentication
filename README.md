@@ -79,7 +79,8 @@ The following mutations are available for handling user authentication:
 
 Logs a user in.
 
-Use the token returned here as your `Authorization` header to sign subsequent calls (e.g. `Authorization: Bearer {tokenValue}`).
+If you have enabled the 'Use HTTP-Only Cookie' setting, subsequent calls will use the access token automatically via the cookie.
+Otherwise, use the token returned here as your `Authorization` header (e.g. `Authorization: Bearer {tokenValue}`).
 
 Publically available. Does not require `Authorization` header.
 
@@ -115,7 +116,8 @@ mutation {
 
 Registers a user.
 
-Use the token returned here as your `Authorization` header to sign subsequent calls (e.g. `Authorization: Bearer {tokenValue}`).
+If you have enabled the 'Use HTTP-Only Cookie' setting, subsequent calls will use the access token automatically via the cookie.
+Otherwise, use the token returned here as your `Authorization` header (e.g. `Authorization: Bearer {tokenValue}`).
 
 Publically available. Does not require `Authorization` header.
 
