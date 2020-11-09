@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
+- Added empty fallback to `Craft::$app->getRequest()->getReferrer()`, to fix error if referrer is blank
+
+## 1.1.1 - 2020-11-09
+
+### Fixed
+
 - Fixed issue with `isGraphiqlRequest` always returning `true`, breaking Craft's GraphiQL explorer
 
 ## 1.1.0 - 2020-11-04
