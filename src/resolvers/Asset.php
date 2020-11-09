@@ -11,6 +11,7 @@ use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\helpers\StringHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -40,26 +41,30 @@ class Asset extends ElementResolver
         }
 
         if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+            $token = GraphqlAuthentication::$plugin->getHeaderToken();
 
-            if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                unset($arguments['uploader']);
-                $authorOnlyVolumes = GraphqlAuthentication::$plugin->getSettings()->assetQueries ?? [];
+            if (StringHelper::contains($token, 'user-')) {
+                $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
 
-                foreach ($authorOnlyVolumes as $volume => $value) {
-                    if (!(bool) $value) {
-                        continue;
+                if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
+                    unset($arguments['uploader']);
+                    $authorOnlyVolumes = GraphqlAuthentication::$plugin->getSettings()->assetQueries ?? [];
+
+                    foreach ($authorOnlyVolumes as $volume => $value) {
+                        if (!(bool) $value) {
+                            continue;
+                        }
+
+                        if (isset($arguments['volume']) && trim($arguments['volume'][0]) !== $volume) {
+                            continue;
+                        }
+
+                        if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== Craft::$app->getVolumes()->getVolumeByHandle($volume)->id) {
+                            continue;
+                        }
+
+                        $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
                     }
-
-                    if (isset($arguments['volume']) && trim($arguments['volume'][0]) !== $volume) {
-                        continue;
-                    }
-
-                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== Craft::$app->getVolumes()->getVolumeByHandle($volume)->id) {
-                        continue;
-                    }
-
-                    $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
                 }
             }
         }
