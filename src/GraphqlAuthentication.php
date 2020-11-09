@@ -488,7 +488,7 @@ class GraphqlAuthentication extends Plugin
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
             'resolve' => function () use ($gql) {
-                $token = $this->_getHeaderToken();
+                $token = $this->getHeaderToken();
 
                 if (!$token) {
                     throw new Error(TOKEN_NOT_FOUND);
@@ -659,25 +659,7 @@ class GraphqlAuthentication extends Plugin
         }
     }
 
-    public function getUserFromToken(): User
-    {
-        return Craft::$app->getUsers()->getUserById($this->_extractUserIdFromToken($this->_getHeaderToken()));
-    }
-
-    public function isGraphiqlRequest(): bool
-    {
-        return StringHelper::contains(Craft::$app->getRequest()->getReferrer() ?? '', UrlHelper::cpUrl() . 'graphiql');
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    protected function _isSchemaSet(): bool
-    {
-        return (bool) isset($this->getSettings()->schemaId);
-    }
-
-    protected function _getHeaderToken(): GqlToken
+    public function getHeaderToken(): GqlToken
     {
         if ($this->getSettings()->setCookie && isset($_COOKIE['gql_accessToken'])) {
             try {
@@ -725,8 +707,30 @@ class GraphqlAuthentication extends Plugin
         return $token;
     }
 
+    public function getUserFromToken(): User
+    {
+        return Craft::$app->getUsers()->getUserById($this->_extractUserIdFromToken($this->getHeaderToken()));
+    }
+
+    public function isGraphiqlRequest(): bool
+    {
+        return StringHelper::contains(Craft::$app->getRequest()->getReferrer() ?? '', UrlHelper::cpUrl() . 'graphiql');
+    }
+
+    // Protected Methods
+    // =========================================================================
+
+    protected function _isSchemaSet(): bool
+    {
+        return (bool) isset($this->getSettings()->schemaId);
+    }
+
     protected function _validateTokenExpiry(GqlToken $token)
     {
+        if (!$token->expiryDate) {
+            return;
+        }
+
         if (strtotime(date('y-m-d H:i:s')) < strtotime($token->expiryDate->format('y-m-d H:i:s'))) {
             return;
         }
@@ -810,7 +814,7 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        $scope = $this->_getHeaderToken()->getScope();
+        $scope = $this->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             throw new Error(FORBIDDEN_MUTATION);
@@ -850,7 +854,7 @@ class GraphqlAuthentication extends Plugin
             return;
         }
 
-        $scope = $this->_getHeaderToken()->getScope();
+        $scope = $this->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             throw new Error(FORBIDDEN_MUTATION);
