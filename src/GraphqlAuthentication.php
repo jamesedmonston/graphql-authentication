@@ -714,7 +714,7 @@ class GraphqlAuthentication extends Plugin
 
     public function isGraphiqlRequest(): bool
     {
-        return StringHelper::contains(Craft::$app->getRequest()->getReferrer() ?? '', UrlHelper::cpUrl() . 'graphiql');
+        return StringHelper::contains((Craft::$app->getRequest()->getReferrer() ?? '') . 'graphiql', UrlHelper::cpUrl() . 'graphiql');
     }
 
     // Protected Methods
