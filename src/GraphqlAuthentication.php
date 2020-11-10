@@ -530,7 +530,7 @@ class GraphqlAuthentication extends Plugin
 
     public function restrictMutationFields(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
+        if (!$this->_shouldRestrictRequests()) {
             return;
         }
 
@@ -599,7 +599,7 @@ class GraphqlAuthentication extends Plugin
 
     public function ensureEntryMutationAllowed(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
+        if (!$this->_shouldRestrictRequests()) {
             return;
         }
 
@@ -630,7 +630,7 @@ class GraphqlAuthentication extends Plugin
 
     public function ensureAssetMutationAllowed(ModelEvent $event)
     {
-        if (!Craft::$app->getRequest()->getBodyParam('query') || $this->isGraphiqlRequest()) {
+        if (!$this->_shouldRestrictRequests()) {
             return;
         }
 
@@ -874,6 +874,17 @@ class GraphqlAuthentication extends Plugin
 
             throw new Error(FORBIDDEN_MUTATION);
         }
+    }
+
+    protected function _shouldRestrictRequests(): bool
+    {
+        $request = Craft::$app->getRequest();
+
+        if ($request->isConsoleRequest || $this->isGraphiqlRequest()) {
+            return false;
+        }
+
+        return (bool) $request->getBodyParam('query');
     }
 
     protected function createSettingsModel()
