@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.5 - 2020-11-10
+
+### Fixed
+
+- Fixed issue with project config sync throwing `Calling unknown method: craft\console\Request::getBodyParam()`
+
 ## 1.1.4 - 2020-11-09
 
 ### Improved
