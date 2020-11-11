@@ -305,11 +305,15 @@ class GraphqlAuthentication extends Plugin
                 $customFields = UserArguments::getContentArguments();
 
                 foreach ($customFields as $key) {
+                    if (is_array($key) && isset($key['name'])) {
+                        $key = $key['name'];
+                    }
+
                     if (!isset($arguments[$key]) || !count($arguments[$key])) {
                         continue;
                     }
 
-                    $user->{$key} = $arguments[$key][0];
+                    $user->setFieldValue($key, $arguments[$key][0]);
                 }
 
                 if (!$elements->saveElement($user)) {
@@ -447,7 +451,7 @@ class GraphqlAuthentication extends Plugin
                 ],
                 UserArguments::getContentArguments(),
             ),
-            'resolve' => function ($source, array $arguments) use ($elements) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users) {
                 $user = $this->getUserFromToken();
 
                 if (!$user) {
@@ -469,12 +473,16 @@ class GraphqlAuthentication extends Plugin
 
                 $customFields = UserArguments::getContentArguments();
 
-                foreach ($customFields as $key) {
+                foreach ($customFields as &$key) {
+                    if (is_array($key) && isset($key['name'])) {
+                        $key = $key['name'];
+                    }
+
                     if (!isset($arguments[$key]) || !count($arguments[$key])) {
                         continue;
                     }
 
-                    $user->{$key} = $arguments[$key][0];
+                    $user->setFieldValue($key, $arguments[$key][0]);
                 }
 
                 if (!$elements->saveElement($user)) {
