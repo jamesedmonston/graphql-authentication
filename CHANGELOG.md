@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.6 - 2020-11-11
+
+### Fixed
+
+- Fixed issue with `updatePassword` mutation failing validation
+- Fixed issue with custom fields on users not setting correct values on `register` and `updateUser` mutations
+
 ## 1.1.5 - 2020-11-10
 
 ### Fixed
