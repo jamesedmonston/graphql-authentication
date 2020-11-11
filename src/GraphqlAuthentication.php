@@ -396,7 +396,7 @@ class GraphqlAuthentication extends Plugin
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $permissions) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions) {
                 $user = $this->getUserFromToken();
 
                 if (!$user) {
@@ -416,6 +416,8 @@ class GraphqlAuthentication extends Plugin
                 if (!in_array('accessCp', $userPermissions)) {
                     $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
                 }
+
+                $user = $users->getUserByUsernameOrEmail($user->email);
 
                 if (!$user->authenticate($currentPassword)) {
                     $permissions->saveUserPermissions($user->id, $userPermissions);
