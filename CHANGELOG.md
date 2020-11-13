@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.7 - 2020-11-13
+
+### Fixed
+
+- Fixed issue with trailing commas in function calls causing an error on environments running PHP <7.3
+
 ## 1.1.6 - 2020-11-11
 
 ### Fixed
