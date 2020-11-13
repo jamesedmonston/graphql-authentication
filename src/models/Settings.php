@@ -19,7 +19,7 @@ class Settings extends Model
     {
         return [
             [['schemaId', 'expiration'], 'required'],
-            [['setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default'],
+            [['setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default']
         ];
     }
 }

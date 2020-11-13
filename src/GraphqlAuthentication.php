@@ -104,13 +104,13 @@ class GraphqlAuthentication extends Plugin
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
-            [$this, 'registerGqlQueries'],
+            [$this, 'registerGqlQueries']
         );
 
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_MUTATIONS,
-            [$this, 'registerGqlMutations'],
+            [$this, 'registerGqlMutations']
         );
 
         Event::on(
@@ -119,13 +119,13 @@ class GraphqlAuthentication extends Plugin
             function (ModelEvent $event) {
                 $this->restrictMutationFields($event);
                 $this->ensureEntryMutationAllowed($event);
-            },
+            }
         );
 
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_DELETE,
-            [$this, 'ensureEntryMutationAllowed'],
+            [$this, 'ensureEntryMutationAllowed']
         );
 
         Event::on(
@@ -134,13 +134,13 @@ class GraphqlAuthentication extends Plugin
             function (ModelEvent $event) {
                 $this->restrictMutationFields($event);
                 $this->ensureAssetMutationAllowed($event);
-            },
+            }
         );
 
         Event::on(
             Asset::class,
             Asset::EVENT_BEFORE_DELETE,
-            [$this, 'ensureAssetMutationAllowed'],
+            [$this, 'ensureAssetMutationAllowed']
         );
     }
 
@@ -154,42 +154,42 @@ class GraphqlAuthentication extends Plugin
             'description' => 'This query is used to query for entries.',
             'type' => Type::listOf(EntryInterface::getType()),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolve',
+            'resolve' => EntryResolver::class . '::resolve'
         ];
 
         $event->queries['entry'] = [
             'description' => 'This query is used to query for a single entry.',
             'type' => EntryInterface::getType(),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolveOne',
+            'resolve' => EntryResolver::class . '::resolveOne'
         ];
 
         $event->queries['entryCount'] = [
             'description' => 'This query is used to return the number of entries.',
             'type' => Type::nonNull(Type::int()),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolveCount',
+            'resolve' => EntryResolver::class . '::resolveCount'
         ];
 
         $event->queries['assets'] = [
             'description' => 'This query is used to query for assets.',
             'type' => Type::listOf(AssetInterface::getType()),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolve',
+            'resolve' => AssetResolver::class . '::resolve'
         ];
 
         $event->queries['asset'] = [
             'description' => 'This query is used to query for a single asset.',
             'type' => AssetInterface::getType(),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolveOne',
+            'resolve' => AssetResolver::class . '::resolveOne'
         ];
 
         $event->queries['assetCount'] = [
             'description' => 'This query is used to return the number of assets.',
             'type' => Type::nonNull(Type::int()),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolveCount',
+            'resolve' => AssetResolver::class . '::resolveCount'
         ];
 
         $event->queries['getUser'] = [
@@ -204,7 +204,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return $user;
-            },
+            }
         ];
     }
 
@@ -225,8 +225,8 @@ class GraphqlAuthentication extends Plugin
                 'name' => 'Auth',
                 'fields' => [
                     'accessToken' => Type::nonNull(Type::string()),
-                    'user' => UserType::generateType(User::class),
-                ],
+                    'user' => UserType::generateType(User::class)
+                ]
             ]))
         );
 
@@ -235,7 +235,7 @@ class GraphqlAuthentication extends Plugin
             'type' => $tokenAndUserType,
             'args' => [
                 'email' => Type::nonNull(Type::string()),
-                'password' => Type::nonNull(Type::string()),
+                'password' => Type::nonNull(Type::string())
             ],
             'resolve' => function ($source, array $arguments) use ($users, $permissions, $settings) {
                 $email = $arguments['email'];
@@ -272,9 +272,9 @@ class GraphqlAuthentication extends Plugin
 
                 return [
                     'accessToken' => $token,
-                    'user' => $user,
+                    'user' => $user
                 ];
-            },
+            }
         ];
 
         $event->mutations['register'] = [
@@ -285,9 +285,9 @@ class GraphqlAuthentication extends Plugin
                     'email' => Type::nonNull(Type::string()),
                     'password' => Type::nonNull(Type::string()),
                     'firstName' => Type::nonNull(Type::string()),
-                    'lastName' => Type::nonNull(Type::string()),
+                    'lastName' => Type::nonNull(Type::string())
                 ],
-                UserArguments::getContentArguments(),
+                UserArguments::getContentArguments()
             ),
             'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
                 $email = $arguments['email'];
@@ -337,16 +337,16 @@ class GraphqlAuthentication extends Plugin
 
                 return [
                     'accessToken' => $token,
-                    'user' => $user,
+                    'user' => $user
                 ];
-            },
+            }
         ];
 
         $event->mutations['forgottenPassword'] = [
             'description' => "Sends a password reset email to the user's email address. Returns success message.",
             'type' => Type::nonNull(Type::string()),
             'args' => [
-                'email' => Type::nonNull(Type::string()),
+                'email' => Type::nonNull(Type::string())
             ],
             'resolve' => function ($source, array $arguments) use ($users) {
                 $email = $arguments['email'];
@@ -360,7 +360,7 @@ class GraphqlAuthentication extends Plugin
                 $users->sendPasswordResetEmail($user);
 
                 return $message;
-            },
+            }
         ];
 
         $event->mutations['setPassword'] = [
@@ -369,7 +369,7 @@ class GraphqlAuthentication extends Plugin
             'args' => [
                 'password' => Type::nonNull(Type::string()),
                 'code' => Type::nonNull(Type::string()),
-                'id' => Type::nonNull(Type::string()),
+                'id' => Type::nonNull(Type::string())
             ],
             'resolve' => function ($source, array $arguments) use ($elements, $users) {
                 $password = $arguments['password'];
@@ -389,7 +389,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return 'Successfully saved password';
-            },
+            }
         ];
 
         $event->mutations['updatePassword'] = [
@@ -398,7 +398,7 @@ class GraphqlAuthentication extends Plugin
             'args' => [
                 'currentPassword' => Type::nonNull(Type::string()),
                 'newPassword' => Type::nonNull(Type::string()),
-                'confirmPassword' => Type::nonNull(Type::string()),
+                'confirmPassword' => Type::nonNull(Type::string())
             ],
             'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions) {
                 $user = $this->getUserFromToken();
@@ -437,7 +437,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return 'Successfully updated password';
-            },
+            }
         ];
 
         $event->mutations['updateUser'] = [
@@ -447,9 +447,9 @@ class GraphqlAuthentication extends Plugin
                 [
                     'email' => Type::string(),
                     'firstName' => Type::string(),
-                    'lastName' => Type::string(),
+                    'lastName' => Type::string()
                 ],
-                UserArguments::getContentArguments(),
+                UserArguments::getContentArguments()
             ),
             'resolve' => function ($source, array $arguments) use ($elements, $users) {
                 $user = $this->getUserFromToken();
@@ -490,7 +490,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return $user;
-            },
+            }
         ];
 
         $event->mutations['deleteCurrentToken'] = [
@@ -507,7 +507,7 @@ class GraphqlAuthentication extends Plugin
                 $gql->deleteTokenById($token->id);
 
                 return true;
-            },
+            }
         ];
 
         $event->mutations['deleteAllTokens'] = [
@@ -534,7 +534,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return true;
-            },
+            }
         ];
     }
 
@@ -762,7 +762,7 @@ class GraphqlAuthentication extends Plugin
             'name' => "user-{$user->id}-{$time}",
             'accessToken' => $accessToken,
             'enabled' => true,
-            'schemaId' => $settings->schemaId,
+            'schemaId' => $settings->schemaId
         ];
 
         if ($settings->expiration) {
@@ -797,7 +797,7 @@ class GraphqlAuthentication extends Plugin
             'domain' => '',
             'secure' => true,
             'httponly' => true,
-            'samesite' => 'none',
+            'samesite' => 'none'
         ]);
     }
 
@@ -915,21 +915,21 @@ class GraphqlAuthentication extends Plugin
         $userOptions = [
             [
                 'label' => '',
-                'value' => '',
+                'value' => ''
             ]
         ];
 
         foreach ($userGroups as $userGroup) {
             $userOptions[] = [
                 'label' => $userGroup->name,
-                'value' => $userGroup->id,
+                'value' => $userGroup->id
             ];
         }
 
         $schemaOptions = [
             [
                 'label' => '',
-                'value' => '',
+                'value' => ''
             ]
         ];
 
@@ -940,7 +940,7 @@ class GraphqlAuthentication extends Plugin
 
             $schemaOptions[] = [
                 'label' => $schema->name,
-                'value' => $schema->id,
+                'value' => $schema->id
             ];
         }
 
@@ -980,7 +980,7 @@ class GraphqlAuthentication extends Plugin
 
                     $entryQueries[$name] = [
                         'label' => $name,
-                        'handle' => $handle,
+                        'handle' => $handle
                     ];
 
                     continue;
@@ -992,7 +992,7 @@ class GraphqlAuthentication extends Plugin
 
                 $entryMutations[$name] = [
                     'label' => $name,
-                    'handle' => $handle,
+                    'handle' => $handle
                 ];
             }
 
@@ -1020,7 +1020,7 @@ class GraphqlAuthentication extends Plugin
 
                     $assetQueries[$name] = [
                         'label' => $name,
-                        'handle' => $handle,
+                        'handle' => $handle
                     ];
 
                     continue;
@@ -1032,7 +1032,7 @@ class GraphqlAuthentication extends Plugin
 
                 $assetMutations[$name] = [
                     'label' => $name,
-                    'handle' => $handle,
+                    'handle' => $handle
                 ];
             }
         }
@@ -1044,7 +1044,7 @@ class GraphqlAuthentication extends Plugin
             'entryQueries' => $entryQueries,
             'entryMutations' => $entryMutations,
             'assetQueries' => $assetQueries,
-            'assetMutations' => $assetMutations,
+            'assetMutations' => $assetMutations
         ]);
     }
 }
