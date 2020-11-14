@@ -316,12 +316,22 @@ class GraphqlAuthentication extends Plugin
                     $user->setFieldValue($key, $arguments[$key][0]);
                 }
 
+                $requiresVerification = Craft::$app->getProjectConfig()->get('users.requireEmailVerification');
+
+                if ($requiresVerification) {
+                    $user->pending = true;
+                }
+
                 if (!$elements->saveElement($user)) {
                     throw new Error(json_encode($user->getErrors()));
                 }
 
                 if ($settings->userGroup) {
                     $users->assignUserToGroups($user->id, [$settings->userGroup]);
+                }
+
+                if ($requiresVerification) {
+                    $users->sendActivationEmail($user);
                 }
 
                 $now = DateTimeHelper::currentUTCDateTime();
