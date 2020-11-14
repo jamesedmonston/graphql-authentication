@@ -18,8 +18,8 @@ class Settings extends Model
     public function rules()
     {
         return [
-            [['schemaId', 'expiration'], 'required'],
-            [['setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default']
+            [['schemaId'], 'required'],
+            [['expiration', 'setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default']
         ];
     }
 }
