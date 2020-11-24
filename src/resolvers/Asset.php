@@ -30,7 +30,7 @@ class Asset extends ElementResolver
         // If this is the beginning of a resolver chain, start fresh
         if ($source === null) {
             $query = AssetElement::find();
-        // If not, get the prepared element query
+            // If not, get the prepared element query
         } else {
             $query = $source->$fieldName;
         }
@@ -41,10 +41,10 @@ class Asset extends ElementResolver
         }
 
         if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            $token = GraphqlAuthentication::$plugin->getHeaderToken();
+            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
 
             if (StringHelper::contains($token, 'user-')) {
-                $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+                $arguments['uploader'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
 
                 if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
                     unset($arguments['uploader']);
@@ -63,7 +63,7 @@ class Asset extends ElementResolver
                             continue;
                         }
 
-                        $arguments['uploader'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+                        $arguments['uploader'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
                     }
                 }
             }

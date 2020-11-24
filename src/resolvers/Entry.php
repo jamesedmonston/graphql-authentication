@@ -30,7 +30,7 @@ class Entry extends ElementResolver
         // If this is the beginning of a resolver chain, start fresh
         if ($source === null) {
             $query = EntryElement::find();
-        // If not, get the prepared element query
+            // If not, get the prepared element query
         } else {
             $query = $source->$fieldName;
         }
@@ -41,10 +41,10 @@ class Entry extends ElementResolver
         }
 
         if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            $token = GraphqlAuthentication::$plugin->getHeaderToken();
+            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
 
             if (StringHelper::contains($token, 'user-')) {
-                $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+                $arguments['authorId'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
 
                 if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                     unset($arguments['authorId']);
@@ -63,7 +63,7 @@ class Entry extends ElementResolver
                             continue;
                         }
 
-                        $arguments['authorId'] = GraphqlAuthentication::$plugin->getUserFromToken()->id;
+                        $arguments['authorId'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
                     }
                 }
             }
