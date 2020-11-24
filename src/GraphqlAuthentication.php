@@ -30,6 +30,7 @@ use craft\models\GqlToken;
 use craft\records\User as UserRecord;
 use craft\services\Gql;
 use DateTime;
+use Google_Client;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
@@ -154,42 +155,42 @@ class GraphqlAuthentication extends Plugin
             'description' => 'This query is used to query for entries.',
             'type' => Type::listOf(EntryInterface::getType()),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolve'
+            'resolve' => EntryResolver::class . '::resolve',
         ];
 
         $event->queries['entry'] = [
             'description' => 'This query is used to query for a single entry.',
             'type' => EntryInterface::getType(),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolveOne'
+            'resolve' => EntryResolver::class . '::resolveOne',
         ];
 
         $event->queries['entryCount'] = [
             'description' => 'This query is used to return the number of entries.',
             'type' => Type::nonNull(Type::int()),
             'args' => EntryArguments::getArguments(),
-            'resolve' => EntryResolver::class . '::resolveCount'
+            'resolve' => EntryResolver::class . '::resolveCount',
         ];
 
         $event->queries['assets'] = [
             'description' => 'This query is used to query for assets.',
             'type' => Type::listOf(AssetInterface::getType()),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolve'
+            'resolve' => AssetResolver::class . '::resolve',
         ];
 
         $event->queries['asset'] = [
             'description' => 'This query is used to query for a single asset.',
             'type' => AssetInterface::getType(),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolveOne'
+            'resolve' => AssetResolver::class . '::resolveOne',
         ];
 
         $event->queries['assetCount'] = [
             'description' => 'This query is used to return the number of assets.',
             'type' => Type::nonNull(Type::int()),
             'args' => AssetArguments::getArguments(),
-            'resolve' => AssetResolver::class . '::resolveCount'
+            'resolve' => AssetResolver::class . '::resolveCount',
         ];
 
         $event->queries['getUser'] = [
@@ -204,7 +205,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return $user;
-            }
+            },
         ];
     }
 
@@ -225,8 +226,8 @@ class GraphqlAuthentication extends Plugin
                 'name' => 'Auth',
                 'fields' => [
                     'accessToken' => Type::nonNull(Type::string()),
-                    'user' => UserType::generateType(User::class)
-                ]
+                    'user' => UserType::generateType(User::class),
+                ],
             ]))
         );
 
@@ -235,46 +236,17 @@ class GraphqlAuthentication extends Plugin
             'type' => $tokenAndUserType,
             'args' => [
                 'email' => Type::nonNull(Type::string()),
-                'password' => Type::nonNull(Type::string())
+                'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($users, $permissions, $settings) {
-                $email = $arguments['email'];
-                $password = $arguments['password'];
-                $user = $users->getUserByUsernameOrEmail($email);
-
-                if (!$user) {
-                    throw new Error(INVALID_LOGIN);
-                }
-
-                $userPermissions = $permissions->getPermissionsByUserId($user->id);
-
-                if (!in_array('accessCp', $userPermissions)) {
-                    $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
-                }
-
-                if (!$user->authenticate($password)) {
-                    $permissions->saveUserPermissions($user->id, $userPermissions);
-                    throw new Error(INVALID_LOGIN);
-                }
-
-                $permissions->saveUserPermissions($user->id, $userPermissions);
-
-                $now = DateTimeHelper::currentUTCDateTime();
-                $userRecord = UserRecord::findOne($user->id);
-                $userRecord->lastLoginDate = $now;
-                $userRecord->save();
-
+            'resolve' => function ($source, array $arguments) {
+                $user = $this->_authenticateUser($arguments);
                 $token = $this->_generateToken($user);
-
-                if ($settings->setCookie) {
-                    $this->_setTokenCookie($token);
-                }
 
                 return [
                     'accessToken' => $token,
-                    'user' => $user
+                    'user' => $user,
                 ];
-            }
+            },
         ];
 
         $event->mutations['register'] = [
@@ -285,78 +257,26 @@ class GraphqlAuthentication extends Plugin
                     'email' => Type::nonNull(Type::string()),
                     'password' => Type::nonNull(Type::string()),
                     'firstName' => Type::nonNull(Type::string()),
-                    'lastName' => Type::nonNull(Type::string())
+                    'lastName' => Type::nonNull(Type::string()),
                 ],
                 UserArguments::getContentArguments()
             ),
             'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
-                $email = $arguments['email'];
-                $password = $arguments['password'];
-                $firstName = $arguments['firstName'];
-                $lastName = $arguments['lastName'];
-
-                $user = new User();
-                $user->username = $email;
-                $user->email = $email;
-                $user->newPassword = $password;
-                $user->firstName = $firstName;
-                $user->lastName = $lastName;
-
-                $customFields = UserArguments::getContentArguments();
-
-                foreach ($customFields as $key) {
-                    if (is_array($key) && isset($key['name'])) {
-                        $key = $key['name'];
-                    }
-
-                    if (!isset($arguments[$key]) || !count($arguments[$key])) {
-                        continue;
-                    }
-
-                    $user->setFieldValue($key, $arguments[$key][0]);
-                }
-
-                $requiresVerification = Craft::$app->getProjectConfig()->get('users.requireEmailVerification');
-
-                if ($requiresVerification) {
-                    $user->pending = true;
-                }
-
-                if (!$elements->saveElement($user)) {
-                    throw new Error(json_encode($user->getErrors()));
-                }
-
-                if ($settings->userGroup) {
-                    $users->assignUserToGroups($user->id, [$settings->userGroup]);
-                }
-
-                if ($requiresVerification) {
-                    $users->sendActivationEmail($user);
-                }
-
-                $now = DateTimeHelper::currentUTCDateTime();
-                $userRecord = UserRecord::findOne($user->id);
-                $userRecord->lastLoginDate = $now;
-                $userRecord->save();
-
+                $user = $this->_createUser($arguments);
                 $token = $this->_generateToken($user);
-
-                if ($settings->setCookie) {
-                    $this->_setTokenCookie($token);
-                }
 
                 return [
                     'accessToken' => $token,
-                    'user' => $user
+                    'user' => $user,
                 ];
-            }
+            },
         ];
 
         $event->mutations['forgottenPassword'] = [
             'description' => "Sends a password reset email to the user's email address. Returns success message.",
             'type' => Type::nonNull(Type::string()),
             'args' => [
-                'email' => Type::nonNull(Type::string())
+                'email' => Type::nonNull(Type::string()),
             ],
             'resolve' => function ($source, array $arguments) use ($users) {
                 $email = $arguments['email'];
@@ -370,7 +290,7 @@ class GraphqlAuthentication extends Plugin
                 $users->sendPasswordResetEmail($user);
 
                 return $message;
-            }
+            },
         ];
 
         $event->mutations['setPassword'] = [
@@ -379,7 +299,7 @@ class GraphqlAuthentication extends Plugin
             'args' => [
                 'password' => Type::nonNull(Type::string()),
                 'code' => Type::nonNull(Type::string()),
-                'id' => Type::nonNull(Type::string())
+                'id' => Type::nonNull(Type::string()),
             ],
             'resolve' => function ($source, array $arguments) use ($elements, $users) {
                 $password = $arguments['password'];
@@ -399,7 +319,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return 'Successfully saved password';
-            }
+            },
         ];
 
         $event->mutations['updatePassword'] = [
@@ -408,7 +328,7 @@ class GraphqlAuthentication extends Plugin
             'args' => [
                 'currentPassword' => Type::nonNull(Type::string()),
                 'newPassword' => Type::nonNull(Type::string()),
-                'confirmPassword' => Type::nonNull(Type::string())
+                'confirmPassword' => Type::nonNull(Type::string()),
             ],
             'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions) {
                 $user = $this->getUserFromToken();
@@ -447,7 +367,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return 'Successfully updated password';
-            }
+            },
         ];
 
         $event->mutations['updateUser'] = [
@@ -457,7 +377,7 @@ class GraphqlAuthentication extends Plugin
                 [
                     'email' => Type::string(),
                     'firstName' => Type::string(),
-                    'lastName' => Type::string()
+                    'lastName' => Type::string(),
                 ],
                 UserArguments::getContentArguments()
             ),
@@ -500,7 +420,7 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return $user;
-            }
+            },
         ];
 
         $event->mutations['deleteCurrentToken'] = [
@@ -517,7 +437,7 @@ class GraphqlAuthentication extends Plugin
                 $gql->deleteTokenById($token->id);
 
                 return true;
-            }
+            },
         ];
 
         $event->mutations['deleteAllTokens'] = [
@@ -544,7 +464,63 @@ class GraphqlAuthentication extends Plugin
                 }
 
                 return true;
-            }
+            },
+        ];
+
+        $event->mutations['googleSignIn'] = [
+            'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
+            'type' => $tokenAndUserType,
+            'args' => [
+                'idToken' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($source, array $arguments) use ($users, $settings) {
+                if (!$settings->googleClientId) {
+                    throw new Error('No Google Client ID exists');
+                }
+
+                $client = new Google_Client(['client_id' => $settings->googleClientId]);
+                $payload = $client->verifyIdToken($arguments['idToken']);
+
+                if (!$payload) {
+                    throw new Error('Invalid Token ID');
+                }
+
+                $email = $payload['email'];
+
+                if (!$email || !isset($email)) {
+                    throw new Error('No email in scope');
+                }
+
+                if ($settings->allowedGoogleDomains) {
+                    $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $settings->allowedGoogleDomains));
+                    $hd = $payload['hd'];
+
+                    if (!in_array($hd, $domains)) {
+                        throw new Error("Email address doesn't match allowed Google domains");
+                    }
+                }
+
+                $user = $users->getUserByUsernameOrEmail($email);
+
+                if (!$user) {
+                    $firstName = $payload['given_name'];
+                    $lastName = $payload['family_name'];
+
+                    $user = $this->_createUser([
+                        'email' => $email,
+                        'password' => '',
+                        'firstName' => $firstName,
+                        'lastName' => $lastName,
+                    ]);
+                }
+
+                $token = $this->_generateToken($user);
+
+                return [
+                    'accessToken' => $token,
+                    'user' => $user,
+                ];
+            },
         ];
     }
 
@@ -745,6 +721,104 @@ class GraphqlAuthentication extends Plugin
         return (bool) isset($this->getSettings()->schemaId);
     }
 
+    // TO-DO: Move user authentication into separate service
+
+    protected function _authenticateUser(array $arguments): User
+    {
+        $email = $arguments['email'];
+        $password = $arguments['password'];
+
+        $users = Craft::$app->getUsers();
+        $user = $users->getUserByUsernameOrEmail($email);
+
+        if (!$user) {
+            throw new Error(INVALID_LOGIN);
+        }
+
+        $permissions = Craft::$app->getUserPermissions();
+        $userPermissions = $permissions->getPermissionsByUserId($user->id);
+
+        if (!in_array('accessCp', $userPermissions)) {
+            $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+        }
+
+        if (!$user->authenticate($password)) {
+            $permissions->saveUserPermissions($user->id, $userPermissions);
+            throw new Error(INVALID_LOGIN);
+        }
+
+        $permissions->saveUserPermissions($user->id, $userPermissions);
+
+        $this->_updateLastLogin($user);
+        return $user;
+    }
+
+    protected function _createUser(array $arguments): User
+    {
+        $email = $arguments['email'];
+        $password = $arguments['password'];
+        $firstName = $arguments['firstName'];
+        $lastName = $arguments['lastName'];
+
+        $user = new User();
+        $user->username = $email;
+        $user->email = $email;
+        $user->firstName = $firstName;
+        $user->lastName = $lastName;
+
+        if ($password) {
+            $user->newPassword = $password;
+        }
+
+        $customFields = UserArguments::getContentArguments();
+
+        foreach ($customFields as $key) {
+            if (is_array($key) && isset($key['name'])) {
+                $key = $key['name'];
+            }
+
+            if (!isset($arguments[$key]) || !count($arguments[$key])) {
+                continue;
+            }
+
+            $user->setFieldValue($key, $arguments[$key][0]);
+        }
+
+        $requiresVerification = Craft::$app->getProjectConfig()->get('users.requireEmailVerification');
+
+        if ($requiresVerification) {
+            $user->pending = true;
+        }
+
+        $elements = Craft::$app->getElements();
+
+        if (!$elements->saveElement($user)) {
+            throw new Error(json_encode($user->getErrors()));
+        }
+
+        $users = Craft::$app->getUsers();
+        $settings = $this->getSettings();
+
+        if ($settings->userGroup) {
+            $users->assignUserToGroups($user->id, [$settings->userGroup]);
+        }
+
+        if ($requiresVerification) {
+            $users->sendActivationEmail($user);
+        }
+
+        $this->_updateLastLogin($user);
+        return $user;
+    }
+
+    protected function _updateLastLogin(User $user)
+    {
+        $now = DateTimeHelper::currentUTCDateTime();
+        $userRecord = UserRecord::findOne($user->id);
+        $userRecord->lastLoginDate = $now;
+        $userRecord->save();
+    }
+
     protected function _validateTokenExpiry(GqlToken $token)
     {
         if (!$token->expiryDate) {
@@ -772,7 +846,7 @@ class GraphqlAuthentication extends Plugin
             'name' => "user-{$user->id}-{$time}",
             'accessToken' => $accessToken,
             'enabled' => true,
-            'schemaId' => $settings->schemaId
+            'schemaId' => $settings->schemaId,
         ];
 
         if ($settings->expiration) {
@@ -783,6 +857,10 @@ class GraphqlAuthentication extends Plugin
 
         if (!Craft::$app->getGql()->saveToken($token)) {
             throw new Error(json_encode($token->getErrors()));
+        }
+
+        if ($settings->setCookie) {
+            $this->_setTokenCookie($accessToken);
         }
 
         return $accessToken;
@@ -807,7 +885,7 @@ class GraphqlAuthentication extends Plugin
             'domain' => '',
             'secure' => true,
             'httponly' => true,
-            'samesite' => 'none'
+            'samesite' => 'none',
         ]);
     }
 
@@ -925,22 +1003,22 @@ class GraphqlAuthentication extends Plugin
         $userOptions = [
             [
                 'label' => '',
-                'value' => ''
-            ]
+                'value' => '',
+            ],
         ];
 
         foreach ($userGroups as $userGroup) {
             $userOptions[] = [
                 'label' => $userGroup->name,
-                'value' => $userGroup->id
+                'value' => $userGroup->id,
             ];
         }
 
         $schemaOptions = [
             [
                 'label' => '',
-                'value' => ''
-            ]
+                'value' => '',
+            ],
         ];
 
         foreach ($schemas as $schema) {
@@ -950,7 +1028,7 @@ class GraphqlAuthentication extends Plugin
 
             $schemaOptions[] = [
                 'label' => $schema->name,
-                'value' => $schema->id
+                'value' => $schema->id,
             ];
         }
 
@@ -990,7 +1068,7 @@ class GraphqlAuthentication extends Plugin
 
                     $entryQueries[$name] = [
                         'label' => $name,
-                        'handle' => $handle
+                        'handle' => $handle,
                     ];
 
                     continue;
@@ -1002,7 +1080,7 @@ class GraphqlAuthentication extends Plugin
 
                 $entryMutations[$name] = [
                     'label' => $name,
-                    'handle' => $handle
+                    'handle' => $handle,
                 ];
             }
 
@@ -1030,7 +1108,7 @@ class GraphqlAuthentication extends Plugin
 
                     $assetQueries[$name] = [
                         'label' => $name,
-                        'handle' => $handle
+                        'handle' => $handle,
                     ];
 
                     continue;
@@ -1042,7 +1120,7 @@ class GraphqlAuthentication extends Plugin
 
                 $assetMutations[$name] = [
                     'label' => $name,
-                    'handle' => $handle
+                    'handle' => $handle,
                 ];
             }
         }
@@ -1054,7 +1132,7 @@ class GraphqlAuthentication extends Plugin
             'entryQueries' => $entryQueries,
             'entryMutations' => $entryMutations,
             'assetQueries' => $assetQueries,
-            'assetMutations' => $assetMutations
+            'assetMutations' => $assetMutations,
         ]);
     }
 }

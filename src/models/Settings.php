@@ -14,12 +14,27 @@ class Settings extends Model
     public $entryMutations = null;
     public $assetQueries = null;
     public $assetMutations = null;
+    public $googleClientId = null;
+    public $allowedGoogleDomains = null;
 
     public function rules()
     {
         return [
             [['schemaId'], 'required'],
-            [['expiration', 'setCookie', 'userGroup', 'entryQueries', 'entryMutations', 'assetQueries', 'assetMutations'], 'default']
+            [
+                [
+                    'expiration',
+                    'setCookie',
+                    'userGroup',
+                    'entryQueries',
+                    'entryMutations',
+                    'assetQueries',
+                    'assetMutations',
+                    'googleClientId',
+                    'allowedGoogleDomains',
+                ],
+                'default',
+            ],
         ];
     }
 }
