@@ -2,135 +2,315 @@
 
 <h1>User Settings</h1>
 
-{% set schemaInput = schemaOptions ? forms.selectField({
-    name: 'schemaId',
-    options: schemaOptions,
-    value: settings.schemaId,
-  }) : tag('p', {
-    class: ['warning', 'with-icon'],
-    text: 'No schemas exist yet.'|t('app'),
-  })
-%}
-
-{{ forms.field({
-  label: 'GraphQL Schema',
-  instructions: 'The schema that access tokens will be assigned to.',
-  name: 'schemaId',
-  required: true,
-  first: true,
-}, schemaInput) }}
-
 {{ forms.selectField({
-  label: 'User Group',
-  instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
-  name: 'userGroup',
-  value: settings.userGroup,
-  options: userOptions,
+  label: 'Permission Type',
+  instructions: "Choose whether to have a 'one-size-fits-all' schema for users, or a schema per user group.",
+  name: 'permissionType',
+  id: 'permissionType',
+  value: settings.permissionType,
+  options: [
+    { label: 'Single Schema', value: 'single' },
+    { label: 'Multiple Schemas', value: 'multiple' },
+  ],
+  required: true,
 }) }}
 
-{% if not settings.schemaId %}
+{% if settings.permissionType == 'single' %}
+  <hr/>
+
+  {% set schemaInput = schemaOptions ? forms.selectField({
+      name: 'schemaId',
+      options: schemaOptions,
+      value: settings.schemaId,
+    }) : tag('p', {
+      class: ['warning', 'with-icon'],
+      text: 'No schemas exist yet.'|t('app'),
+    })
+  %}
+
   {{ forms.field({
-    label: 'User Permissions',
-    instructions: 'Select your desired schema and save to modify user permissions.',
-  }, null) }}
+    label: 'GraphQL Schema',
+    instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+    name: 'schemaId',
+    required: true,
+  }, schemaInput) }}
+
+  {{ forms.field({
+    label: 'Allow Registration',
+    instructions: "Whether or not the `register` mutation should be available.",
+    name: 'allowRegistration',
+  }, forms.lightswitch({
+    name: 'allowRegistration',
+    on: settings.allowRegistration,
+  })) }}
+
+  {{ forms.selectField({
+    label: 'User Group',
+    instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
+    name: 'userGroup',
+    value: settings.userGroup,
+    options: userOptions,
+  }) }}
+
+  {% if not settings.schemaId %}
+    {{ forms.field({
+      label: 'User Permissions',
+      instructions: 'Select your desired schema and save to modify user permissions.',
+    }, null) }}
+  {% else %}
+    {% if entryQueries %}
+      <div class="field">
+        <div class="heading">
+          <label>Restricted Entry Queries</label>
+
+          <div class="instructions">
+            <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
+          </div>
+        </div>
+
+        <div class="input">
+          {% for query in entryQueries %}
+            <div>
+              {{ forms.checkbox({
+                label: query.label,
+                name: 'entryQueries[' ~ query.handle ~ ']',
+                value: true,
+                checked: settings.entryQueries[query.handle] ?? false,
+              }) }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if entryMutations %}
+      <div class="field">
+        <div class="heading">
+          <label>Restricted Entry Mutations</label>
+
+          <div class="instructions">
+            <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
+          </div>
+        </div>
+
+        <div class="input">
+          {% for mutation in entryMutations %}
+            <div>
+              {{ forms.checkbox({
+                label: mutation.label,
+                name: 'entryMutations[' ~ mutation.handle ~ ']',
+                value: true,
+                checked: settings.entryMutations[mutation.handle] ?? false,
+              }) }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if assetQueries %}
+      <div class="field">
+        <div class="heading">
+          <label>Restricted Asset Queries</label>
+
+          <div class="instructions">
+            <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
+          </div>
+        </div>
+
+        <div class="input">
+          {% for query in assetQueries %}
+            <div>
+              {{ forms.checkbox({
+                label: query.label,
+                name: 'assetQueries[' ~ query.handle ~ ']',
+                value: true,
+                checked: settings.assetQueries[query.handle] ?? false,
+              }) }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if assetMutations %}
+      <div class="field">
+        <div class="heading">
+          <label>Restricted Asset Mutations</label>
+
+          <div class="instructions">
+            <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
+          </div>
+        </div>
+
+        <div class="input">
+          {% for mutation in assetMutations %}
+            <div>
+              {{ forms.checkbox({
+                label: mutation.label,
+                name: 'assetMutations[' ~ mutation.handle ~ ']',
+                value: true,
+                checked: settings.assetMutations[mutation.handle] ?? false,
+              }) }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
 {% else %}
-  {% if entryQueries %}
-    <div class="field">
-      <div class="heading">
-        <label>Restricted Entry Queries</label>
+  {% for userGroup in userOptions %}
+    {% if userGroup.label != '' %}
+      <hr/>
+      <h2>{{ userGroup.label }}</h2>
 
-        <div class="instructions">
-          <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
-        </div>
-      </div>
+      {% set groupKey = 'group-' ~ userGroup.value %}
 
-      <div class="input">
-        {% for query in entryQueries %}
-          <div>
-            {{ forms.checkbox({
-              label: query.label,
-              name: 'entryQueries[' ~ query.handle ~ ']',
-              value: true,
-              checked: settings.entryQueries[query.handle] ?? false,
-            }) }}
+      {% set schemaInput = schemaOptions ? forms.selectField({
+          name: 'granularSchemas[' ~ groupKey ~ '][schemaId]',
+          options: schemaOptions,
+          value: settings.granularSchemas[groupKey].schemaId ?? null,
+        }) : tag('p', {
+          class: ['warning', 'with-icon'],
+          text: 'No schemas exist yet.'|t('app'),
+        })
+      %}
+
+      {{ forms.field({
+        label: 'GraphQL Schema',
+        instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+        name: 'schemaId',
+      }, schemaInput) }}
+
+      {{ forms.field({
+        label: 'Allow Registration',
+        instructions: "Whether or not the `register` mutation should be available.",
+        name: 'granularSchemas[' ~ groupKey ~ '][allowRegistration]',
+      }, forms.lightswitch({
+        name: 'granularSchemas[' ~ groupKey ~ '][allowRegistration]',
+        on: settings.granularSchemas[groupKey].allowRegistration ?? null,
+      })) }}
+
+      {{ forms.selectField({
+        label: 'User Group',
+        instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
+        name: 'granularSchemas[' ~ groupKey ~ '][userGroup]',
+        value: settings.granularSchemas[groupKey].userGroup ?? null,
+        options: userOptions,
+      }) }}
+
+      {% if not settings.granularSchemas[groupKey].schemaId ?? null %}
+        {{ forms.field({
+          label: 'User Permissions',
+          instructions: 'Select your desired schema and save to modify user permissions.',
+        }, null) }}
+      {% else %}
+        {% if entryQueries[groupKey] %}
+          <div class="field">
+            <div class="heading">
+              <label>Restricted Entry Queries</label>
+
+              <div class="instructions">
+                <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
+              </div>
+            </div>
+
+            <div class="input">
+              {% for query in entryQueries[groupKey] %}
+                <div>
+                  {{ forms.checkbox({
+                    label: query.label,
+                    name: 'granularSchemas[' ~ groupKey ~ '][entryQueries][' ~ query.handle ~ ']',
+                    value: true,
+                    checked: settings.granularSchemas[groupKey].entryQueries[query.handle] ?? null,
+                  }) }}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
+        {% endif %}
 
-  {% if entryMutations %}
-    <div class="field">
-      <div class="heading">
-        <label>Restricted Entry Mutations</label>
+        {% if entryMutations[groupKey] %}
+          <div class="field">
+            <div class="heading">
+              <label>Restricted Entry Mutations</label>
 
-        <div class="instructions">
-          <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
-        </div>
-      </div>
+              <div class="instructions">
+                <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
+              </div>
+            </div>
 
-      <div class="input">
-        {% for mutation in entryMutations %}
-          <div>
-            {{ forms.checkbox({
-              label: mutation.label,
-              name: 'entryMutations[' ~ mutation.handle ~ ']',
-              value: true,
-              checked: settings.entryMutations[mutation.handle] ?? false,
-            }) }}
+            <div class="input">
+              {% for mutation in entryMutations[groupKey] %}
+                <div>
+                  {{ forms.checkbox({
+                    label: mutation.label,
+                    name: 'granularSchemas[' ~ groupKey ~ '][entryMutations][' ~ mutation.handle ~ ']',
+                    value: true,
+                    checked: settings.granularSchemas[groupKey].entryMutations[mutation.handle] ?? null,
+                  }) }}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
+        {% endif %}
 
-  {% if assetQueries %}
-    <div class="field">
-      <div class="heading">
-        <label>Restricted Asset Queries</label>
+        {% if assetQueries[groupKey] %}
+          <div class="field">
+            <div class="heading">
+              <label>Restricted Asset Queries</label>
 
-        <div class="instructions">
-          <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
-        </div>
-      </div>
+              <div class="instructions">
+                <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
+              </div>
+            </div>
 
-      <div class="input">
-        {% for query in assetQueries %}
-          <div>
-            {{ forms.checkbox({
-              label: query.label,
-              name: 'assetQueries[' ~ query.handle ~ ']',
-              value: true,
-              checked: settings.assetQueries[query.handle] ?? false,
-            }) }}
+            <div class="input">
+              {% for query in assetQueries[groupKey] %}
+                <div>
+                  {{ forms.checkbox({
+                    label: query.label,
+                    name: 'granularSchemas[' ~ groupKey ~ '][assetQueries][' ~ query.handle ~ ']',
+                    value: true,
+                    checked: settings.granularSchemas[groupKey].assetQueries[query.handle] ?? null,
+                  }) }}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
+        {% endif %}
 
-  {% if assetMutations %}
-    <div class="field">
-      <div class="heading">
-        <label>Restricted Asset Mutations</label>
+        {% if assetMutations[groupKey] %}
+          <div class="field">
+            <div class="heading">
+              <label>Restricted Asset Mutations</label>
 
-        <div class="instructions">
-          <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
-        </div>
-      </div>
+              <div class="instructions">
+                <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
+              </div>
+            </div>
 
-      <div class="input">
-        {% for mutation in assetMutations %}
-          <div>
-            {{ forms.checkbox({
-              label: mutation.label,
-              name: 'assetMutations[' ~ mutation.handle ~ ']',
-              value: true,
-              checked: settings.assetMutations[mutation.handle] ?? false,
-            }) }}
+            <div class="input">
+              {% for mutation in assetMutations[groupKey] %}
+                <div>
+                  {{ forms.checkbox({
+                    label: mutation.label,
+                    name: 'granularSchemas[' ~ groupKey ~ '][assetMutations][' ~ mutation.handle ~ ']',
+                    value: true,
+                    checked: settings.granularSchemas[groupKey].assetMutations[mutation.handle] ?? null,
+                  }) }}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
 {% endif %}
+
+<script>
+  const form = document.getElementById('main-form');
+  const permissionType = document.getElementById('settings-permissionType');
+  permissionType.addEventListener('change', () => form.submit());
+</script>

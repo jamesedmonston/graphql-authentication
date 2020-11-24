@@ -105,28 +105,30 @@ class UserService extends Component
             },
         ];
 
-        $event->mutations['register'] = [
-            'description' => 'Registers a user. Returns user and token.',
-            'type' => $tokenAndUserType,
-            'args' => array_merge(
-                [
-                    'email' => Type::nonNull(Type::string()),
-                    'password' => Type::nonNull(Type::string()),
-                    'firstName' => Type::nonNull(Type::string()),
-                    'lastName' => Type::nonNull(Type::string()),
-                ],
-                UserArguments::getContentArguments()
-            ),
-            'resolve' => function ($source, array $arguments) use ($tokenService) {
-                $user = $this->_create($arguments);
-                $token = $tokenService->create($user);
+        if (GraphqlAuthentication::$plugin->getSettings()->allowRegistration) {
+            $event->mutations['register'] = [
+                'description' => 'Registers a user. Returns user and token.',
+                'type' => $tokenAndUserType,
+                'args' => array_merge(
+                    [
+                        'email' => Type::nonNull(Type::string()),
+                        'password' => Type::nonNull(Type::string()),
+                        'firstName' => Type::nonNull(Type::string()),
+                        'lastName' => Type::nonNull(Type::string()),
+                    ],
+                    UserArguments::getContentArguments()
+                ),
+                'resolve' => function ($source, array $arguments) use ($tokenService) {
+                    $user = $this->_create($arguments);
+                    $token = $tokenService->create($user);
 
-                return [
-                    'accessToken' => $token,
-                    'user' => $user,
-                ];
-            },
-        ];
+                    return [
+                        'accessToken' => $token,
+                        'user' => $user,
+                    ];
+                },
+            ];
+        }
 
         $event->mutations['forgottenPassword'] = [
             'description' => "Sends a password reset email to the user's email address. Returns success message.",
