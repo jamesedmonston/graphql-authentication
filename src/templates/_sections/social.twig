@@ -1,0 +1,43 @@
+{% import '_includes/forms' as forms %}
+
+<h1>Social Settings</h1>
+<p>Separate mutations for each service will be available once you've filled in the appropriate details.</p>
+
+<hr/>
+
+<h2>Google</h2>
+
+{{ forms.field({
+  instructions: 'Use the `googleSignIn` mutation after filling in the `Client ID` field.',
+  first: true,
+}, null) }}
+
+{{ forms.textField({
+  label: 'Client ID',
+  instructions: 'The client ID from your Google OAuth project.',
+  name: 'googleClientId',
+  value: settings.googleClientId,
+  placeholder: 'xxxx-xxxx.apps.googleusercontent.com',
+  required: false,
+}) }}
+
+{{ forms.textField({
+  label: 'Allowed Email Domains',
+  instructions: "The domains from which you'd like to allow Google Sign-In. Comma-delimited. Leave empty to allow any domain.",
+  name: 'allowedGoogleDomains',
+  value: settings.allowedGoogleDomains,
+  placeholder: 'domain1.com, domain2.co.uk',
+  required: false,
+}) }}
+
+<hr/>
+<h2>Facebook</h2>
+<p>Coming soon!</p>
+
+<hr/>
+<h2>Twitter</h2>
+<p>Coming soon!</p>
+
+<hr/>
+<h2>Apple</h2>
+<p>Coming soon!</p>

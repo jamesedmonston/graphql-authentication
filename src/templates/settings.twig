@@ -1,0 +1,21 @@
+{% extends '_layouts/cp' %}
+{% set title = 'GraphQL Authentication' %}
+
+{% block content %}
+	<input type="hidden" name="action" value="plugins/save-plugin-settings">
+	<input type="hidden" name="pluginHandle" value="graphql-authentication">
+
+	{% namespace namespace %}
+    <div id="users">
+      {% include 'graphql-authentication/_sections/users' %}
+    </div>
+
+    <div id="tokens" class="hidden">
+      {% include 'graphql-authentication/_sections/tokens' %}
+    </div>
+
+    <div id="social" class="hidden">
+      {% include 'graphql-authentication/_sections/social' %}
+    </div>
+	{% endnamespace %}
+{% endblock %}

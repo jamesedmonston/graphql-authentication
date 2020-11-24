@@ -12,13 +12,16 @@ namespace jamesedmonston\graphqlauthentication;
 
 use Craft;
 use craft\base\Plugin;
+use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
+use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
 use jamesedmonston\graphqlauthentication\services\RestrictionService;
 use jamesedmonston\graphqlauthentication\services\SocialService;
 use jamesedmonston\graphqlauthentication\services\TokenService;
 use jamesedmonston\graphqlauthentication\services\UserService;
+use yii\base\Event;
 
 /**
  * Class GraphqlAuthentication
@@ -79,6 +82,12 @@ class GraphqlAuthentication extends Plugin
         $this->user->init();
         $this->restriction->init();
         $this->social->init();
+
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            [$this, 'onRegisterCPUrlRules']
+        );
     }
 
     public function isGraphiqlRequest(): bool
@@ -86,157 +95,22 @@ class GraphqlAuthentication extends Plugin
         return StringHelper::contains((Craft::$app->getRequest()->getReferrer() ?? '') . 'graphiql', UrlHelper::cpUrl() . 'graphiql');
     }
 
-    // Protected Methods
+    // Settings
     // =========================================================================
 
-    protected function createSettingsModel()
+    protected function createSettingsModel(): Settings
     {
         return new Settings();
     }
 
-    protected function settingsHtml()
+    public function getSettingsResponse()
     {
-        $gql = Craft::$app->getGql();
-        $sections = Craft::$app->getSections()->getAllSections();
-        $volumes = Craft::$app->getVolumes()->getAllVolumes();
-        $settings = $this->getSettings();
-        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
-        $schemas = $gql->getSchemas();
-        $publicSchema = $gql->getPublicSchema();
+        Craft::$app->controller->redirect(UrlHelper::cpUrl('graphql-authentication/settings'));
+    }
 
-        $userOptions = [
-            [
-                'label' => '',
-                'value' => '',
-            ],
-        ];
-
-        foreach ($userGroups as $userGroup) {
-            $userOptions[] = [
-                'label' => $userGroup->name,
-                'value' => $userGroup->id,
-            ];
-        }
-
-        $schemaOptions = [
-            [
-                'label' => '',
-                'value' => '',
-            ],
-        ];
-
-        foreach ($schemas as $schema) {
-            if ($publicSchema && $schema->id === $publicSchema->id) {
-                continue;
-            }
-
-            $schemaOptions[] = [
-                'label' => $schema->name,
-                'value' => $schema->id,
-            ];
-        }
-
-        $entryQueries = null;
-        $entryMutations = null;
-        $assetQueries = null;
-        $assetMutations = null;
-
-        if ($settings->schemaId) {
-            $selectedSchema = $gql->getSchemaById($settings->schemaId);
-
-            $entryQueries = [];
-            $entryMutations = [];
-
-            $scopes = array_filter($selectedSchema->scope, function ($key) {
-                return StringHelper::contains($key, 'sections');
-            });
-
-            foreach ($scopes as $scope) {
-                $scopeId = explode(':', explode('.', $scope)[1])[0];
-
-                $section = array_values(array_filter($sections, function ($type) use ($scopeId) {
-                    return $type['uid'] === $scopeId;
-                }))[0];
-
-                if ($section->type === 'single') {
-                    continue;
-                }
-
-                $name = $section->name;
-                $handle = $section->handle;
-
-                if (StringHelper::contains($scope, ':read')) {
-                    if (isset($entryQueries[$name])) {
-                        continue;
-                    }
-
-                    $entryQueries[$name] = [
-                        'label' => $name,
-                        'handle' => $handle,
-                    ];
-
-                    continue;
-                }
-
-                if (isset($entryMutations[$name])) {
-                    continue;
-                }
-
-                $entryMutations[$name] = [
-                    'label' => $name,
-                    'handle' => $handle,
-                ];
-            }
-
-            $assetQueries = [];
-            $assetMutations = [];
-
-            $scopes = array_filter($selectedSchema->scope, function ($key) {
-                return StringHelper::contains($key, 'volumes');
-            });
-
-            foreach ($scopes as $scope) {
-                $scopeId = explode(':', explode('.', $scope)[1])[0];
-
-                $volume = array_values(array_filter($volumes, function ($type) use ($scopeId) {
-                    return $type['uid'] === $scopeId;
-                }))[0];
-
-                $name = $volume->name;
-                $handle = $volume->handle;
-
-                if (StringHelper::contains($scope, ':read')) {
-                    if (isset($assetQueries[$name])) {
-                        continue;
-                    }
-
-                    $assetQueries[$name] = [
-                        'label' => $name,
-                        'handle' => $handle,
-                    ];
-
-                    continue;
-                }
-
-                if (isset($assetMutations[$name])) {
-                    continue;
-                }
-
-                $assetMutations[$name] = [
-                    'label' => $name,
-                    'handle' => $handle,
-                ];
-            }
-        }
-
-        return Craft::$app->getView()->renderTemplate('graphql-authentication/index', [
-            'settings' => $settings,
-            'userOptions' => $userOptions,
-            'schemaOptions' => $schemaOptions,
-            'entryQueries' => $entryQueries,
-            'entryMutations' => $entryMutations,
-            'assetQueries' => $assetQueries,
-            'assetMutations' => $assetMutations,
-        ]);
+    public function onRegisterCPUrlRules(RegisterUrlRulesEvent $event)
+    {
+        $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
+        $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
     }
 }
