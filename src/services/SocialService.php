@@ -54,60 +54,62 @@ class SocialService extends Component
             ]))
         );
 
-        $event->mutations['googleSignIn'] = [
-            'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
-            'type' => $tokenAndUserType,
-            'args' => [
-                'idToken' => Type::nonNull(Type::string()),
-            ],
-            'resolve' => function ($source, array $arguments) use ($users, $settings) {
-                if (!$settings->googleClientId) {
-                    throw new Error(self::$CLIENT_NOT_FOUND);
-                }
-
-                $client = new Google_Client(['client_id' => $settings->googleClientId]);
-                $payload = $client->verifyIdToken($arguments['idToken']);
-
-                if (!$payload) {
-                    throw new Error(self::$INVALID_TOKEN);
-                }
-
-                $email = $payload['email'];
-
-                if (!$email || !isset($email)) {
-                    throw new Error(self::$EMAIL_NOT_FOUND);
-                }
-
-                if ($settings->allowedGoogleDomains) {
-                    $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $settings->allowedGoogleDomains));
-                    $hd = $payload['hd'];
-
-                    if (!in_array($hd, $domains)) {
-                        throw new Error(self::$EMAIL_MISMATCH);
+        if ($settings->googleClientId) {
+            $event->mutations['googleSignIn'] = [
+                'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
+                'type' => $tokenAndUserType,
+                'args' => [
+                    'idToken' => Type::nonNull(Type::string()),
+                ],
+                'resolve' => function ($source, array $arguments) use ($users, $settings) {
+                    if (!$settings->googleClientId) {
+                        throw new Error(self::$CLIENT_NOT_FOUND);
                     }
-                }
 
-                $user = $users->getUserByUsernameOrEmail($email);
+                    $client = new Google_Client(['client_id' => $settings->googleClientId]);
+                    $payload = $client->verifyIdToken($arguments['idToken']);
 
-                if (!$user) {
-                    $firstName = $payload['given_name'];
-                    $lastName = $payload['family_name'];
+                    if (!$payload) {
+                        throw new Error(self::$INVALID_TOKEN);
+                    }
 
-                    $user = GraphqlAuthentication::$plugin->getInstance()->user->create([
-                        'email' => $email,
-                        'password' => '',
-                        'firstName' => $firstName,
-                        'lastName' => $lastName,
-                    ]);
-                }
+                    $email = $payload['email'];
 
-                $token = GraphqlAuthentication::$plugin->getInstance()->token->create($user);
+                    if (!$email || !isset($email)) {
+                        throw new Error(self::$EMAIL_NOT_FOUND);
+                    }
 
-                return [
-                    'accessToken' => $token,
-                    'user' => $user,
-                ];
-            },
-        ];
+                    if ($settings->allowedGoogleDomains) {
+                        $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $settings->allowedGoogleDomains));
+                        $hd = $payload['hd'];
+
+                        if (!in_array($hd, $domains)) {
+                            throw new Error(self::$EMAIL_MISMATCH);
+                        }
+                    }
+
+                    $user = $users->getUserByUsernameOrEmail($email);
+
+                    if (!$user) {
+                        $firstName = $payload['given_name'];
+                        $lastName = $payload['family_name'];
+
+                        $user = GraphqlAuthentication::$plugin->getInstance()->user->create([
+                            'email' => $email,
+                            'password' => '',
+                            'firstName' => $firstName,
+                            'lastName' => $lastName,
+                        ]);
+                    }
+
+                    $token = GraphqlAuthentication::$plugin->getInstance()->token->create($user);
+
+                    return [
+                        'accessToken' => $token,
+                        'user' => $user,
+                    ];
+                },
+            ];
+        }
     }
 }
