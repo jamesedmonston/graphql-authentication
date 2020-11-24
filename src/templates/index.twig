@@ -160,3 +160,21 @@
     </div>
   {% endif %}
 {% endif %}
+
+{{ forms.textField({
+  label: 'Google Client ID',
+  instructions: 'The client ID from your Google OAuth project.',
+  name: 'googleClientId',
+  value: settings.googleClientId,
+  placeholder: 'xxxx-xxxx.apps.googleusercontent.com',
+  required: false,
+}) }}
+
+{{ forms.textField({
+  label: 'Allowed Email Domains',
+  instructions: "The domains from which you'd like to allow Google Sign-In. Comma-delimited. Leave empty to allow any domain.",
+  name: 'allowedGoogleDomains',
+  value: settings.allowedGoogleDomains,
+  placeholder: 'domain1.com, domain2.co.uk',
+  required: false,
+}) }}
