@@ -24,7 +24,7 @@ class UserService extends Component
     public static $INVALID_USER_UPDATE = "We couldn't update the user with the provided details";
     public static $INVALID_REQUEST = 'Cannot validate request';
     public static $INVALID_PASSWORD_MATCH = 'New passwords do not match';
-    public static $INVALID_SCHEMA = 'No schem has been set for this user group';
+    public static $INVALID_SCHEMA = 'No schema has been set for this user group';
     public static $TOKEN_NOT_FOUND = "We couldn't find any matching tokens";
     public static $USER_NOT_FOUND = "We couldn't find any matching users";
 
@@ -85,7 +85,7 @@ class UserService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
+            'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings) {
                 $user = $this->_authenticate($arguments);
                 $schemaId = $settings->schemaId ?? null;
 
@@ -106,6 +106,7 @@ class UserService extends Component
                 return [
                     'accessToken' => $token,
                     'user' => $user,
+                    'schema' => $gql->getSchemaById($schemaId)->name,
                 ];
             },
         ];
@@ -123,17 +124,20 @@ class UserService extends Component
                     ],
                     UserArguments::getContentArguments()
                 ),
-                'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
-                    if (!$settings->schemaId) {
+                'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings) {
+                    $schemaId = $settings->schemaId;
+
+                    if (!$schemaId) {
                         throw new Error(self::$INVALID_SCHEMA);
                     }
 
                     $user = $this->create($arguments, $settings->userGroup);
-                    $token = $tokenService->create($user, $settings->schemaId);
+                    $token = $tokenService->create($user, $schemaId);
 
                     return [
                         'accessToken' => $token,
                         'user' => $user,
+                        'schema' => $gql->getSchemaById($schemaId)->name,
                     ];
                 },
             ];
@@ -161,7 +165,7 @@ class UserService extends Component
                         ],
                         UserArguments::getContentArguments()
                     ),
-                    'resolve' => function ($source, array $arguments) use ($tokenService, $settings, $userGroup) {
+                    'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings, $userGroup) {
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
@@ -174,6 +178,7 @@ class UserService extends Component
                         return [
                             'accessToken' => $token,
                             'user' => $user,
+                            'schema' => $gql->getSchemaById($schemaId)->name,
                         ];
                     },
                 ];

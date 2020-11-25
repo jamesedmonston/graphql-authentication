@@ -4,7 +4,6 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
-use craft\elements\User;
 use craft\services\Gql;
 use Google_Client;
 use GraphQL\Error\Error;
@@ -42,6 +41,7 @@ class SocialService extends Component
     public function registerGqlMutations(Event $event)
     {
         $users = Craft::$app->getUsers();
+        $gql = Craft::$app->getGql();
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
@@ -53,7 +53,13 @@ class SocialService extends Component
                 'args' => [
                     'idToken' => Type::nonNull(Type::string()),
                 ],
-                'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService) {
+                    $schemaId = $settings->schemaId;
+
+                    if (!$schemaId) {
+                        throw new Error(self::$INVALID_SCHEMA);
+                    }
+
                     $idToken = $arguments['idToken'];
                     $tokenUser = $this->_getUserFromToken($idToken);
                     $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
@@ -71,11 +77,12 @@ class SocialService extends Component
                         ], $settings->userGroup);
                     }
 
-                    $token = $tokenService->create($user, $settings->schemaId);
+                    $token = $tokenService->create($user, $schemaId);
 
                     return [
                         'accessToken' => $token,
                         'user' => $user,
+                        'schema' => $gql->getSchemaById($schemaId)->name,
                     ];
                 },
             ];
@@ -97,7 +104,7 @@ class SocialService extends Component
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                    'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService, $userGroup) {
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
@@ -126,6 +133,7 @@ class SocialService extends Component
                         return [
                             'accessToken' => $token,
                             'user' => $user,
+                            'schema' => $gql->getSchemaById($schemaId)->name,
                         ];
                     },
                 ];

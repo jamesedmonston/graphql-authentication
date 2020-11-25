@@ -27,10 +27,11 @@ class Auth extends ObjectType
         }
 
         return GqlEntityRegistry::createEntity(static::class, new ObjectType([
-            'name' => 'Auth',
+            'name' => static::getName(),
             'fields' => [
                 'accessToken' => Type::nonNull(Type::string()),
                 'user' => UserType::generateType(User::class),
+                'schema' => Type::nonNull(Type::string()),
             ],
         ]));
     }
