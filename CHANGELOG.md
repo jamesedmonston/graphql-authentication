@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Added Google Sign-In support (adds a single `googleSignIn` mutation, or mutations per user group, depending on settings)
 - Added `SameSite` cookie policy control
 - Added unique, per user caching, to ensure users never see each other's cached queries
+- Added a `schema` field to the authentication mutation responses
 
 ### Changed
 
