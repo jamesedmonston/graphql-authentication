@@ -4,11 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.2.0 - 2020-11-15
+## 1.2.0 - Unreleased
+
+### Added
+
+- Added ability to disable user registration
+- Added per user group schema assignment, user group assignment, and granular schema permissions (a `register` mutation is add for each group, if enabled)
+- Added Google Sign-In support (adds a single `googleSignIn` mutation, or mutations per user group, depending on settings)
+- Added `SameSite` cookie policy control
 
 ### Changed
 
+- Reworked the plugins settings into a tabbed interface
 - The `register` mutation now listens to the `requireEmailVerification` setting in user settings – creating users in a pending state, and sending an activation email
+- Tokens are now created using `microtime()` instead of `time()` to avoid any name conflicts
+
+### Fixed
+
+- Fixed some deprecation errors
+
+### Misc
+
+- Lots of under-the-hood tidying to make maintenance a lot easier
 
 ## 1.1.8 - 2020-11-14
 
