@@ -11,6 +11,7 @@ use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
+use craft\helpers\StringHelper;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -68,6 +69,12 @@ class RestrictionService extends Component
             Asset::EVENT_BEFORE_DELETE,
             [$this, 'ensureAssetMutationAllowed']
         );
+
+        Event::on(
+            Gql::class,
+            Gql::EVENT_BEFORE_EXECUTE_GQL_QUERY,
+            [$this, 'injectUniqueCache']
+        );
     }
 
     public function registerGqlQueries(Event $event)
@@ -113,20 +120,6 @@ class RestrictionService extends Component
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolveCount',
         ];
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    protected function _shouldRestrictRequests(): bool
-    {
-        $request = Craft::$app->getRequest();
-
-        if ($request->isConsoleRequest || GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            return false;
-        }
-
-        return (bool) $request->getBodyParam('query');
     }
 
     public function restrictMutationFields(ModelEvent $event)
@@ -258,6 +251,39 @@ class RestrictionService extends Component
                 throw new Error(self::$FORBIDDEN_MUTATION);
             }
         }
+    }
+
+    // inject a unique caching key per user, to ensure users don't see each other's cached content
+
+    public function injectUniqueCache(Event $event)
+    {
+        if (GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
+            return;
+        }
+
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $token = $tokenService->getHeaderToken();
+        $cacheKey = $token->accessToken;
+
+        if (StringHelper::contains($token->name, 'user-')) {
+            $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
+        }
+
+        $event->variables['gql_cacheKey'] = $cacheKey;
+    }
+
+    // Protected Methods
+    // =========================================================================
+
+    protected function _shouldRestrictRequests(): bool
+    {
+        $request = Craft::$app->getRequest();
+
+        if ($request->isConsoleRequest || GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
+            return false;
+        }
+
+        return (bool) $request->getBodyParam('query');
     }
 
     protected function _ensureValidEntry(int $id)
