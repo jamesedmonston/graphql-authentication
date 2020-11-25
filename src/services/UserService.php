@@ -139,7 +139,7 @@ class UserService extends Component
                         throw new Error(self::$INVALID_SCHEMA);
                     }
 
-                    $user = $this->_create($arguments, $settings->userGroup);
+                    $user = $this->create($arguments, $settings->userGroup);
                     $token = $tokenService->create($user, $settings->schemaId);
 
                     return [
@@ -179,7 +179,7 @@ class UserService extends Component
                             throw new Error(self::$INVALID_SCHEMA);
                         }
 
-                        $user = $this->_create($arguments, $userGroup->id);
+                        $user = $this->create($arguments, $userGroup->id);
                         $token = $tokenService->create($user, $schemaId);
 
                         return [
@@ -386,40 +386,7 @@ class UserService extends Component
         ];
     }
 
-    // Protected Methods
-    // =========================================================================
-
-    protected function _authenticate(array $arguments): User
-    {
-        $email = $arguments['email'];
-        $password = $arguments['password'];
-
-        $users = Craft::$app->getUsers();
-        $user = $users->getUserByUsernameOrEmail($email);
-
-        if (!$user) {
-            throw new Error(self::$INVALID_LOGIN);
-        }
-
-        $permissions = Craft::$app->getUserPermissions();
-        $userPermissions = $permissions->getPermissionsByUserId($user->id);
-
-        if (!in_array('accessCp', $userPermissions)) {
-            $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
-        }
-
-        if (!$user->authenticate($password)) {
-            $permissions->saveUserPermissions($user->id, $userPermissions);
-            throw new Error(self::$INVALID_LOGIN);
-        }
-
-        $permissions->saveUserPermissions($user->id, $userPermissions);
-
-        $this->_updateLastLogin($user);
-        return $user;
-    }
-
-    protected function _create(array $arguments, Int $userGroup): User
+    public function create(array $arguments, Int $userGroup): User
     {
         $email = $arguments['email'];
         $password = $arguments['password'];
@@ -471,6 +438,39 @@ class UserService extends Component
         if ($requiresVerification) {
             $users->sendActivationEmail($user);
         }
+
+        $this->_updateLastLogin($user);
+        return $user;
+    }
+
+    // Protected Methods
+    // =========================================================================
+
+    protected function _authenticate(array $arguments): User
+    {
+        $email = $arguments['email'];
+        $password = $arguments['password'];
+
+        $users = Craft::$app->getUsers();
+        $user = $users->getUserByUsernameOrEmail($email);
+
+        if (!$user) {
+            throw new Error(self::$INVALID_LOGIN);
+        }
+
+        $permissions = Craft::$app->getUserPermissions();
+        $userPermissions = $permissions->getPermissionsByUserId($user->id);
+
+        if (!in_array('accessCp', $userPermissions)) {
+            $permissions->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+        }
+
+        if (!$user->authenticate($password)) {
+            $permissions->saveUserPermissions($user->id, $userPermissions);
+            throw new Error(self::$INVALID_LOGIN);
+        }
+
+        $permissions->saveUserPermissions($user->id, $userPermissions);
 
         $this->_updateLastLogin($user);
         return $user;
