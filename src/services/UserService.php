@@ -6,15 +6,14 @@ use Craft;
 use craft\base\Component;
 use craft\elements\User;
 use craft\gql\arguments\elements\User as UserArguments;
-use craft\gql\GqlEntityRegistry;
 use craft\gql\types\generators\UserType;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
 use craft\services\Gql;
 use GraphQL\Error\Error;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\base\Event;
 
@@ -79,19 +78,9 @@ class UserService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
-        $tokenAndUserType = Type::nonNull(
-            GqlEntityRegistry::createEntity('Auth', new ObjectType([
-                'name' => 'Auth',
-                'fields' => [
-                    'accessToken' => Type::nonNull(Type::string()),
-                    'user' => UserType::generateType(User::class),
-                ],
-            ]))
-        );
-
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
-            'type' => $tokenAndUserType,
+            'type' => Type::nonNull(Auth::getType()),
             'args' => [
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
@@ -124,7 +113,7 @@ class UserService extends Component
         if ($settings->permissionType === 'single' && $settings->allowRegistration) {
             $event->mutations['register'] = [
                 'description' => 'Registers a user. Returns user and token.',
-                'type' => $tokenAndUserType,
+                'type' => Type::nonNull(Auth::getType()),
                 'args' => array_merge(
                     [
                         'email' => Type::nonNull(Type::string()),
@@ -162,7 +151,7 @@ class UserService extends Component
 
                 $event->mutations["register{$handle}"] = [
                     'description' => "Registers a {$userGroup->name} user. Returns user and token.",
-                    'type' => $tokenAndUserType,
+                    'type' => Type::nonNull(Auth::getType()),
                     'args' => array_merge(
                         [
                             'email' => Type::nonNull(Type::string()),

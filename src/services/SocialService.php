@@ -5,13 +5,11 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\elements\User;
-use craft\gql\GqlEntityRegistry;
-use craft\gql\types\generators\UserType;
 use craft\services\Gql;
 use Google_Client;
 use GraphQL\Error\Error;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\base\Event;
 
@@ -48,20 +46,10 @@ class SocialService extends Component
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
-        $tokenAndUserType = Type::nonNull(
-            GqlEntityRegistry::createEntity('SocialAuth', new ObjectType([
-                'name' => 'SocialAuth',
-                'fields' => [
-                    'accessToken' => Type::nonNull(Type::string()),
-                    'user' => UserType::generateType(User::class),
-                ],
-            ]))
-        );
-
         if ($settings->permissionType === 'single' && $settings->googleClientId) {
             $event->mutations['googleSignIn'] = [
                 'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
-                'type' => $tokenAndUserType,
+                'type' => Type::nonNull(Auth::getType()),
                 'args' => [
                     'idToken' => Type::nonNull(Type::string()),
                 ],
@@ -105,7 +93,7 @@ class SocialService extends Component
 
                 $event->mutations["googleSignIn{$handle}"] = [
                     'description' => "Authenticates a {$userGroup->name} using a Google Sign-In ID token. Returns user and token.",
-                    'type' => $tokenAndUserType,
+                    'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
