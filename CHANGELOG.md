@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Added per user group schema assignment, user group assignment, and granular schema permissions (a `register` mutation is added for each group, if enabled)
 - Added Google Sign-In support (adds a single `googleSignIn` mutation, or mutations per user group, depending on settings)
 - Added `SameSite` cookie policy control
+- Added unique, per user caching, to ensure users never see each other's cached queries
 
 ### Changed
 
