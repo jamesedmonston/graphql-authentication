@@ -41,14 +41,26 @@ class Asset extends ElementResolver
         }
 
         if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
+            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+            $token = $tokenService->getHeaderToken();
 
             if (StringHelper::contains($token, 'user-')) {
-                $arguments['uploader'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
+                $user = $tokenService->getUserFromToken();
+                $arguments['uploader'] = $user->id;
 
                 if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
                     unset($arguments['uploader']);
-                    $authorOnlyVolumes = GraphqlAuthentication::$plugin->getSettings()->assetQueries ?? [];
+
+                    $settings = GraphqlAuthentication::$plugin->getSettings();
+                    $authorOnlyVolumes = $settings->assetQueries ?? [];
+
+                    if ($settings->permissionType === 'multiple') {
+                        $userGroup = $user->getGroups()[0] ?? null;
+
+                        if ($userGroup) {
+                            $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
+                        }
+                    }
 
                     foreach ($authorOnlyVolumes as $volume => $value) {
                         if (!(bool) $value) {
@@ -63,7 +75,7 @@ class Asset extends ElementResolver
                             continue;
                         }
 
-                        $arguments['uploader'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
+                        $arguments['uploader'] = $user->id;
                     }
                 }
             }

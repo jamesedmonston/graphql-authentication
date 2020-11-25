@@ -204,7 +204,17 @@ class RestrictionService extends Component
             return;
         }
 
-        $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->entryMutations ?? [];
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $authorOnlySections = $settings->entryMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
+
         $entrySection = Craft::$app->getSections()->getSectionById($event->sender->sectionId)->handle;
 
         if (!in_array($entrySection, array_keys($authorOnlySections))) {
@@ -235,7 +245,17 @@ class RestrictionService extends Component
             return;
         }
 
-        $authorOnlyVolumes = GraphqlAuthentication::$plugin->getSettings()->assetMutations ?? [];
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $authorOnlyVolumes = $settings->assetMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
+            }
+        }
+
         $assetVolume = Craft::$app->getVolumes()->getVolumeById($event->sender->volumeId)->handle;
 
         if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
@@ -310,8 +330,18 @@ class RestrictionService extends Component
             throw new Error(self::$FORBIDDEN_MUTATION);
         }
 
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $authorOnlySections = $settings->entryQueries ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
+            }
+        }
+
         $sections = Craft::$app->getSections();
-        $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->entryQueries ?? [];
 
         foreach ($authorOnlySections as $section => $value) {
             if (!(bool) $value) {
@@ -350,8 +380,18 @@ class RestrictionService extends Component
             throw new Error(self::$FORBIDDEN_MUTATION);
         }
 
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $authorOnlyVolumes = $settings->assetQueries ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
+            }
+        }
+
         $volumes = Craft::$app->getVolumes()->getAllVolumes();
-        $authorOnlyVolumes = GraphqlAuthentication::$plugin->getSettings()->assetQueries ?? [];
 
         foreach ($authorOnlyVolumes as $volume => $value) {
             if (!(bool) $value) {

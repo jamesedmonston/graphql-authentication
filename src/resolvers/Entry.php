@@ -41,14 +41,26 @@ class Entry extends ElementResolver
         }
 
         if (!GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
+            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+            $token = $tokenService->getHeaderToken();
 
             if (StringHelper::contains($token, 'user-')) {
-                $arguments['authorId'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
+                $user = $tokenService->getUserFromToken();
+                $arguments['authorId'] = $user->id;
 
                 if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                     unset($arguments['authorId']);
-                    $authorOnlySections = GraphqlAuthentication::$plugin->getSettings()->entryQueries ?? [];
+
+                    $settings = GraphqlAuthentication::$plugin->getSettings();
+                    $authorOnlySections = $settings->entryQueries ?? [];
+
+                    if ($settings->permissionType === 'multiple') {
+                        $userGroup = $user->getGroups()[0] ?? null;
+
+                        if ($userGroup) {
+                            $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
+                        }
+                    }
 
                     foreach ($authorOnlySections as $section => $value) {
                         if (!(bool) $value) {
@@ -63,7 +75,7 @@ class Entry extends ElementResolver
                             continue;
                         }
 
-                        $arguments['authorId'] = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken()->id;
+                        $arguments['authorId'] = $user->id;
                     }
                 }
             }
