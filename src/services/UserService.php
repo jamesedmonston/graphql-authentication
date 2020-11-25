@@ -25,6 +25,7 @@ class UserService extends Component
     public static $INVALID_USER_UPDATE = "We couldn't update the user with the provided details";
     public static $INVALID_REQUEST = 'Cannot validate request';
     public static $INVALID_PASSWORD_MATCH = 'New passwords do not match';
+    public static $INVALID_SCHEMA = 'No schem has been set for this user group';
     public static $TOKEN_NOT_FOUND = "We couldn't find any matching tokens";
     public static $USER_NOT_FOUND = "We couldn't find any matching users";
 
@@ -75,6 +76,7 @@ class UserService extends Component
         $users = Craft::$app->getUsers();
         $permissions = Craft::$app->getUserPermissions();
         $gql = Craft::$app->getGql();
+        $settings = GraphqlAuthentication::$plugin->getSettings();
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
         $tokenAndUserType = Type::nonNull(
@@ -94,9 +96,23 @@ class UserService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($tokenService) {
+            'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
                 $user = $this->_authenticate($arguments);
-                $token = $tokenService->create($user);
+                $schemaId = $settings->schemaId ?? null;
+
+                if ($settings->permissionType === 'multiple') {
+                    $userGroup = $user->getGroups()[0] ?? null;
+
+                    if ($userGroup) {
+                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+                    }
+                }
+
+                if (!$schemaId) {
+                    throw new Error(self::$INVALID_SCHEMA);
+                }
+
+                $token = $tokenService->create($user, $schemaId);
 
                 return [
                     'accessToken' => $token,
@@ -105,7 +121,7 @@ class UserService extends Component
             },
         ];
 
-        if (GraphqlAuthentication::$plugin->getSettings()->allowRegistration) {
+        if ($settings->permissionType === 'single' && $settings->allowRegistration) {
             $event->mutations['register'] = [
                 'description' => 'Registers a user. Returns user and token.',
                 'type' => $tokenAndUserType,
@@ -118,9 +134,13 @@ class UserService extends Component
                     ],
                     UserArguments::getContentArguments()
                 ),
-                'resolve' => function ($source, array $arguments) use ($tokenService) {
-                    $user = $this->_create($arguments);
-                    $token = $tokenService->create($user);
+                'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
+                    if (!$settings->schemaId) {
+                        throw new Error(self::$INVALID_SCHEMA);
+                    }
+
+                    $user = $this->_create($arguments, $settings->userGroup);
+                    $token = $tokenService->create($user, $settings->schemaId);
 
                     return [
                         'accessToken' => $token,
@@ -128,6 +148,47 @@ class UserService extends Component
                     ];
                 },
             ];
+        }
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroups = Craft::$app->getUserGroups()->getAllGroups();
+
+            foreach ($userGroups as $userGroup) {
+                if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
+                    continue;
+                }
+
+                $handle = ucfirst($userGroup->handle);
+
+                $event->mutations["register{$handle}"] = [
+                    'description' => "Registers a {$userGroup->name} user. Returns user and token.",
+                    'type' => $tokenAndUserType,
+                    'args' => array_merge(
+                        [
+                            'email' => Type::nonNull(Type::string()),
+                            'password' => Type::nonNull(Type::string()),
+                            'firstName' => Type::nonNull(Type::string()),
+                            'lastName' => Type::nonNull(Type::string()),
+                        ],
+                        UserArguments::getContentArguments()
+                    ),
+                    'resolve' => function ($source, array $arguments) use ($tokenService, $settings, $userGroup) {
+                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+
+                        if (!$schemaId) {
+                            throw new Error(self::$INVALID_SCHEMA);
+                        }
+
+                        $user = $this->_create($arguments, $userGroup->id);
+                        $token = $tokenService->create($user, $schemaId);
+
+                        return [
+                            'accessToken' => $token,
+                            'user' => $user,
+                        ];
+                    },
+                ];
+            }
         }
 
         $event->mutations['forgottenPassword'] = [
@@ -146,7 +207,6 @@ class UserService extends Component
                 }
 
                 $users->sendPasswordResetEmail($user);
-
                 return $message;
             },
         ];
@@ -359,7 +419,7 @@ class UserService extends Component
         return $user;
     }
 
-    protected function _create(array $arguments): User
+    protected function _create(array $arguments, Int $userGroup): User
     {
         $email = $arguments['email'];
         $password = $arguments['password'];
@@ -403,10 +463,9 @@ class UserService extends Component
         }
 
         $users = Craft::$app->getUsers();
-        $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        if ($settings->userGroup) {
-            $users->assignUserToGroups($user->id, [$settings->userGroup]);
+        if ($userGroup) {
+            $users->assignUserToGroups($user->id, [$userGroup]);
         }
 
         if ($requiresVerification) {

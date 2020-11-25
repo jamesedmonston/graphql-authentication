@@ -72,17 +72,17 @@ class TokenService extends Component
         return Craft::$app->getUsers()->getUserById($this->_extractUserId($this->getHeaderToken()));
     }
 
-    public function create(User $user): string
+    public function create(User $user, Int $schemaId): string
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
-        $time = time();
+        $time = microtime(true);
 
         $fields = [
             'name' => "user-{$user->id}-{$time}",
             'accessToken' => $accessToken,
             'enabled' => true,
-            'schemaId' => $settings->schemaId,
+            'schemaId' => $schemaId,
         ];
 
         if ($settings->expiration) {

@@ -191,14 +191,6 @@
         on: settings.granularSchemas[groupKey].allowRegistration ?? null,
       })) }}
 
-      {{ forms.selectField({
-        label: 'User Group',
-        instructions: 'The user group that users will be assigned to when created through the `register` mutation.',
-        name: 'granularSchemas[' ~ groupKey ~ '][userGroup]',
-        value: settings.granularSchemas[groupKey].userGroup ?? null,
-        options: userOptions,
-      }) }}
-
       {% if not settings.granularSchemas[groupKey].schemaId ?? null %}
         {{ forms.field({
           label: 'User Permissions',
