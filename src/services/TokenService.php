@@ -115,7 +115,7 @@ class TokenService extends Component
         }
 
         if (PHP_VERSION_ID < 70300) {
-            return setcookie('gql_accessToken', $token, $expiry, '/; samesite=none', '', true, true);
+            return setcookie('gql_accessToken', $token, $expiry, "/; samesite={$settings->sameSitePolicy}", '', true, true);
         }
 
         return setcookie('gql_accessToken', $token, [
@@ -124,7 +124,7 @@ class TokenService extends Component
             'domain' => '',
             'secure' => true,
             'httponly' => true,
-            'samesite' => 'none',
+            'samesite' => $settings->sameSitePolicy,
         ]);
     }
 

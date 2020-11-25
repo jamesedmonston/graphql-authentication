@@ -24,6 +24,7 @@ class Settings extends Model
     // Tokens
     public $expiration = null;
     public $setCookie = null;
+    public $sameSitePolicy = 'strict';
 
     // Social
     public $googleClientId = null;
@@ -45,6 +46,7 @@ class Settings extends Model
                     'granularSchemas',
                     'expiration',
                     'setCookie',
+                    'sameSitePolicy',
                     'googleClientId',
                     'allowedGoogleDomains',
                 ],

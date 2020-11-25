@@ -28,3 +28,15 @@
   name: 'setCookie',
   on: settings.setCookie,
 })) }}
+
+{{ forms.selectField({
+  label: 'SameSite Cookie Policy',
+  instructions: 'The `SameSite` policy to use on cookies.',
+  name: 'sameSitePolicy',
+  value: settings.sameSitePolicy,
+  options: [
+    { value: 'strict', label: 'Strict' },
+    { value: 'lax', label: 'Lax' },
+    { value: 'none', label: 'None' },
+  ],
+}) }}
