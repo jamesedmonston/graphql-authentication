@@ -197,7 +197,7 @@ class RestrictionService extends Component
             return;
         }
 
-        $user = GraphqlAuthentication::$plugin->getInstance()->user->getUserFromToken();
+        $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
         if ($event->isNew) {
             $event->sender->authorId = $user->id;
@@ -238,7 +238,7 @@ class RestrictionService extends Component
             return;
         }
 
-        $user = GraphqlAuthentication::$plugin->getInstance()->user->getUserFromToken();
+        $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
         if ($event->isNew) {
             $event->sender->uploaderId = $user->id;
@@ -318,13 +318,14 @@ class RestrictionService extends Component
             return;
         }
 
-        $user = GraphqlAuthentication::$plugin->getInstance()->user->getUserFromToken();
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $user = $tokenService->getUserFromToken();
 
         if ((string) $entry->authorId === (string) $user->id) {
             return;
         }
 
-        $scope = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken()->getScope();
+        $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             throw new Error(self::$FORBIDDEN_MUTATION);
@@ -368,13 +369,14 @@ class RestrictionService extends Component
             return;
         }
 
-        $user = GraphqlAuthentication::$plugin->getInstance()->user->getUserFromToken();
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $user = $tokenService->getUserFromToken();
 
         if ((string) $asset->uploaderId === (string) $user->id) {
             return;
         }
 
-        $scope = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken()->getScope();
+        $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             throw new Error(self::$FORBIDDEN_MUTATION);
