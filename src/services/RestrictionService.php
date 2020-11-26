@@ -154,7 +154,7 @@ class RestrictionService extends Component
                     break;
 
                 case 'craft\\elements\\MatrixBlock':
-                    foreach ($field as $matrixBlock) {
+                    foreach ($field->all() as $matrixBlock) {
                         foreach ($matrixBlock as $key => $value) {
                             if (!$value) {
                                 continue;
