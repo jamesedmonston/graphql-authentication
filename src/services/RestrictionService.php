@@ -18,6 +18,7 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
 use jamesedmonston\graphqlauthentication\resolvers\Entry as EntryResolver;
+use Throwable;
 use yii\base\Event;
 
 class RestrictionService extends Component
@@ -277,19 +278,21 @@ class RestrictionService extends Component
 
     public function injectUniqueCache(Event $event)
     {
-        if (GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
+        if (!$this->_shouldRestrictRequests()) {
             return;
         }
 
-        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-        $token = $tokenService->getHeaderToken();
-        $cacheKey = $token->accessToken;
+        try {
+            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+            $token = $tokenService->getHeaderToken();
+            $cacheKey = $token->accessToken;
 
-        if (StringHelper::contains($token->name, 'user-')) {
-            $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
-        }
+            if (StringHelper::contains($token->name, 'user-')) {
+                $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
+            }
 
-        $event->variables['gql_cacheKey'] = $cacheKey;
+            $event->variables['gql_cacheKey'] = $cacheKey;
+        } catch (Throwable $e) {}
     }
 
     // Protected Methods
