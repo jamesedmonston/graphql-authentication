@@ -106,11 +106,13 @@ class SettingsController extends Controller
 
         if ($settings->permissionType === 'multiple') {
             foreach ($userGroups as $userGroup) {
-                if (!$settings->granularSchemas['group-' . $userGroup->id]['schemaId']) {
+                $schemaId = $settings->granularSchemas['group-' . $userGroup->id]['schemaId'] ?? null;
+
+                if (!$schemaId) {
                     continue;
                 }
 
-                $schemaPermissions = $this->_getSchemaPermissions($gql->getSchemaById($settings->granularSchemas['group-' . $userGroup->id]['schemaId']));
+                $schemaPermissions = $this->_getSchemaPermissions($gql->getSchemaById($schemaId));
                 $entryQueries['group-' . $userGroup->id] = $schemaPermissions['entryQueries'];
                 $entryMutations['group-' . $userGroup->id] = $schemaPermissions['entryMutations'];
                 $assetQueries['group-' . $userGroup->id] = $schemaPermissions['assetQueries'];

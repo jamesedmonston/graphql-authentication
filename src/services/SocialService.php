@@ -92,10 +92,6 @@ class SocialService extends Component
             $userGroups = Craft::$app->getUserGroups()->getAllGroups();
 
             foreach ($userGroups as $userGroup) {
-                if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                    continue;
-                }
-
                 $handle = ucfirst($userGroup->handle);
 
                 $event->mutations["googleSignIn{$handle}"] = [
