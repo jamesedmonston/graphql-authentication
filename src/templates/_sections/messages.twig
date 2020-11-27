@@ -1,0 +1,132 @@
+{% import '_includes/forms' as forms %}
+
+<h1>Response &amp; Error Messages</h1>
+
+{{ forms.field({
+  instructions: "Here you can customize the response and error messages returned/thrown from queries and mutations.",
+  first: true,
+}, null) }}
+
+<hr/>
+<h2>Invalid</h2>
+
+{{ forms.textField({
+  label: 'Invalid Authorization Header',
+  name: 'invalidHeader',
+  value: settings.invalidHeader,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Schema',
+  name: 'invalidSchema',
+  value: settings.invalidSchema,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Request',
+  name: 'invalidRequest',
+  value: settings.invalidRequest,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Login',
+  name: 'invalidLogin',
+  value: settings.invalidLogin,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Password Match',
+  name: 'invalidPasswordMatch',
+  value: settings.invalidPasswordMatch,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Password Update',
+  name: 'invalidPasswordUpdate',
+  value: settings.invalidPasswordUpdate,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid User Update',
+  name: 'invalidUserUpdate',
+  value: settings.invalidUserUpdate,
+  required: true,
+}) }}
+
+<hr/>
+<h2>Not Found</h2>
+
+{{ forms.textField({
+  label: 'Token Not Found',
+  name: 'tokenNotFound',
+  value: settings.tokenNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'User Not Found',
+  name: 'userNotFound',
+  value: settings.userNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Entry Not Found',
+  name: 'entryNotFound',
+  value: settings.entryNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Asset Not Found',
+  name: 'assetNotFound',
+  value: settings.assetNotFound,
+  required: true,
+}) }}
+
+<hr/>
+<h2>Forbidden</h2>
+
+{{ forms.textField({
+  label: 'Forbidden Mutation',
+  name: 'forbiddenMutation',
+  value: settings.forbiddenMutation,
+  required: true,
+}) }}
+
+<hr/>
+<h2>Social</h2>
+
+{{ forms.textField({
+  label: 'Google Client Not Found',
+  name: 'googleClientNotFound',
+  value: settings.googleClientNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Google Token ID',
+  name: 'googleTokenIdInvalid',
+  value: settings.googleTokenIdInvalid,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Email Not In Google Scope',
+  name: 'googleEmailNotInScope',
+  value: settings.googleEmailNotInScope,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Google Email Mismatch',
+  name: 'googleEmailMismatch',
+  value: settings.googleEmailMismatch,
+  required: true,
+}) }}

@@ -14,14 +14,14 @@ use yii\web\BadRequestHttpException;
 
 class TokenService extends Component
 {
-    public static $INVALID_HEADER = 'Invalid Authorization Header';
-
     // Public Methods
     // =========================================================================
 
     public function getHeaderToken(): GqlToken
     {
-        if (GraphqlAuthentication::$plugin->getSettings()->setCookie && isset($_COOKIE['gql_accessToken'])) {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+
+        if ($settings->setCookie && isset($_COOKIE['gql_accessToken'])) {
             try {
                 $token = Craft::$app->getGql()->getTokenByAccessToken($_COOKIE['gql_accessToken']);
             } catch (InvalidArgumentException $e) {
@@ -29,7 +29,7 @@ class TokenService extends Component
             }
 
             if (!isset($token)) {
-                throw new BadRequestHttpException(self::$INVALID_HEADER);
+                throw new BadRequestHttpException($settings->invalidHeader);
             }
 
             $this->_validateExpiry($token);
@@ -51,7 +51,7 @@ class TokenService extends Component
                     }
 
                     if (!$token) {
-                        throw new BadRequestHttpException(self::$INVALID_HEADER);
+                        throw new BadRequestHttpException($settings->invalidHeader);
                     }
 
                     break 2;
@@ -60,7 +60,7 @@ class TokenService extends Component
         }
 
         if (!isset($token)) {
-            throw new BadRequestHttpException(self::$INVALID_HEADER);
+            throw new BadRequestHttpException($settings->invalidHeader);
         }
 
         $this->_validateExpiry($token);
@@ -143,6 +143,6 @@ class TokenService extends Component
             return;
         }
 
-        throw new BadRequestHttpException(self::$INVALID_HEADER);
+        throw new BadRequestHttpException(GraphqlAuthentication::$plugin->getSettings()->invalidHeader);
     }
 }

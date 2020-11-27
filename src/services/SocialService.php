@@ -14,13 +14,6 @@ use yii\base\Event;
 
 class SocialService extends Component
 {
-    public static $CLIENT_NOT_FOUND = 'No Google Client ID exists';
-    public static $INVALID_TOKEN = 'Invalid Token ID';
-    public static $INVALID_SCHEMA = 'No schema has been set for this user group';
-    public static $USER_NOT_FOUND = "We couldn't find any matching users";
-    public static $EMAIL_NOT_FOUND = 'No email in scope';
-    public static $EMAIL_MISMATCH = "Email address doesn't match allowed Google domains";
-
     // Public Methods
     // =========================================================================
 
@@ -57,7 +50,7 @@ class SocialService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error(self::$INVALID_SCHEMA);
+                        throw new Error($settings->invalidSchema);
                     }
 
                     $idToken = $arguments['idToken'];
@@ -66,7 +59,7 @@ class SocialService extends Component
 
                     if (!$user) {
                         if (!$settings->allowRegistration) {
-                            throw new Error(self::$USER_NOT_FOUND);
+                            throw new Error($settings->userNotFound);
                         }
 
                         $user = $userService->create([
@@ -104,7 +97,7 @@ class SocialService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error(self::$INVALID_SCHEMA);
+                            throw new Error($settings->invalidSchema);
                         }
 
                         $idToken = $arguments['idToken'];
@@ -113,7 +106,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new Error(self::$INVALID_SCHEMA);
+                                throw new Error($settings->invalidSchema);
                             }
 
                             $user = $userService->create([
@@ -145,20 +138,20 @@ class SocialService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!$settings->googleClientId) {
-            throw new Error(self::$CLIENT_NOT_FOUND);
+            throw new Error($settings->googleClientNotFound);
         }
 
         $client = new Google_Client(['client_id' => $settings->googleClientId]);
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            throw new Error(self::$INVALID_TOKEN);
+            throw new Error($settings->googleTokenIdInvalid);
         }
 
         $email = $payload['email'];
 
         if (!$email || !isset($email)) {
-            throw new Error(self::$EMAIL_NOT_FOUND);
+            throw new Error($settings->googleEmailNotInScope);
         }
 
         if ($settings->allowedGoogleDomains) {
@@ -166,7 +159,7 @@ class SocialService extends Component
             $hd = $payload['hd'];
 
             if (!in_array($hd, $domains)) {
-                throw new Error(self::$EMAIL_MISMATCH);
+                throw new Error($settings->googleEmailMismatch);
             }
         }
 

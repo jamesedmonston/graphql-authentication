@@ -49,6 +49,11 @@ class SettingsController extends Controller
                 'url' => "#settings-social",
                 'class' => null,
             ],
+            [
+                'label' => 'Messages',
+                'url' => "#settings-messages",
+                'class' => null,
+            ],
         ];
 
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();

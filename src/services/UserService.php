@@ -19,15 +19,6 @@ use yii\base\Event;
 
 class UserService extends Component
 {
-    public static $INVALID_LOGIN = "We couldn't log you in with the provided details";
-    public static $INVALID_PASSWORD_UPDATE = "We couldn't update the password with the provided details";
-    public static $INVALID_USER_UPDATE = "We couldn't update the user with the provided details";
-    public static $INVALID_REQUEST = 'Cannot validate request';
-    public static $INVALID_PASSWORD_MATCH = 'New passwords do not match';
-    public static $INVALID_SCHEMA = 'No schema has been set for this user group';
-    public static $TOKEN_NOT_FOUND = "We couldn't find any matching tokens";
-    public static $USER_NOT_FOUND = "We couldn't find any matching users";
-
     // Public Methods
     // =========================================================================
 
@@ -53,15 +44,17 @@ class UserService extends Component
 
     public function registerGqlQueries(Event $event)
     {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+
         $event->queries['getUser'] = [
             'description' => 'Gets authenticated user.',
             'type' => UserType::generateType(User::class),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function () use ($settings) {
                 $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error(self::$USER_NOT_FOUND);
+                    throw new Error($settings->userNotFound);
                 }
 
                 return $user;
@@ -98,7 +91,7 @@ class UserService extends Component
                 }
 
                 if (!$schemaId) {
-                    throw new Error(self::$INVALID_SCHEMA);
+                    throw new Error($settings->invalidSchema);
                 }
 
                 $token = $tokenService->create($user, $schemaId);
@@ -128,7 +121,7 @@ class UserService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error(self::$INVALID_SCHEMA);
+                        throw new Error($settings->invalidSchema);
                     }
 
                     $user = $this->create($arguments, $settings->userGroup);
@@ -169,7 +162,7 @@ class UserService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error(self::$INVALID_SCHEMA);
+                            throw new Error($settings->invalidSchema);
                         }
 
                         $user = $this->create($arguments, $userGroup->id);
@@ -213,7 +206,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $users) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
                 $password = $arguments['password'];
                 $code = $arguments['code'];
                 $id = $arguments['id'];
@@ -221,7 +214,7 @@ class UserService extends Component
                 $user = $users->getUserByUid($id);
 
                 if (!$user || !$users->isVerificationCodeValidForUser($user, $code)) {
-                    throw new Error(self::$INVALID_REQUEST);
+                    throw new Error($settings->invalidRequest);
                 }
 
                 $user->newPassword = $password;
@@ -242,18 +235,18 @@ class UserService extends Component
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions, $tokenService) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions, $tokenService, $settings) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error(self::$INVALID_PASSWORD_UPDATE);
+                    throw new Error($settings->invalidPasswordUpdate);
                 }
 
                 $newPassword = $arguments['newPassword'];
                 $confirmPassword = $arguments['confirmPassword'];
 
                 if ($newPassword !== $confirmPassword) {
-                    throw new Error(self::$INVALID_PASSWORD_MATCH);
+                    throw new Error($settings->invalidPasswordMatch);
                 }
 
                 $currentPassword = $arguments['currentPassword'];
@@ -267,7 +260,7 @@ class UserService extends Component
 
                 if (!$user->authenticate($currentPassword)) {
                     $permissions->saveUserPermissions($user->id, $userPermissions);
-                    throw new Error(self::$INVALID_PASSWORD_UPDATE);
+                    throw new Error($settings->invalidPasswordUpdate);
                 }
 
                 $permissions->saveUserPermissions($user->id, $userPermissions);
@@ -293,11 +286,11 @@ class UserService extends Component
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $tokenService) {
+            'resolve' => function ($source, array $arguments) use ($elements, $tokenService, $settings) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error(self::$INVALID_USER_UPDATE);
+                    throw new Error($settings->invalidUserUpdate);
                 }
 
                 if (isset($arguments['email'])) {
@@ -339,11 +332,11 @@ class UserService extends Component
             'description' => 'Deletes authenticated user access token. Useful for logging out of current device. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($gql, $tokenService) {
+            'resolve' => function () use ($gql, $tokenService, $settings) {
                 $token = $tokenService->getHeaderToken();
 
                 if (!$token) {
-                    throw new Error(self::$TOKEN_NOT_FOUND);
+                    throw new Error($settings->tokenNotFound);
                 }
 
                 $gql->deleteTokenById($token->id);
@@ -356,17 +349,17 @@ class UserService extends Component
             'description' => 'Deletes all access tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($gql, $tokenService) {
+            'resolve' => function () use ($gql, $tokenService, $settings) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error(self::$TOKEN_NOT_FOUND);
+                    throw new Error($settings->tokenNotFound);
                 }
 
                 $savedTokens = $gql->getTokens();
 
                 if (!$savedTokens || !count($savedTokens)) {
-                    throw new Error(self::$TOKEN_NOT_FOUND);
+                    throw new Error($settings->tokenNotFound);
                 }
 
                 foreach ($savedTokens as $savedToken) {
@@ -447,9 +440,10 @@ class UserService extends Component
 
         $users = Craft::$app->getUsers();
         $user = $users->getUserByUsernameOrEmail($email);
+        $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!$user) {
-            throw new Error(self::$INVALID_LOGIN);
+            throw new Error($settings->invalidLogin);
         }
 
         $permissions = Craft::$app->getUserPermissions();
@@ -461,7 +455,7 @@ class UserService extends Component
 
         if (!$user->authenticate($password)) {
             $permissions->saveUserPermissions($user->id, $userPermissions);
-            throw new Error(self::$INVALID_LOGIN);
+            throw new Error($settings->invalidLogin);
         }
 
         $permissions->saveUserPermissions($user->id, $userPermissions);

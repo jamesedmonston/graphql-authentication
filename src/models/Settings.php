@@ -30,10 +30,52 @@ class Settings extends Model
     public $googleClientId = null;
     public $allowedGoogleDomains = null;
 
+    // Messages
+    public $invalidHeader = 'Invalid Authorization Header';
+    public $invalidSchema = 'No schema has been set for this user group';
+    public $invalidRequest = 'Cannot validate request';
+    public $invalidLogin = "We couldn't log you in with the provided details";
+    public $invalidPasswordMatch = 'New passwords do not match';
+    public $invalidPasswordUpdate = "We couldn't update the password with the provided details";
+    public $invalidUserUpdate = "We couldn't update the user with the provided details";
+
+    public $tokenNotFound = "We couldn't find any matching tokens";
+    public $userNotFound = "We couldn't find any matching users";
+    public $entryNotFound = "We couldn't find any matching entries";
+    public $assetNotFound = "We couldn't find any matching assets";
+
+    public $forbiddenMutation = "User doesn't have permission to perform this mutation";
+
+    public $googleClientNotFound = 'No Google Client ID exists';
+    public $googleTokenIdInvalid = 'Invalid Google Token ID';
+    public $googleEmailNotInScope = 'No email in scope';
+    public $googleEmailMismatch = "Email address doesn't match allowed Google domains";
+
     public function rules()
     {
         return [
-            [['permissionType'], 'required'],
+            [
+                [
+                    'permissionType',
+                    'invalidHeader',
+                    'invalidSchema',
+                    'invalidRequest',
+                    'invalidLogin',
+                    'invalidPasswordMatch',
+                    'invalidPasswordUpdate',
+                    'invalidUserUpdate',
+                    'tokenNotFound',
+                    'userNotFound',
+                    'entryNotFound',
+                    'assetNotFound',
+                    'forbiddenMutation',
+                    'googleClientNotFound',
+                    'googleTokenIdInvalid',
+                    'googleEmailNotInScope',
+                    'googleEmailMismatch',
+                ],
+                'required',
+            ],
             [
                 [
                     'schemaId',

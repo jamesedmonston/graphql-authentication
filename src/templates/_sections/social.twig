@@ -1,7 +1,11 @@
 {% import '_includes/forms' as forms %}
 
 <h1>Social Settings</h1>
-<p>Separate mutations for each service will be available once you've filled in the appropriate details.</p>
+
+{{ forms.field({
+  instructions: "Separate mutations for each service will be available once you've filled in the appropriate details.",
+  first: true,
+}, null) }}
 
 <hr/>
 <h2>Google</h2>

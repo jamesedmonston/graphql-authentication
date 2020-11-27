@@ -23,10 +23,6 @@ use yii\base\Event;
 
 class RestrictionService extends Component
 {
-    public static $FORBIDDEN_MUTATION = "User doesn't have permission to perform this mutation";
-    public static $ENTRY_NOT_FOUND = "We couldn't find any matching entries";
-    public static $ASSET_NOT_FOUND = "We couldn't find any matching assets";
-
     // Public Methods
     // =========================================================================
 
@@ -228,7 +224,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->authorId !== (string) $user->id) {
-                throw new Error(self::$FORBIDDEN_MUTATION);
+                throw new Error($settings->forbiddenMutation);
             }
         }
     }
@@ -269,7 +265,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                throw new Error(self::$FORBIDDEN_MUTATION);
+                throw new Error($settings->forbiddenMutation);
             }
         }
     }
@@ -312,9 +308,10 @@ class RestrictionService extends Component
     protected function _ensureValidEntry(int $id)
     {
         $entry = Craft::$app->getElements()->getElementById($id);
+        $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!$entry) {
-            throw new Error(self::$ENTRY_NOT_FOUND);
+            throw new Error($settings->entryNotFound);
         }
 
         if (!$entry->authorId) {
@@ -331,7 +328,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-            throw new Error(self::$FORBIDDEN_MUTATION);
+            throw new Error($settings->forbiddenMutation);
         }
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -356,16 +353,17 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new Error(self::$FORBIDDEN_MUTATION);
+            throw new Error($settings->forbiddenMutation);
         }
     }
 
     protected function _ensureValidAsset(int $id)
     {
         $asset = Craft::$app->getAssets()->getAssetById($id);
+        $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!$asset) {
-            throw new Error(self::$ASSET_NOT_FOUND);
+            throw new Error($settings->assetNotFound);
         }
 
         if (!$asset->uploaderId) {
@@ -382,7 +380,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-            throw new Error(self::$FORBIDDEN_MUTATION);
+            throw new Error($settings->forbiddenMutation);
         }
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -407,7 +405,7 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new Error(self::$FORBIDDEN_MUTATION);
+            throw new Error($settings->forbiddenMutation);
         }
     }
 }
