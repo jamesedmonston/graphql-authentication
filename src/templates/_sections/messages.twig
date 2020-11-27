@@ -101,7 +101,7 @@
 }) }}
 
 <hr/>
-<h2>Social</h2>
+<h2>Google</h2>
 
 {{ forms.textField({
   label: 'Google Client Not Found',
@@ -128,5 +128,50 @@
   label: 'Google Email Mismatch',
   name: 'googleEmailMismatch',
   value: settings.googleEmailMismatch,
+  required: true,
+}) }}
+
+<hr/>
+<h2>Twitter</h2>
+
+{{ forms.textField({
+  label: 'Invalid Twitter API Key',
+  name: 'twitterApiKeyNotFound',
+  value: settings.twitterApiKeyNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Twitter API Key Secret',
+  name: 'twitterApiKeySecretNotFound',
+  value: settings.twitterApiKeySecretNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Twitter Redirect URL',
+  name: 'twitterRedirectUrlNotFound',
+  value: settings.twitterRedirectUrlNotFound,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Email Not In Twitter Scope',
+  name: 'twitterEmailNotInScope',
+  value: settings.twitterEmailNotInScope,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Twitter OAuth Token',
+  name: 'twitterInvalidOauthToken',
+  value: settings.twitterInvalidOauthToken,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid OAuth URL',
+  name: 'twitterInvalidGenerate',
+  value: settings.twitterInvalidGenerate,
   required: true,
 }) }}

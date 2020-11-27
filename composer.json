@@ -24,6 +24,7 @@
     }
   ],
   "require": {
+    "abraham/twitteroauth": "^1.0",
     "craftcms/cms": "^3.5.0",
     "google/apiclient": "^2.8"
   },

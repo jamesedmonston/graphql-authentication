@@ -29,6 +29,9 @@ class Settings extends Model
     // Social
     public $googleClientId = null;
     public $allowedGoogleDomains = null;
+    public $twitterApiKey = null;
+    public $twitterApiKeySecret = null;
+    public $twitterRedirectUrl = null;
 
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
@@ -50,6 +53,13 @@ class Settings extends Model
     public $googleTokenIdInvalid = 'Invalid Google Token ID';
     public $googleEmailNotInScope = 'No email in scope';
     public $googleEmailMismatch = "Email address doesn't match allowed Google domains";
+
+    public $twitterApiKeyNotFound = 'No Twitter API key exists';
+    public $twitterApiKeySecretNotFound = 'No Twitter API key secret exists';
+    public $twitterRedirectUrlNotFound = 'No Twitter redirect URL exists';
+    public $twitterEmailNotInScope = 'No email in scope';
+    public $twitterInvalidOauthToken = 'Invalid OAuth Token';
+    public $twitterInvalidGenerate = "Couldn't generate Twitter OAuth URL";
 
     public function rules()
     {
@@ -73,6 +83,12 @@ class Settings extends Model
                     'googleTokenIdInvalid',
                     'googleEmailNotInScope',
                     'googleEmailMismatch',
+                    'twitterApiKeyNotFound',
+                    'twitterApiKeySecretNotFound',
+                    'twitterRedirectUrlNotFound',
+                    'twitterEmailNotInScope',
+                    'twitterInvalidOauthToken',
+                    'twitterInvalidGenerate',
                 ],
                 'required',
             ],

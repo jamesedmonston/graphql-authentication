@@ -39,7 +39,38 @@
 
 <hr/>
 <h2>Twitter</h2>
-<p>Coming soon!</p>
+
+{{ forms.field({
+  instructions: 'Use the `twitterOauthUrl` query to get the authorization URL, then use the `twitterSignIn` mutation to authenticate a user, after filling in the all fields below.',
+  first: true,
+}, null) }}
+
+{{ forms.textField({
+  label: 'API Key',
+  instructions: 'The API key from your Twitter app.',
+  name: 'twitterApiKey',
+  value: settings.twitterApiKey,
+  placeholder: 'fZ60QeEmjHKIqq7a7NxcfOBPN',
+  required: false,
+}) }}
+
+{{ forms.textField({
+  label: 'API Key Secret',
+  instructions: 'The API key secret from your Twitter app.',
+  name: 'twitterApiKeySecret',
+  value: settings.twitterApiKeySecret,
+  placeholder: 'EjszP3Ax1J2Y3VfDdDTqpgRr0Wb5IWibIgeSbQA1VzyWMUhzRR',
+  required: false,
+}) }}
+
+{{ forms.textField({
+  label: 'Redirect URL',
+  instructions: 'The URL to redirect to after authenticating.',
+  name: 'twitterRedirectUrl',
+  value: settings.twitterRedirectUrl,
+  placeholder: 'https://yoursite.com',
+  required: false,
+}) }}
 
 <hr/>
 <h2>Apple</h2>
