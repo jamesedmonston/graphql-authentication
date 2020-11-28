@@ -6,6 +6,7 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 use Craft;
 use craft\base\Component;
 use craft\services\Gql;
+use Facebook\Facebook;
 use Google_Client;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -40,44 +41,46 @@ class SocialService extends Component
 
     public function registerGqlQueries(Event $event)
     {
-        $event->queries['twitterOauthUrl'] = [
-            'description' => 'Generates the OAuth URL for allowing users to authenticate.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => [],
-            'resolve' => function () {
-                $settings = GraphqlAuthentication::$plugin->getSettings();
+        $settings = GraphqlAuthentication::$plugin->getSettings();
 
-                if (!$settings->twitterApiKey) {
-                    throw new Error($settings->twitterApiKeyNotFound);
-                }
+        if ($this->_validateFacebookSettings()) {
+            $event->queries['facebookOauthUrl'] = [
+                'description' => 'Generates the Facebook OAuth URL for allowing users to authenticate.',
+                'type' => Type::nonNull(Type::string()),
+                'args' => [],
+                'resolve' => function () use ($settings) {
+                    $client = new Facebook([
+                        'app_id' => $settings->facebookAppId,
+                        'app_secret' => $settings->facebookAppSecret,
+                    ]);
 
-                if (!$settings->twitterApiKeySecret) {
-                    throw new Error($settings->twitterApiKeySecretNotFound);
-                }
+                    $url = $client->getRedirectLoginHelper()->getLoginUrl($settings->facebookRedirectUrl, ['email']);
+                    return $url;
+                },
+            ];
+        }
 
-                if (!$settings->twitterRedirectUrl) {
-                    throw new Error($settings->twitterRedirectUrlNotFound);
-                }
+        if ($this->_validateTwitterSettings()) {
+            $event->queries['twitterOauthUrl'] = [
+                'description' => 'Generates the Twitter OAuth URL for allowing users to authenticate.',
+                'type' => Type::nonNull(Type::string()),
+                'args' => [],
+                'resolve' => function () use ($settings) {
+                    $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret);
+                    $requestToken = $client->oauth('oauth/request_token', ['oauth_callback' => $settings->twitterRedirectUrl]);
 
-                $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret);
-                $requestToken = $client->oauth('oauth/request_token', ['oauth_callback' => $settings->twitterRedirectUrl]);
+                    $oauthToken = $requestToken['oauth_token'];
+                    $oauthTokenSecret = $requestToken['oauth_token_secret'];
 
-                $oauthToken = $requestToken['oauth_token'];
-                $oauthTokenSecret = $requestToken['oauth_token_secret'];
+                    $session = Craft::$app->getSession();
+                    $session->set('oauthToken', $oauthToken);
+                    $session->set('oauthTokenSecret', $oauthTokenSecret);
 
-                $url = $client->url('oauth/authorize', ['oauth_token' => $oauthToken]);
-
-                if (!$url) {
-                    throw new Error($settings->twitterInvalidGenerate);
-                }
-
-                $session = Craft::$app->getSession();
-                $session->set('oauthToken', $oauthToken);
-                $session->set('oauthTokenSecret', $oauthTokenSecret);
-
-                return $url;
-            },
-        ];
+                    $url = $client->url('oauth/authorize', ['oauth_token' => $oauthToken]);
+                    return $url;
+                },
+            ];
+        }
     }
 
     public function registerGqlMutations(Event $event)
@@ -177,7 +180,95 @@ class SocialService extends Component
             }
         }
 
-        if ($settings->permissionType === 'single' && $settings->twitterApiKey) {
+        if ($settings->permissionType === 'single' && $this->_validateFacebookSettings()) {
+            $event->mutations['facebookSignIn'] = [
+                'description' => 'Authenticates a user using a Facebook Sign-In token. Returns user and token.',
+                'type' => Type::nonNull(Auth::getType()),
+                'args' => [
+                    'code' => Type::nonNull(Type::string()),
+                ],
+                'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService) {
+                    $schemaId = $settings->schemaId;
+
+                    if (!$schemaId) {
+                        throw new Error($settings->invalidSchema);
+                    }
+
+                    $code = $arguments['code'];
+                    $tokenUser = $this->_getUserFromFacebookToken($code);
+                    $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+
+                    if (!$user) {
+                        if (!$settings->allowRegistration) {
+                            throw new Error($settings->userNotFound);
+                        }
+
+                        $user = $userService->create([
+                            'email' => $tokenUser['email'],
+                            'password' => '',
+                            'firstName' => $tokenUser['firstName'],
+                            'lastName' => $tokenUser['lastName'],
+                        ], $settings->userGroup);
+                    }
+
+                    $token = $tokenService->create($user, $schemaId);
+
+                    return [
+                        'accessToken' => $token,
+                        'user' => $user,
+                        'schema' => $gql->getSchemaById($schemaId)->name,
+                    ];
+                },
+            ];
+        }
+
+        if ($settings->permissionType === 'multiple' && $this->_validateTwitterSettings()) {
+            foreach ($userGroups as $userGroup) {
+                $handle = ucfirst($userGroup->handle);
+
+                $event->mutations["facebookSignIn{$handle}"] = [
+                    'description' => "Authenticates a {$userGroup->name} using a Facebook Sign-In token. Returns user and token.",
+                    'type' => Type::nonNull(Auth::getType()),
+                    'args' => [
+                        'code' => Type::nonNull(Type::string()),
+                    ],
+                    'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService, $userGroup) {
+                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+
+                        if (!$schemaId) {
+                            throw new Error($settings->invalidSchema);
+                        }
+
+                        $code = $arguments['code'];
+                        $tokenUser = $this->_getUserFromFacebookToken($code);
+                        $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+
+                        if (!$user) {
+                            if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
+                                throw new Error($settings->invalidSchema);
+                            }
+
+                            $user = $userService->create([
+                                'email' => $tokenUser['email'],
+                                'password' => '',
+                                'firstName' => $tokenUser['firstName'],
+                                'lastName' => $tokenUser['lastName'],
+                            ], $userGroup->id);
+                        }
+
+                        $token = $tokenService->create($user, $schemaId);
+
+                        return [
+                            'accessToken' => $token,
+                            'user' => $user,
+                            'schema' => $gql->getSchemaById($schemaId)->name,
+                        ];
+                    },
+                ];
+            }
+        }
+
+        if ($settings->permissionType === 'single' && $this->_validateTwitterSettings()) {
             $event->mutations['twitterSignIn'] = [
                 'description' => 'Authenticates a user using a Twitter Sign-In token. Returns user and token.',
                 'type' => Type::nonNull(Auth::getType()),
@@ -221,7 +312,7 @@ class SocialService extends Component
             ];
         }
 
-        if ($settings->permissionType === 'multiple' && $settings->twitterApiKey) {
+        if ($settings->permissionType === 'multiple' && $this->_validateTwitterSettings()) {
             foreach ($userGroups as $userGroup) {
                 $handle = ucfirst($userGroup->handle);
 
@@ -273,14 +364,21 @@ class SocialService extends Component
     // Protected Methods
     // =========================================================================
 
+    protected function _validateFacebookSettings(): bool
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        return $settings->facebookAppId && $settings->facebookAppSecret && $settings->facebookRedirectUrl;
+    }
+
+    protected function _validateTwitterSettings(): bool
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        return $settings->twitterApiKey && $settings->twitterApiKeySecret && $settings->twitterRedirectUrl;
+    }
+
     protected function _getUserFromGoogleToken(string $idToken): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-
-        if (!$settings->googleClientId) {
-            throw new Error($settings->googleClientNotFound);
-        }
-
         $client = new Google_Client(['client_id' => $settings->googleClientId]);
         $payload = $client->verifyIdToken($idToken);
 
@@ -291,7 +389,7 @@ class SocialService extends Component
         $email = $payload['email'];
 
         if (!$email || !isset($email)) {
-            throw new Error($settings->googleEmailNotInScope);
+            throw new Error($settings->emailNotInScope);
         }
 
         if ($settings->allowedGoogleDomains) {
@@ -313,28 +411,48 @@ class SocialService extends Component
         );
     }
 
-    protected function _getUserFromTwitterToken(string $oauthToken, string $oauthVerifier): array
+    protected function _getUserFromFacebookToken(string $code): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        if (!$settings->twitterApiKey) {
-            throw new Error($settings->twitterApiKeyNotFound);
+        $client = new Facebook([
+            'app_id' => $settings->facebookAppId,
+            'app_secret' => $settings->facebookAppSecret,
+        ]);
+
+        $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $settings->facebookRedirectUrl);
+
+        if (!$accessToken) {
+            throw new Error($settings->invalidOauthToken);
         }
 
-        if (!$settings->twitterApiKeySecret) {
-            throw new Error($settings->twitterApiKeySecretNotFound);
+        $user = $client->get('/me?fields=id,name,email', $accessToken->getValue())->getGraphUser();
+        $email = $user['email'];
+
+        if (!$email || !isset($email)) {
+            throw new Error($settings->emailNotInScope);
         }
 
-        if (!$settings->twitterRedirectUrl) {
-            throw new Error($settings->twitterRedirectUrlNotFound);
-        }
+        $name = explode(' ', $user['name'] ?? '', 1);
+        $firstName = $name[0] ?? '';
+        $lastName = $name[1] ?? '';
 
+        return compact(
+            'email',
+            'firstName',
+            'lastName',
+        );
+    }
+
+    protected function _getUserFromTwitterToken(string $oauthToken, string $oauthVerifier): array
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
         $session = Craft::$app->getSession();
         $sessionOauthToken = $session->get('oauthToken');
         $sessionOauthTokenSecret = $session->get('oauthTokenSecret');
 
         if ($oauthToken !== $sessionOauthToken) {
-            throw new Error($settings->twitterInvalidOauthToken);
+            throw new Error($settings->invalidOauthToken);
         }
 
         $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret, $sessionOauthToken, $sessionOauthTokenSecret);
@@ -346,7 +464,7 @@ class SocialService extends Component
         $email = $user->email;
 
         if (!$email || !isset($email)) {
-            throw new Error($settings->twitterEmailNotInScope);
+            throw new Error($settings->emailNotInScope);
         }
 
         $name = explode(' ', $user->name ?? '', 1);
@@ -359,7 +477,7 @@ class SocialService extends Component
         return compact(
             'email',
             'firstName',
-            'lastName'
+            'lastName',
         );
     }
 }

@@ -59,6 +59,13 @@
   required: true,
 }) }}
 
+{{ forms.textField({
+  label: 'Invalid OAuth Token',
+  name: 'invalidOauthToken',
+  value: settings.invalidOauthToken,
+  required: true,
+}) }}
+
 <hr/>
 <h2>Not Found</h2>
 
@@ -90,6 +97,13 @@
   required: true,
 }) }}
 
+{{ forms.textField({
+  label: 'Email Not In Scope',
+  name: 'emailNotInScope',
+  value: settings.emailNotInScope,
+  required: true,
+}) }}
+
 <hr/>
 <h2>Forbidden</h2>
 
@@ -104,13 +118,6 @@
 <h2>Google</h2>
 
 {{ forms.textField({
-  label: 'Google Client Not Found',
-  name: 'googleClientNotFound',
-  value: settings.googleClientNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
   label: 'Invalid Google Token ID',
   name: 'googleTokenIdInvalid',
   value: settings.googleTokenIdInvalid,
@@ -118,60 +125,8 @@
 }) }}
 
 {{ forms.textField({
-  label: 'Email Not In Google Scope',
-  name: 'googleEmailNotInScope',
-  value: settings.googleEmailNotInScope,
-  required: true,
-}) }}
-
-{{ forms.textField({
   label: 'Google Email Mismatch',
   name: 'googleEmailMismatch',
   value: settings.googleEmailMismatch,
-  required: true,
-}) }}
-
-<hr/>
-<h2>Twitter</h2>
-
-{{ forms.textField({
-  label: 'Invalid Twitter API Key',
-  name: 'twitterApiKeyNotFound',
-  value: settings.twitterApiKeyNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid Twitter API Key Secret',
-  name: 'twitterApiKeySecretNotFound',
-  value: settings.twitterApiKeySecretNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid Twitter Redirect URL',
-  name: 'twitterRedirectUrlNotFound',
-  value: settings.twitterRedirectUrlNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Email Not In Twitter Scope',
-  name: 'twitterEmailNotInScope',
-  value: settings.twitterEmailNotInScope,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid Twitter OAuth Token',
-  name: 'twitterInvalidOauthToken',
-  value: settings.twitterInvalidOauthToken,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid OAuth URL',
-  name: 'twitterInvalidGenerate',
-  value: settings.twitterInvalidGenerate,
   required: true,
 }) }}
