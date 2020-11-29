@@ -298,11 +298,16 @@ class RestrictionService extends Component
     {
         $request = Craft::$app->getRequest();
 
-        if ($request->isConsoleRequest || GraphqlAuthentication::$plugin->isGraphiqlRequest()) {
-            return false;
+        if (
+            !$request->isConsoleRequest &&
+            !GraphqlAuthentication::$plugin->isGraphiqlRequest() &&
+            (bool) $request->getBodyParam('query')
+        ) {
+            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
+            return StringHelper::contains($token->name, 'user-');
         }
 
-        return (bool) $request->getBodyParam('query');
+        return false;
     }
 
     protected function _ensureValidEntry(int $id)
