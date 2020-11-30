@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Component;
 use craft\elements\User;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
 use craft\services\Gql;
 use DateTime;
@@ -251,7 +252,7 @@ class TokenService extends Component
         $now = new DateTimeImmutable();
 
         $jwt = $jwtConfig->builder()
-            ->issuedBy(Craft::$app->id)
+            ->issuedBy(Craft::$app->id ?? UrlHelper::cpUrl())
             ->issuedAt($now)
             ->expiresAt($now->modify($settings->jwtExpiration))
             ->relatedTo($user->id)
