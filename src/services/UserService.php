@@ -95,12 +95,7 @@ class UserService extends Component
                 }
 
                 $token = $tokenService->create($user, $schemaId);
-
-                return [
-                    'accessToken' => $token,
-                    'user' => $user,
-                    'schema' => $gql->getSchemaById($schemaId)->name,
-                ];
+                return $this->getResponseFields($user, $schemaId, $token);
             },
         ];
 
@@ -127,11 +122,7 @@ class UserService extends Component
                     $user = $this->create($arguments, $settings->userGroup);
                     $token = $tokenService->create($user, $schemaId);
 
-                    return [
-                        'accessToken' => $token,
-                        'user' => $user,
-                        'schema' => $gql->getSchemaById($schemaId)->name,
-                    ];
+                    return $this->getResponseFields($user, $schemaId, $token);
                 },
             ];
         }
@@ -168,11 +159,7 @@ class UserService extends Component
                         $user = $this->create($arguments, $userGroup->id);
                         $token = $tokenService->create($user, $schemaId);
 
-                        return [
-                            'accessToken' => $token,
-                            'user' => $user,
-                            'schema' => $gql->getSchemaById($schemaId)->name,
-                        ];
+                        return $this->getResponseFields($user, $schemaId, $token);
                     },
                 ];
             }
@@ -428,6 +415,27 @@ class UserService extends Component
 
         $this->_updateLastLogin($user);
         return $user;
+    }
+
+    public function getResponseFields(User $user, int $schemaId, $token): array
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+
+        $fields = [
+            'user' => $user,
+            'schema' => Craft::$app->getGql()->getSchemaById($schemaId)->name,
+        ];
+
+        if ($settings->tokenType !== 'jwt') {
+            $fields['accessToken'] = $token;
+        } else {
+            $fields['jwt'] = $token['jwt'];
+            $fields['jwtExpiresAt'] = $token['jwtExpiresAt'];
+            $fields['refreshToken'] = $token['refreshToken'];
+            $fields['refreshTokenExpiresAt'] = $token['refreshTokenExpiresAt'];
+        }
+
+        return $fields;
     }
 
     // Protected Methods

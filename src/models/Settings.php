@@ -22,8 +22,12 @@ class Settings extends Model
     public $granularSchemas = [];
 
     // Tokens
-    public $expiration = null;
+    public $tokenType = 'response';
+    public $expiration = '1 week';
     public $setCookie = null;
+    public $jwtExpiration = '30 minutes';
+    public $jwtRefreshExpiration = '3 months';
+    public $jwtSecretKey = null;
     public $sameSitePolicy = 'strict';
 
     // Social
@@ -65,6 +69,7 @@ class Settings extends Model
             [
                 [
                     'permissionType',
+                    'tokenType',
                     'invalidHeader',
                     'invalidSchema',
                     'invalidRequest',
@@ -96,6 +101,9 @@ class Settings extends Model
                     'granularSchemas',
                     'expiration',
                     'setCookie',
+                    'jwtExpiration',
+                    'jwtRefreshExpiration',
+                    'jwtSecretKey',
                     'sameSitePolicy',
                     'googleClientId',
                     'allowedGoogleDomains',

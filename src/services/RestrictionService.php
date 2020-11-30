@@ -303,8 +303,13 @@ class RestrictionService extends Component
             !GraphqlAuthentication::$plugin->isGraphiqlRequest() &&
             (bool) $request->getBodyParam('query')
         ) {
-            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
-            return StringHelper::contains($token->name, 'user-');
+            $token = null;
+
+            try {
+                $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
+            } catch (Throwable $e) {}
+
+            return StringHelper::contains($token->name ?? '', 'user-');
         }
 
         return false;

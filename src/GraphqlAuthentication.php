@@ -12,9 +12,11 @@ namespace jamesedmonston\graphqlauthentication;
 
 use Craft;
 use craft\base\Plugin;
+use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
+use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
 use jamesedmonston\graphqlauthentication\services\RestrictionService;
@@ -48,7 +50,7 @@ class GraphqlAuthentication extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.0.0';
+    public $schemaVersion = '1.1.0';
 
     /**
      * @var bool
@@ -88,6 +90,20 @@ class GraphqlAuthentication extends Plugin
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
             [$this, 'onRegisterCPUrlRules']
         );
+
+        if ($this->getSettings()->tokenType === 'jwt') {
+            Event::on(
+                Cp::class,
+                Cp::EVENT_REGISTER_CP_NAV_ITEMS,
+                function (RegisterCpNavItemsEvent $event) {
+                    $event->navItems[] = [
+                        'url' => 'graphql-authentication/refresh-tokens',
+                        'label' => 'JWT Refresh Tokens',
+                        'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
+                    ];
+                }
+            );
+        }
     }
 
     public function isGraphiqlRequest(): bool

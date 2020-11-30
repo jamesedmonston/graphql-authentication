@@ -6,6 +6,7 @@ use craft\gql\GqlEntityRegistry;
 use craft\gql\types\generators\UserType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 class Auth extends ObjectType
 {
@@ -26,13 +27,25 @@ class Auth extends ObjectType
             return $type;
         }
 
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+
+        $fields = [
+            'user' => UserType::generateType(User::class),
+            'schema' => Type::nonNull(Type::string()),
+        ];
+
+        if ($settings->tokenType !== 'jwt') {
+            $fields['accessToken'] = Type::nonNull(Type::string());
+        } else {
+            $fields['jwt'] = Type::nonNull(Type::string());
+            $fields['jwtExpiresAt'] = Type::nonNull(Type::int());
+            $fields['refreshToken'] = Type::nonNull(Type::string());
+            $fields['refreshTokenExpiresAt'] = Type::nonNull(Type::int());
+        }
+
         return GqlEntityRegistry::createEntity(static::class, new ObjectType([
             'name' => static::getName(),
-            'fields' => [
-                'accessToken' => Type::nonNull(Type::string()),
-                'user' => UserType::generateType(User::class),
-                'schema' => Type::nonNull(Type::string()),
-            ],
+            'fields' => $fields,
         ]));
     }
 }

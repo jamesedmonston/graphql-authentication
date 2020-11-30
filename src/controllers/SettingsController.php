@@ -125,6 +125,10 @@ class SettingsController extends Controller
             }
         }
 
+        if (!$settings->jwtSecretKey) {
+            $settings->jwtSecretKey = Craft::$app->getSecurity()->generateRandomString(32);
+        }
+
         $this->renderTemplate('graphql-authentication/settings', compact(
             'settings',
             'namespace',
