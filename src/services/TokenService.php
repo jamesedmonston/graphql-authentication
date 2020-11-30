@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\elements\User;
+use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
 use craft\services\Gql;
@@ -61,6 +62,7 @@ class TokenService extends Component
                         throw new Error('Invalid Refresh Token');
                     }
 
+                    $this->_clearExpiredTokens();
                     $tokenEntry = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                     if (!$tokenEntry) {
@@ -147,11 +149,15 @@ class TokenService extends Component
                                     InMemory::plainText($settings->jwtSecretKey),
                                 );
 
-                                $jwt = $jwtConfig->parser()->parse($matches[1]);
+                                $validator = new SignedWith(
+                                    new Sha256(),
+                                    InMemory::plainText($settings->jwtSecretKey),
+                                );
 
-                                $validator = new SignedWith(new Sha256(), InMemory::plainText($settings->jwtSecretKey));
                                 $jwtConfig->setValidationConstraints($validator);
                                 $constraints = $jwtConfig->validationConstraints();
+
+                                $jwt = $jwtConfig->parser()->parse($matches[1]);
 
                                 try {
                                     $jwtConfig->validator()->assert($jwt, ...$constraints);
@@ -190,6 +196,8 @@ class TokenService extends Component
 
     public function create(User $user, Int $schemaId)
     {
+        $this->_clearExpiredTokens();
+
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
         $time = microtime(true);
@@ -320,5 +328,35 @@ class TokenService extends Component
         }
 
         throw new BadRequestHttpException(GraphqlAuthentication::$plugin->getSettings()->invalidHeader);
+    }
+
+    protected function _clearExpiredTokens()
+    {
+        $now = time();
+
+        $gql = Craft::$app->getGql();
+        $gqlTokens = $gql->getTokens();
+
+        foreach ($gqlTokens as $gqlToken) {
+            if (!StringHelper::contains($gqlToken->name, 'user-')) {
+                continue;
+            }
+
+            if (strtotime($gqlToken->expiryDate->format('Y-m-d H:i:s')) > $now) {
+                continue;
+            }
+
+            $gql->deleteTokenById($gqlToken->id);
+        }
+
+        $refreshTokens = RefreshToken::find()->all();
+
+        foreach ($refreshTokens as $refreshToken) {
+            if (strtotime(date_create($refreshToken->expiryDate)->format('Y-m-d H:i:s')) > $now) {
+                continue;
+            }
+
+            Craft::$app->getElements()->deleteElementById($refreshToken->id);
+        }
     }
 }
