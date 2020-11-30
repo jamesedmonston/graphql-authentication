@@ -51,6 +51,11 @@ class Settings extends Model
     public $invalidPasswordUpdate = "We couldn't update the password with the provided details";
     public $invalidUserUpdate = "We couldn't update the user with the provided details";
     public $invalidOauthToken = 'Invalid OAuth Token';
+    public $invalidJwtSecretKey = 'Invalid JWT Secret Key';
+    public $invalidRefreshToken = 'Invalid Refresh Token';
+
+    public $passwordSaved = 'Successfully saved password';
+    public $passwordUpdated = 'Successfully updated password';
 
     public $tokenNotFound = "We couldn't find any matching tokens";
     public $userNotFound = "We couldn't find any matching users";

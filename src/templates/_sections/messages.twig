@@ -8,28 +8,24 @@
 }, null) }}
 
 <hr/>
+<h2>Responses</h2>
+
+{{ forms.textField({
+  label: 'Password Saved',
+  name: 'passwordSaved',
+  value: settings.passwordSaved,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Password Updated',
+  name: 'passwordUpdated',
+  value: settings.passwordUpdated,
+  required: true,
+}) }}
+
+<hr/>
 <h2>Invalid</h2>
-
-{{ forms.textField({
-  label: 'Invalid Authorization Header',
-  name: 'invalidHeader',
-  value: settings.invalidHeader,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid Schema',
-  name: 'invalidSchema',
-  value: settings.invalidSchema,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Invalid Request',
-  name: 'invalidRequest',
-  value: settings.invalidRequest,
-  required: true,
-}) }}
 
 {{ forms.textField({
   label: 'Invalid Login',
@@ -59,51 +55,6 @@
   required: true,
 }) }}
 
-{{ forms.textField({
-  label: 'Invalid OAuth Token',
-  name: 'invalidOauthToken',
-  value: settings.invalidOauthToken,
-  required: true,
-}) }}
-
-<hr/>
-<h2>Not Found</h2>
-
-{{ forms.textField({
-  label: 'Token Not Found',
-  name: 'tokenNotFound',
-  value: settings.tokenNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'User Not Found',
-  name: 'userNotFound',
-  value: settings.userNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Entry Not Found',
-  name: 'entryNotFound',
-  value: settings.entryNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Asset Not Found',
-  name: 'assetNotFound',
-  value: settings.assetNotFound,
-  required: true,
-}) }}
-
-{{ forms.textField({
-  label: 'Email Not In Scope',
-  name: 'emailNotInScope',
-  value: settings.emailNotInScope,
-  required: true,
-}) }}
-
 <hr/>
 <h2>Forbidden</h2>
 
@@ -116,13 +67,6 @@
 
 <hr/>
 <h2>Google</h2>
-
-{{ forms.textField({
-  label: 'Invalid Google Token ID',
-  name: 'googleTokenIdInvalid',
-  value: settings.googleTokenIdInvalid,
-  required: true,
-}) }}
 
 {{ forms.textField({
   label: 'Google Email Mismatch',

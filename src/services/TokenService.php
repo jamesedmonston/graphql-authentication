@@ -59,14 +59,14 @@ class TokenService extends Component
                     $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                     if (!$refreshToken) {
-                        throw new Error('Invalid Refresh Token');
+                        throw new Error($settings->invalidRefreshToken);
                     }
 
                     $this->_clearExpiredTokens();
                     $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                     if (!$refreshTokenElement) {
-                        throw new Error('Invalid Refresh Token');
+                        throw new Error($settings->invalidRefreshToken);
                     }
 
                     $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
@@ -241,7 +241,7 @@ class TokenService extends Component
         }
 
         if (!$settings->jwtSecretKey) {
-            throw new Error('Invalid JWT Secret Key');
+            throw new Error($settings->invalidJwtSecretKey);
         }
 
         $jwtConfig = Configuration::forSymmetricSigner(

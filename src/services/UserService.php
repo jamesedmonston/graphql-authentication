@@ -210,7 +210,7 @@ class UserService extends Component
                     throw new Error(json_encode($user->getErrors()));
                 }
 
-                return 'Successfully saved password';
+                return $settings->passwordSaved;
             },
         ];
 
@@ -258,7 +258,7 @@ class UserService extends Component
                     throw new Error(json_encode($user->getErrors()));
                 }
 
-                return 'Successfully updated password';
+                return $settings->passwordUpdated;
             },
         ];
 
