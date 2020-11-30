@@ -63,24 +63,25 @@ class TokenService extends Component
                     }
 
                     $this->_clearExpiredTokens();
-                    $tokenEntry = RefreshToken::find()->where(['token' => $refreshToken])->one();
+                    $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
-                    if (!$tokenEntry) {
+                    if (!$refreshTokenElement) {
                         throw new Error('Invalid Refresh Token');
                     }
 
-                    $user = Craft::$app->getUsers()->getUserById($tokenEntry->userId);
+                    $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
 
                     if (!$user) {
                         throw new Error($settings->userNotFound);
                     }
 
-                    $schemaId = $tokenEntry->schemaId;
+                    $schemaId = $refreshTokenElement->schemaId;
 
                     if (!$user) {
                         throw new Error($settings->invalidSchema);
                     }
 
+                    Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
                     $token = $this->create($user, $schemaId);
                     return $token;
                 },
@@ -264,15 +265,15 @@ class TokenService extends Component
         $refreshToken = Craft::$app->getSecurity()->generateRandomString(32);
         $refreshTokenExpiration = date_create(date('Y-m-d H:i:s'))->modify("+ {$settings->jwtRefreshExpiration}");
 
-        $tokenEntry = new RefreshToken([
+        $refreshTokenElement = new RefreshToken([
             'token' => $refreshToken,
             'userId' => $user->id,
             'schemaId' => $schemaId,
             'expiryDate' => $refreshTokenExpiration->format('Y-m-d H:i:s'),
         ]);
 
-        if (!Craft::$app->getElements()->saveElement($tokenEntry)) {
-            throw new Error(json_encode($tokenEntry->getErrors()));
+        if (!Craft::$app->getElements()->saveElement($refreshTokenElement)) {
+            throw new Error(json_encode($refreshTokenElement->getErrors()));
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);
