@@ -352,6 +352,7 @@ class TokenService extends Component
             $gql->deleteTokenById($gqlToken->id);
         }
 
+        $elements = Craft::$app->getElements();
         $refreshTokens = RefreshToken::find()->all();
 
         foreach ($refreshTokens as $refreshToken) {
@@ -359,7 +360,7 @@ class TokenService extends Component
                 continue;
             }
 
-            Craft::$app->getElements()->deleteElementById($refreshToken->id);
+            $elements->deleteElementById($refreshToken->id);
         }
     }
 }
