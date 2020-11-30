@@ -255,10 +255,12 @@ class TokenService extends Component
             ->issuedBy(UrlHelper::cpUrl())
             ->issuedAt($now)
             ->expiresAt($now->modify($settings->jwtExpiration))
-            ->withClaim('userId', $user->id)
+            ->relatedTo($user->id)
             ->withClaim('fullName', $user->fullName)
-            ->withClaim('accessToken', $accessToken)
+            ->withClaim('groups', array_column($user->getGroups(), 'name'))
             ->withClaim('schema', $token->getSchema()->name)
+            ->withClaim('admin', $user->admin)
+            ->withClaim('accessToken', $accessToken)
             ->getToken($jwtConfig->signer(), $jwtConfig->signingKey());
 
         $jwtExpiration = date_create(date('Y-m-d H:i:s'))->modify("+ {$settings->jwtExpiration}");
