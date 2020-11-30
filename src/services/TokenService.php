@@ -257,6 +257,7 @@ class TokenService extends Component
             ->expiresAt($now->modify($settings->jwtExpiration))
             ->relatedTo($user->id)
             ->withClaim('fullName', $user->fullName)
+            ->withClaim('email', $user->email)
             ->withClaim('groups', array_column($user->getGroups(), 'name'))
             ->withClaim('schema', $token->getSchema()->name)
             ->withClaim('admin', $user->admin)
