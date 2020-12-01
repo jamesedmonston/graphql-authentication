@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- Fixed issue `Auth` GQL type not registering properly in production mode
+- Fixed issue with `Auth` GQL type not registering properly in production mode
 
 ## 1.2.1 - 2020-12-01
 
