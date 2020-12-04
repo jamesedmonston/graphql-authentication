@@ -377,7 +377,7 @@ class SocialService extends Component
         return compact(
             'email',
             'firstName',
-            'lastName',
+            'lastName'
         );
     }
 
@@ -410,7 +410,7 @@ class SocialService extends Component
         return compact(
             'email',
             'firstName',
-            'lastName',
+            'lastName'
         );
     }
 
@@ -447,7 +447,7 @@ class SocialService extends Component
         return compact(
             'email',
             'firstName',
-            'lastName',
+            'lastName'
         );
     }
 }
