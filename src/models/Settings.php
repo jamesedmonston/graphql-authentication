@@ -22,7 +22,7 @@ class Settings extends Model
     public $granularSchemas = [];
 
     // Tokens
-    public $tokenType = 'response';
+    public $tokenType = 'jwt';
     public $expiration = '1 week';
     public $setCookie = null;
     public $jwtExpiration = '30 minutes';
