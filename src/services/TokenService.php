@@ -147,12 +147,12 @@ class TokenService extends Component
                             try {
                                 $jwtConfig = Configuration::forSymmetricSigner(
                                     new Sha256(),
-                                    InMemory::plainText($settings->jwtSecretKey),
+                                    InMemory::plainText($settings->jwtSecretKey)
                                 );
 
                                 $validator = new SignedWith(
                                     new Sha256(),
-                                    InMemory::plainText($settings->jwtSecretKey),
+                                    InMemory::plainText($settings->jwtSecretKey)
                                 );
 
                                 $jwtConfig->setValidationConstraints($validator);
@@ -246,7 +246,7 @@ class TokenService extends Component
 
         $jwtConfig = Configuration::forSymmetricSigner(
             new Sha256(),
-            InMemory::plainText($settings->jwtSecretKey),
+            InMemory::plainText($settings->jwtSecretKey)
         );
 
         $now = new DateTimeImmutable();
