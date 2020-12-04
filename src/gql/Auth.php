@@ -23,7 +23,7 @@ class Auth extends ObjectType
      */
     public static function getType(): Type
     {
-        if ($type = GqlEntityRegistry::getEntity(static::class)) {
+        if ($type = GqlEntityRegistry::getEntity(static::getName())) {
             return $type;
         }
 
@@ -43,7 +43,7 @@ class Auth extends ObjectType
             $fields['refreshTokenExpiresAt'] = Type::nonNull(Type::int());
         }
 
-        return GqlEntityRegistry::createEntity(static::class, new ObjectType([
+        return GqlEntityRegistry::createEntity(static::getName(), new ObjectType([
             'name' => static::getName(),
             'fields' => $fields,
         ]));

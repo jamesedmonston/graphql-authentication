@@ -10,6 +10,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - Added ability to customise response and error messages
 
+## 1.2.2 - 2020-12-01
+
+### Fixed
+
+- Fixed issue with `Auth` GQL type not registering properly in production mode
+
+## 1.2.1 - 2020-12-01
+
+### Fixed
+
+- Fixed issue with requests against the public schema throwing `Invalid Authorization Header`
+
 ## 1.2.0 - 2020-11-26
 
 ### Added
