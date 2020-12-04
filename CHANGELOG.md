@@ -8,7 +8,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
+- Much improved [documentation](https://docs.jamesedmonston.co.uk/graphql-authentication)!
+- Added JWT and refresh token support ([#3](https://github.com/jamesedmonston/graphql-authentication/issues/3) thanks to [@timkelty](https://github.com/timkelty))
+- Added support for Log in with Twitter
+- Added support for Facebook login
 - Added ability to customise response and error messages
+
+### Changed
+
+- Deprecated non-JWT tokens, these will be removed in version `1.4.0`. JWTs provide greater flexibility and security.
+
+### Fixed
+
+- Fixed an issue where non-user tokens were being restricted ([#19](https://github.com/jamesedmonston/graphql-authentication/issues/21) via [@menberg](https://github.com/menberg))
 
 ## 1.2.2 - 2020-12-01
 
