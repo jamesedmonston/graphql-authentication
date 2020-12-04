@@ -12,6 +12,7 @@ use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -291,6 +292,11 @@ class RestrictionService extends Component
         } catch (Throwable $e) {}
     }
 
+    public function isGraphiqlRequest(): bool
+    {
+        return StringHelper::contains((Craft::$app->getRequest()->getReferrer() ?? ''), UrlHelper::cpUrl() . 'graphiql');
+    }
+
     // Protected Methods
     // =========================================================================
 
@@ -300,7 +306,7 @@ class RestrictionService extends Component
 
         if (
             !$request->isConsoleRequest &&
-            !GraphqlAuthentication::$plugin->isGraphiqlRequest() &&
+            !$this->isGraphiqlRequest() &&
             (bool) $request->getBodyParam('query')
         ) {
             $token = null;

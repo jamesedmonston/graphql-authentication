@@ -14,7 +14,6 @@ use Craft;
 use craft\base\Plugin;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
-use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
@@ -104,11 +103,6 @@ class GraphqlAuthentication extends Plugin
                 }
             );
         }
-    }
-
-    public function isGraphiqlRequest(): bool
-    {
-        return StringHelper::contains((Craft::$app->getRequest()->getReferrer() ?? ''), UrlHelper::cpUrl() . 'graphiql');
     }
 
     // Settings
