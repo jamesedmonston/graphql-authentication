@@ -141,7 +141,7 @@ class SettingsController extends Controller
             'entryQueries',
             'entryMutations',
             'assetQueries',
-            'assetMutations',
+            'assetMutations'
         ));
     }
 
@@ -238,7 +238,7 @@ class SettingsController extends Controller
             'entryQueries',
             'entryMutations',
             'assetQueries',
-            'assetMutations',
+            'assetMutations'
         );
     }
 }
