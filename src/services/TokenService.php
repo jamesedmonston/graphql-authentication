@@ -15,6 +15,7 @@ use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
 use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
+use jamesedmonston\graphqlauthentication\events\JwtValidateEvent;
 use jamesedmonston\graphqlauthentication\gql\JWT;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use Lcobucci\JWT\Configuration;
@@ -52,6 +53,31 @@ class TokenService extends Component
      * ```
      */
     const EVENT_BEFORE_CREATE_JWT = 'beforeCreateJwt';
+
+    /**
+     * @event JwtCreateEvent The event that is triggered before validating a JWT.
+     *
+     * Plugins get a chance to add additional validators to the JWT verification.
+     *
+     * ---
+     * ```php
+     * use jamesedmonston\graphqlauthentication\events\JwtValidateEvent;
+     * use jamesedmonston\graphqlauthentication\services\TokenService;
+     * use Lcobucci\JWT\Validation\Constraint\IssuedBy;
+     * use yii\base\Event;
+     *
+     * Event::on(
+     *     TokenService::class,
+     *     TokenService::EVENT_BEFORE_VALIDATE_JWT,
+     *     function(JwtValidateEvent $event) {
+     *         $config = $event->config;
+     *         $validator = new IssuedBy('Custom Validator');
+     *         $config->setValidationConstraints($validator);
+     *     }
+     * );
+     * ```
+     */
+    const EVENT_BEFORE_VALIDATE_JWT = 'beforeValidateJwt';
 
     // Public Methods
     // =========================================================================
@@ -186,8 +212,14 @@ class TokenService extends Component
 
                                 $jwt = $jwtConfig->parser()->parse($matches[1]);
 
+                                $event = new JwtValidateEvent([
+                                    'config' => $jwtConfig,
+                                ]);
+
+                                $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
+
                                 try {
-                                    $jwtConfig->validator()->assert($jwt, ...$constraints);
+                                    $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
                                 } catch (RequiredConstraintsViolated $e) {
                                     throw new Error(json_encode($e->violations()));
                                 }
