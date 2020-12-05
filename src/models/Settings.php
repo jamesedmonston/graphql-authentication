@@ -37,10 +37,12 @@ class Settings extends Model
     public $facebookAppId = null;
     public $facebookAppSecret = null;
     public $facebookRedirectUrl = null;
+    public $allowedFacebookDomains = null;
 
     public $twitterApiKey = null;
     public $twitterApiKeySecret = null;
     public $twitterRedirectUrl = null;
+    public $allowedTwitterDomains = null;
 
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
@@ -53,6 +55,7 @@ class Settings extends Model
     public $invalidOauthToken = 'Invalid OAuth Token';
     public $invalidJwtSecretKey = 'Invalid JWT Secret Key';
     public $invalidRefreshToken = 'Invalid Refresh Token';
+    public $invalidEmailAddress = 'Invalid email address';
 
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
@@ -67,6 +70,8 @@ class Settings extends Model
 
     public $googleTokenIdInvalid = 'Invalid Google Token ID';
     public $googleEmailMismatch = "Email address doesn't match allowed Google domains";
+    public $facebookEmailMismatch = "Email address doesn't match allowed Facebook domains";
+    public $twitterEmailMismatch = "Email address doesn't match allowed Twitter domains";
 
     public function rules()
     {
@@ -91,6 +96,8 @@ class Settings extends Model
                     'forbiddenMutation',
                     'googleTokenIdInvalid',
                     'googleEmailMismatch',
+                    'facebookEmailMismatch',
+                    'twitterEmailMismatch',
                 ],
                 'required',
             ],
@@ -115,9 +122,11 @@ class Settings extends Model
                     'facebookAppId',
                     'facebookAppSecret',
                     'facebookRedirectUrl',
+                    'allowedFacebookDomains',
                     'twitterApiKey',
                     'twitterApiKeySecret',
                     'twitterRedirectUrl',
+                    'allowedTwitterDomains',
                 ],
                 'default',
             ],

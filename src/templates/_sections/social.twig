@@ -68,6 +68,15 @@
   required: false,
 }) }}
 
+{{ forms.textField({
+  label: 'Allowed Email Domains',
+  instructions: "The domains from which you'd like to allow Facebook Login. Comma-delimited. Leave empty to allow any domain.",
+  name: 'allowedFacebookDomains',
+  value: settings.allowedFacebookDomains,
+  placeholder: 'domain1.com, domain2.co.uk',
+  required: false,
+}) }}
+
 <hr/>
 <h2>Twitter</h2>
 
@@ -100,6 +109,15 @@
   name: 'twitterRedirectUrl',
   value: settings.twitterRedirectUrl,
   placeholder: 'https://yoursite.com',
+  required: false,
+}) }}
+
+{{ forms.textField({
+  label: 'Allowed Email Domains',
+  instructions: "The domains from which you'd like to allow Log in with Twitter. Comma-delimited. Leave empty to allow any domain.",
+  name: 'allowedTwitterDomains',
+  value: settings.allowedTwitterDomains,
+  placeholder: 'domain1.com, domain2.co.uk',
   required: false,
 }) }}
 

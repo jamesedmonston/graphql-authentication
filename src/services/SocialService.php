@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Craft;
 use craft\base\Component;
+use craft\helpers\StringHelper;
 use craft\services\Gql;
 use Facebook\Facebook;
 use Google_Client;
@@ -363,12 +364,11 @@ class SocialService extends Component
         }
 
         if ($settings->allowedGoogleDomains) {
-            $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $settings->allowedGoogleDomains));
-            $hd = $payload['hd'];
-
-            if (!in_array($hd, $domains)) {
-                throw new Error($settings->googleEmailMismatch);
-            }
+            $this->_verifyEmailDomain(
+                $email,
+                $settings->allowedGoogleDomains,
+                $settings->googleEmailMismatch
+            );
         }
 
         $name = $payload['name'] ?? '';
@@ -408,6 +408,14 @@ class SocialService extends Component
             throw new Error($settings->emailNotInScope);
         }
 
+        if ($settings->allowedFacebookDomains) {
+            $this->_verifyEmailDomain(
+                $email,
+                $settings->allowedFacebookDomains,
+                $settings->facebookEmailMismatch
+            );
+        }
+
         $name = explode(' ', $user['name'] ?? '', 1);
         $firstName = $name[0] ?? '';
         $lastName = $name[1] ?? '';
@@ -442,6 +450,14 @@ class SocialService extends Component
             throw new Error($settings->emailNotInScope);
         }
 
+        if ($settings->allowedTwitterDomains) {
+            $this->_verifyEmailDomain(
+                $email,
+                $settings->allowedTwitterDomains,
+                $settings->twitterEmailMismatch
+            );
+        }
+
         $name = explode(' ', $user->name ?? '', 1);
         $firstName = $name[0] ?? '';
         $lastName = $name[1] ?? '';
@@ -454,5 +470,23 @@ class SocialService extends Component
             'firstName',
             'lastName'
         );
+    }
+
+    protected function _verifyEmailDomain(string $email, string $domains, string $error): bool
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+
+        if (!StringHelper::contains($email, '@')) {
+            throw new Error($settings->invalidEmailAddress);
+        }
+
+        $domain = explode('@', $email)[1];
+        $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
+
+        if (!in_array($domain, $domains)) {
+            throw new Error($error);
+        }
+
+        return true;
     }
 }
