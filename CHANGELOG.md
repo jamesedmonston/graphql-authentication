@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - Fixed an issue where non-user tokens were being restricted ([#19](https://github.com/jamesedmonston/graphql-authentication/issues/21) via [@menberg](https://github.com/menberg))
+- Fixed an issue where `family_name` might not be defined in Google Sign-In ([#25](https://github.com/jamesedmonston/graphql-authentication/issues/25))
 
 ## 1.2.2 - 2020-12-01
 
