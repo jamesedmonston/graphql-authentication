@@ -14,6 +14,7 @@ use DateTimeImmutable;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
+use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
 use jamesedmonston\graphqlauthentication\gql\JWT;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use Lcobucci\JWT\Configuration;
@@ -27,6 +28,31 @@ use yii\web\BadRequestHttpException;
 
 class TokenService extends Component
 {
+    /**
+     * @event JwtCreateEvent The event that is triggered before creating a JWT.
+     *
+     * Plugins get a chance to add additional claims to the JWT.
+     *
+     * ---
+     * ```php
+     * use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
+     * use jamesedmonston\graphqlauthentication\services\TokenService;
+     * use yii\base\Event;
+     *
+     * Event::on(
+     *     TokenService::class,
+     *     TokenService::EVENT_BEFORE_CREATE_JWT,
+     *     function(JwtCreateEvent $event) {
+     *         $builder = $event->builder;
+     *         $user = $event->user;
+     *
+     *         $builder->withClaim('customClaim', 'customValue');
+     *     }
+     * );
+     * ```
+     */
+    const EVENT_BEFORE_CREATE_JWT = 'beforeCreateJwt';
+
     // Public Methods
     // =========================================================================
 
@@ -251,7 +277,7 @@ class TokenService extends Component
 
         $now = new DateTimeImmutable();
 
-        $jwt = $jwtConfig->builder()
+        $builder = $jwtConfig->builder()
             ->issuedBy(Craft::$app->id ?? UrlHelper::cpUrl())
             ->issuedAt($now)
             ->expiresAt($now->modify($settings->jwtExpiration))
@@ -261,9 +287,16 @@ class TokenService extends Component
             ->withClaim('groups', array_column($user->getGroups(), 'name'))
             ->withClaim('schema', $token->getSchema()->name)
             ->withClaim('admin', $user->admin)
-            ->withClaim('accessToken', $accessToken)
-            ->getToken($jwtConfig->signer(), $jwtConfig->signingKey());
+            ->withClaim('accessToken', $accessToken);
 
+        $event = new JwtCreateEvent([
+            'builder' => $builder,
+            'user' => $user,
+        ]);
+
+        $this->trigger(self::EVENT_BEFORE_CREATE_JWT, $event);
+
+        $jwt = $event->builder->getToken($jwtConfig->signer(), $jwtConfig->signingKey());
         $jwtExpiration = date_create(date('Y-m-d H:i:s'))->modify("+ {$settings->jwtExpiration}");
         $refreshToken = Craft::$app->getSecurity()->generateRandomString(32);
         $refreshTokenExpiration = date_create(date('Y-m-d H:i:s'))->modify("+ {$settings->jwtRefreshExpiration}");
