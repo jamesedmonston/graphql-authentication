@@ -197,7 +197,7 @@
           instructions: 'Select your desired schema and save to modify user permissions.',
         }, null) }}
       {% else %}
-        {% if entryQueries[groupKey] %}
+        {% if entryQueries[groupKey] is defined %}
           <div class="field">
             <div class="heading">
               <label>Restricted Entry Queries</label>
@@ -222,7 +222,7 @@
           </div>
         {% endif %}
 
-        {% if entryMutations[groupKey] %}
+        {% if entryMutations[groupKey] is defined %}
           <div class="field">
             <div class="heading">
               <label>Restricted Entry Mutations</label>
@@ -247,7 +247,7 @@
           </div>
         {% endif %}
 
-        {% if assetQueries[groupKey] %}
+        {% if assetQueries[groupKey] is defined %}
           <div class="field">
             <div class="heading">
               <label>Restricted Asset Queries</label>
@@ -272,7 +272,7 @@
           </div>
         {% endif %}
 
-        {% if assetMutations[groupKey] %}
+        {% if assetMutations[groupKey] is defined %}
           <div class="field">
             <div class="heading">
               <label>Restricted Asset Mutations</label>

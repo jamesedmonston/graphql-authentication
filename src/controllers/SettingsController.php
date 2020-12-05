@@ -117,11 +117,15 @@ class SettingsController extends Controller
                     continue;
                 }
 
-                $schemaPermissions = $this->_getSchemaPermissions($gql->getSchemaById($schemaId));
-                $entryQueries['group-' . $userGroup->id] = $schemaPermissions['entryQueries'];
-                $entryMutations['group-' . $userGroup->id] = $schemaPermissions['entryMutations'];
-                $assetQueries['group-' . $userGroup->id] = $schemaPermissions['assetQueries'];
-                $assetMutations['group-' . $userGroup->id] = $schemaPermissions['assetMutations'];
+                $schema = $gql->getSchemaById($schemaId);
+
+                if ($schema) {
+                    $schemaPermissions = $this->_getSchemaPermissions($schema);
+                    $entryQueries['group-' . $userGroup->id] = $schemaPermissions['entryQueries'];
+                    $entryMutations['group-' . $userGroup->id] = $schemaPermissions['entryMutations'];
+                    $assetQueries['group-' . $userGroup->id] = $schemaPermissions['assetQueries'];
+                    $assetMutations['group-' . $userGroup->id] = $schemaPermissions['assetMutations'];
+                }
             }
         }
 
