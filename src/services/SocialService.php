@@ -371,8 +371,13 @@ class SocialService extends Component
             }
         }
 
-        $firstName = $payload['given_name'];
-        $lastName = $payload['family_name'];
+        $name = $payload['name'] ?? '';
+        $firstName = $payload['given_name'] ?? null;
+        $lastName = $payload['family_name'] ?? null;
+
+        $name = explode(' ', $name, 1);
+        $firstName = $firstName ?? $name[0] ?? '';
+        $lastName = $lastName ?? $name[1] ?? '';
 
         return compact(
             'email',
