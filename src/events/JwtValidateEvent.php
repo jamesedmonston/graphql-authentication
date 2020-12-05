@@ -8,7 +8,7 @@ use yii\base\Event;
 class JwtValidateEvent extends Event
 {
     /**
-     * @var Configuration The JWT builder
+     * @var Configuration The JWT configuration
      */
     public $config;
 }
