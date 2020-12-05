@@ -55,7 +55,7 @@ class TokenService extends Component
     const EVENT_BEFORE_CREATE_JWT = 'beforeCreateJwt';
 
     /**
-     * @event JwtCreateEvent The event that is triggered before validating a JWT.
+     * @event JwtValidateEvent The event that is triggered before validating a JWT.
      *
      * Plugins get a chance to add additional validators to the JWT verification.
      *
