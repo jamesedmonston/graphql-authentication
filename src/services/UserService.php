@@ -171,10 +171,10 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($users) {
+            'resolve' => function ($source, array $arguments) use ($users, $settings) {
                 $email = $arguments['email'];
                 $user = $users->getUserByUsernameOrEmail($email);
-                $message = 'You will receive an email if it matches an account in our system';
+                $message = $settings->passwordResetSent;
 
                 if (!$user) {
                     return $message;

@@ -59,6 +59,7 @@ class Settings extends Model
 
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
+    public $passwordResetSent = 'You will receive an email if it matches an account in our system';
 
     public $tokenNotFound = "We couldn't find any matching tokens";
     public $userNotFound = "We couldn't find any matching users";
