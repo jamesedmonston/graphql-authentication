@@ -294,7 +294,14 @@ class RestrictionService extends Component
 
     public function isGraphiqlRequest(): bool
     {
-        return StringHelper::contains((Craft::$app->getRequest()->getReferrer() ?? ''), UrlHelper::cpUrl() . 'graphiql');
+        $referrer = Craft::$app->getRequest()->getReferrer() ?? '';
+        $graphiqlUrl = UrlHelper::cpUrl() . 'graphiql';
+
+        if (!StringHelper::contains($graphiqlUrl, '/graphiql')) {
+            $graphiqlUrl = str_replace('graphiql', '/graphiql', $graphiqlUrl);
+        }
+
+        return StringHelper::contains($referrer, $graphiqlUrl);
     }
 
     // Protected Methods
