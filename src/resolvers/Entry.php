@@ -40,7 +40,7 @@ class Entry extends ElementResolver
             return $query;
         }
 
-        if (!GraphqlAuthentication::$plugin->getInstance()->restriction->isGraphiqlRequest()) {
+        if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
             $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
             $token = $tokenService->getHeaderToken();
 

@@ -122,7 +122,7 @@ class RestrictionService extends Component
 
     public function restrictMutationFields(ModelEvent $event)
     {
-        if (!$this->_shouldRestrictRequests()) {
+        if (!$this->shouldRestrictRequests()) {
             return;
         }
 
@@ -191,7 +191,7 @@ class RestrictionService extends Component
 
     public function ensureEntryMutationAllowed(ModelEvent $event)
     {
-        if (!$this->_shouldRestrictRequests()) {
+        if (!$this->shouldRestrictRequests()) {
             return;
         }
 
@@ -232,7 +232,7 @@ class RestrictionService extends Component
 
     public function ensureAssetMutationAllowed(ModelEvent $event)
     {
-        if (!$this->_shouldRestrictRequests()) {
+        if (!$this->shouldRestrictRequests()) {
             return;
         }
 
@@ -275,7 +275,7 @@ class RestrictionService extends Component
 
     public function injectUniqueCache(Event $event)
     {
-        if (!$this->_shouldRestrictRequests()) {
+        if (!$this->shouldRestrictRequests()) {
             return;
         }
 
@@ -292,22 +292,7 @@ class RestrictionService extends Component
         } catch (Throwable $e) {}
     }
 
-    public function isGraphiqlRequest(): bool
-    {
-        $referrer = Craft::$app->getRequest()->getReferrer() ?? '';
-        $graphiqlUrl = UrlHelper::cpUrl() . 'graphiql';
-
-        if (!StringHelper::contains($graphiqlUrl, '/graphiql')) {
-            $graphiqlUrl = str_replace('graphiql', '/graphiql', $graphiqlUrl);
-        }
-
-        return StringHelper::contains($referrer, $graphiqlUrl);
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    protected function _shouldRestrictRequests(): bool
+    public function shouldRestrictRequests(): bool
     {
         $request = Craft::$app->getRequest();
 
@@ -327,6 +312,21 @@ class RestrictionService extends Component
 
         return false;
     }
+
+    public function isGraphiqlRequest(): bool
+    {
+        $referrer = Craft::$app->getRequest()->getReferrer() ?? '';
+        $graphiqlUrl = UrlHelper::cpUrl() . 'graphiql';
+
+        if (!StringHelper::contains($graphiqlUrl, '/graphiql')) {
+            $graphiqlUrl = str_replace('graphiql', '/graphiql', $graphiqlUrl);
+        }
+
+        return StringHelper::contains($referrer, $graphiqlUrl);
+    }
+
+    // Protected Methods
+    // =========================================================================
 
     protected function _ensureValidEntry(int $id)
     {
