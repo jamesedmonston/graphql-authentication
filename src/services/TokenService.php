@@ -272,6 +272,10 @@ class TokenService extends Component
 
     public function rewriteJwtHeader()
     {
+        if (GraphqlAuthentication::$plugin->getSettings()->tokenType !== 'jwt') {
+            return;
+        }
+
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
