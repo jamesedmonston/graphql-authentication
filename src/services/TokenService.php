@@ -4,6 +4,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\controllers\GraphqlController;
 use craft\elements\User;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
@@ -23,6 +24,7 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
+use Throwable;
 use yii\base\Event;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
@@ -88,6 +90,12 @@ class TokenService extends Component
     public function init()
     {
         parent::init();
+
+        Event::on(
+            GraphqlController::class,
+            GraphqlController::EVENT_BEFORE_ACTION,
+            [$this, 'rewriteJwtHeader']
+        );
 
         Event::on(
             Gql::class,
@@ -195,6 +203,20 @@ class TokenService extends Component
                     $authValues = array_map('trim', explode(',', $authHeader));
 
                     foreach ($authValues as $authValue) {
+                        if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
+                            try {
+                                $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
+                            } catch (InvalidArgumentException $e) {
+                                throw new InvalidArgumentException($e);
+                            }
+
+                            if (!$token) {
+                                throw new BadRequestHttpException($settings->invalidHeader);
+                            }
+
+                            break 2;
+                        }
+
                         if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
                             try {
                                 $jwtConfig = Configuration::forSymmetricSigner(
@@ -246,6 +268,19 @@ class TokenService extends Component
                 $this->_validateExpiry($token);
                 return $token;
         }
+    }
+
+    public function rewriteJwtHeader()
+    {
+        $request = Craft::$app->getRequest();
+        $requestHeaders = $request->getHeaders();
+
+        try {
+            if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
+                $token = $this->getHeaderToken();
+                $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
+            }
+        } catch (Throwable $e) {}
     }
 
     public function getUserFromToken(): User

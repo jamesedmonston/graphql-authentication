@@ -44,7 +44,7 @@ class Asset extends ElementResolver
             $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
             $token = $tokenService->getHeaderToken();
 
-            if (StringHelper::contains($token, 'user-')) {
+            if (StringHelper::contains($token->name, 'user-')) {
                 $user = $tokenService->getUserFromToken();
                 $arguments['uploader'] = $user->id;
 
