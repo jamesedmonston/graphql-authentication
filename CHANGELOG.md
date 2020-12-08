@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.2 - Unreleased
+
+### Fixed
+
+- _Actually_ fix `Invalid Authorization Header` on queries/mutations against the public schema ([#23](https://github.com/jamesedmonston/graphql-authentication/issues/23) via [@approached](https://github.com/approached))
+
 ## 1.3.1 - 2020-12-07
 
 ### Fixed
