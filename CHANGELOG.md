@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - _Actually_ fix `Invalid Authorization Header` on queries/mutations against the public schema ([#23](https://github.com/jamesedmonston/graphql-authentication/issues/23) via [@approached](https://github.com/approached))
-- Fix issue where tokens decoded from JWTs weren't being passed to the GraphQL API controller proprly ([#28](https://github.com/jamesedmonston/graphql-authentication/issues/28) via [@daltonrooney](https://github.com/daltonrooney))
+- Fix issue where tokens decoded from JWTs weren't being passed to the GraphQL API controller properly ([#28](https://github.com/jamesedmonston/graphql-authentication/issues/28) via [@daltonrooney](https://github.com/daltonrooney))
 
 ## 1.3.1 - 2020-12-07
 
