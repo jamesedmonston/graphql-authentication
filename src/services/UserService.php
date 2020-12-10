@@ -46,7 +46,7 @@ class UserService extends Component
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        $event->queries['getUser'] = [
+        $event->queries['viewer'] = [
             'description' => 'Gets authenticated user.',
             'type' => UserType::generateType(User::class),
             'args' => [],
@@ -262,7 +262,7 @@ class UserService extends Component
             },
         ];
 
-        $event->mutations['updateUser'] = [
+        $event->mutations['updateViewer'] = [
             'description' => 'Updates authenticated user. Returns user.',
             'type' => UserType::generateType(User::class),
             'args' => array_merge(
