@@ -60,6 +60,21 @@ class UserService extends Component
                 return $user;
             },
         ];
+
+        $event->queries['getUser'] = [
+            'description' => 'Deprecated. Please use `viewer` query.',
+            'type' => UserType::generateType(User::class),
+            'args' => [],
+            'resolve' => function () use ($settings) {
+                $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
+
+                if (!$user) {
+                    throw new InvalidArgumentException($settings->userNotFound);
+                }
+
+                return $user;
+            },
+        ];
     }
 
     public function registerGqlMutations(Event $event)
@@ -264,6 +279,59 @@ class UserService extends Component
 
         $event->mutations['updateViewer'] = [
             'description' => 'Updates authenticated user. Returns user.',
+            'type' => UserType::generateType(User::class),
+            'args' => array_merge(
+                [
+                    'email' => Type::string(),
+                    'firstName' => Type::string(),
+                    'lastName' => Type::string(),
+                ],
+                UserArguments::getContentArguments()
+            ),
+            'resolve' => function ($source, array $arguments) use ($elements, $tokenService, $settings) {
+                $user = $tokenService->getUserFromToken();
+
+                if (!$user) {
+                    throw new InvalidArgumentException($settings->invalidUserUpdate);
+                }
+
+                if (isset($arguments['email'])) {
+                    $user->username = $arguments['email'];
+                    $user->email = $arguments['email'];
+                }
+
+                if (isset($arguments['firstName'])) {
+                    $user->firstName = $arguments['firstName'];
+                }
+
+                if (isset($arguments['lastName'])) {
+                    $user->lastName = $arguments['lastName'];
+                }
+
+                $customFields = UserArguments::getContentArguments();
+
+                foreach ($customFields as &$key) {
+                    if (is_array($key) && isset($key['name'])) {
+                        $key = $key['name'];
+                    }
+
+                    if (!isset($arguments[$key]) || !count($arguments[$key])) {
+                        continue;
+                    }
+
+                    $user->setFieldValue($key, $arguments[$key][0]);
+                }
+
+                if (!$elements->saveElement($user)) {
+                    throw new InvalidArgumentException(json_encode($user->getErrors()));
+                }
+
+                return $user;
+            },
+        ];
+
+        $event->mutations['updateUser'] = [
+            'description' => 'Deprecated. Please use `updateViewer` mutation.',
             'type' => UserType::generateType(User::class),
             'args' => array_merge(
                 [
