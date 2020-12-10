@@ -419,23 +419,14 @@ class UserService extends Component
 
     public function getResponseFields(User $user, int $schemaId, $token): array
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-
-        $fields = [
+        return [
             'user' => $user,
             'schema' => Craft::$app->getGql()->getSchemaById($schemaId)->name,
+            'jwt' => $token['jwt'],
+            'jwtExpiresAt' => $token['jwtExpiresAt'],
+            'refreshToken' => $token['refreshToken'],
+            'refreshTokenExpiresAt' => $token['refreshTokenExpiresAt'],
         ];
-
-        if ($settings->tokenType !== 'jwt') {
-            $fields['accessToken'] = $token;
-        } else {
-            $fields['jwt'] = $token['jwt'];
-            $fields['jwtExpiresAt'] = $token['jwtExpiresAt'];
-            $fields['refreshToken'] = $token['refreshToken'];
-            $fields['refreshTokenExpiresAt'] = $token['refreshTokenExpiresAt'];
-        }
-
-        return $fields;
     }
 
     // Protected Methods

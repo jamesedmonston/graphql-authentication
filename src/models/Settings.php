@@ -22,7 +22,6 @@ class Settings extends Model
     public $granularSchemas = [];
 
     // Tokens
-    public $tokenType = 'jwt';
     public $expiration = '1 week';
     public $setCookie = null;
     public $jwtExpiration = '30 minutes';
@@ -80,7 +79,6 @@ class Settings extends Model
             [
                 [
                     'permissionType',
-                    'tokenType',
                     'invalidHeader',
                     'invalidSchema',
                     'invalidRequest',

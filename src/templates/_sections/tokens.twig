@@ -3,89 +3,48 @@
 <h1>Token Settings</h1>
 
 {{ forms.selectField({
-  label: 'Token Type',
-  instructions: 'Choose whether to return access tokens in mutation responses, as an `HTTP-Only` cookie, or as a JWT with refresh token.',
-  name: 'tokenType',
-  id: 'tokenType',
-  value: settings.tokenType,
+  label: 'JWT Expiration',
+  instructions: 'The length of time before JWTs expire.',
+  name: 'jwtExpiration',
+  value: settings.jwtExpiration,
   options: [
-    { value: 'jwt', label: 'JWT' },
-    { value: 'response', label: 'Response (deprecated)' },
-    { value: 'cookie', label: 'HTTP-Only cookie (deprecated)' },
+    { value: '15 minutes', label: '15 minutes' },
+    { value: '30 minutes', label: '30 minutes' },
+    { value: '1 hour', label: '1 hour' },
+    { value: '1 day', label: '1 day' },
+    { value: '1 week', label: '1 week' },
   ],
-  required: true,
 }) }}
 
-{% if settings.tokenType != 'jwt' %}
-  {{ forms.selectField({
-    label: 'Token Expiration',
-    instructions: 'The length of time before access tokens expire.',
-    name: 'expiration',
-    value: settings.expiration,
-    options: [
-      { value: '', label: 'Never' },
-      { value: '1 hour', label: '1 hour' },
-      { value: '1 day', label: '1 day' },
-      { value: '1 week', label: '1 week' },
-      { value: '1 month', label: '1 month' },
-      { value: '3 months', label: '3 months' },
-      { value: '6 months', label: '6 months' },
-      { value: '1 year', label: '1 year' },
-    ],
-  }) }}
-{% else %}
-  {{ forms.selectField({
-    label: 'JWT Expiration',
-    instructions: 'The length of time before JWTs expire.',
-    name: 'jwtExpiration',
-    value: settings.jwtExpiration,
-    options: [
-      { value: '15 minutes', label: '15 minutes' },
-      { value: '30 minutes', label: '30 minutes' },
-      { value: '1 hour', label: '1 hour' },
-      { value: '1 day', label: '1 day' },
-      { value: '1 week', label: '1 week' },
-    ],
-  }) }}
+{{ forms.selectField({
+  label: 'Refresh Token Expiration',
+  instructions: 'The length of time before refresh tokens expire.',
+  name: 'jwtRefreshExpiration',
+  value: settings.jwtRefreshExpiration,
+  options: [
+    { value: '1 week', label: '1 week' },
+    { value: '1 month', label: '1 month' },
+    { value: '3 months', label: '3 months' },
+    { value: '6 months', label: '6 months' },
+    { value: '1 year', label: '1 year' },
+  ],
+}) }}
 
-  {{ forms.selectField({
-    label: 'Refresh Token Expiration',
-    instructions: 'The length of time before refresh tokens expire.',
-    name: 'jwtRefreshExpiration',
-    value: settings.jwtRefreshExpiration,
-    options: [
-      { value: '1 week', label: '1 week' },
-      { value: '1 month', label: '1 month' },
-      { value: '3 months', label: '3 months' },
-      { value: '6 months', label: '6 months' },
-      { value: '1 year', label: '1 year' },
-    ],
-  }) }}
+{{ forms.textField({
+  label: 'JWT Secret Key',
+  instructions: 'The secret key used to sign JWTs (this is randomly generated, but feel free to use your own).',
+  name: 'jwtSecretKey',
+  value: settings.jwtSecretKey,
+}) }}
 
-  {{ forms.textField({
-    label: 'JWT Secret Key',
-    instructions: 'The secret key used to sign JWTs (this is randomly generated, but feel free to use your own).',
-    name: 'jwtSecretKey',
-    value: settings.jwtSecretKey,
-  }) }}
-{% endif %}
-
-{% if settings.tokenType in ['cookie', 'jwt'] %}
-  {{ forms.selectField({
-    label: 'SameSite Cookie Policy',
-    instructions: 'The `SameSite` policy to use on cookies.',
-    name: 'sameSitePolicy',
-    value: settings.sameSitePolicy,
-    options: [
-      { value: 'strict', label: 'Strict' },
-      { value: 'lax', label: 'Lax' },
-      { value: 'none', label: 'None' },
-    ],
-  }) }}
-{% endif %}
-
-<script>
-  const tokensForm = document.getElementById('main-form');
-  const tokenType = document.getElementById('settings-tokenType');
-  tokenType.addEventListener('change', () => tokensForm.submit());
-</script>
+{{ forms.selectField({
+  label: 'SameSite Cookie Policy',
+  instructions: 'The `SameSite` policy to use on cookies.',
+  name: 'sameSitePolicy',
+  value: settings.sameSitePolicy,
+  options: [
+    { value: 'strict', label: 'Strict' },
+    { value: 'lax', label: 'Lax' },
+    { value: 'none', label: 'None' },
+  ],
+}) }}

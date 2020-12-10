@@ -108,45 +108,43 @@ class TokenService extends Component
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        if ($settings->tokenType === 'jwt') {
-            $event->mutations['refreshToken'] = [
-                'description' => "Refreshes a user's JWT. It first checks for the occurence of the automatically-set `gql_refreshToken` cookie, and falls back to the argument.",
-                'type' => Type::nonNull(JWT::getType()),
-                'args' => [
-                    'refreshToken' => Type::string(),
-                ],
-                'resolve' => function ($source, array $arguments) use ($settings) {
-                    $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
+        $event->mutations['refreshToken'] = [
+            'description' => "Refreshes a user's JWT. It first checks for the occurence of the automatically-set `gql_refreshToken` cookie, and falls back to the argument.",
+            'type' => Type::nonNull(JWT::getType()),
+            'args' => [
+                'refreshToken' => Type::string(),
+            ],
+            'resolve' => function ($source, array $arguments) use ($settings) {
+                $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
-                    if (!$refreshToken) {
-                        throw new Error($settings->invalidRefreshToken);
-                    }
+                if (!$refreshToken) {
+                    throw new Error($settings->invalidRefreshToken);
+                }
 
-                    $this->_clearExpiredTokens();
-                    $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
+                $this->_clearExpiredTokens();
+                $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
-                    if (!$refreshTokenElement) {
-                        throw new Error($settings->invalidRefreshToken);
-                    }
+                if (!$refreshTokenElement) {
+                    throw new Error($settings->invalidRefreshToken);
+                }
 
-                    $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
+                $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
 
-                    if (!$user) {
-                        throw new Error($settings->userNotFound);
-                    }
+                if (!$user) {
+                    throw new Error($settings->userNotFound);
+                }
 
-                    $schemaId = $refreshTokenElement->schemaId;
+                $schemaId = $refreshTokenElement->schemaId;
 
-                    if (!$user) {
-                        throw new Error($settings->invalidSchema);
-                    }
+                if (!$user) {
+                    throw new Error($settings->invalidSchema);
+                }
 
-                    Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
-                    $token = $this->create($user, $schemaId);
-                    return $token;
-                },
-            ];
-        }
+                Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
+                $token = $this->create($user, $schemaId);
+                return $token;
+            },
+        ];
     }
 
     public function getHeaderToken(): GqlToken
@@ -155,127 +153,78 @@ class TokenService extends Component
         $requestHeaders = $request->getHeaders();
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        switch ($settings->tokenType) {
-            case 'response':
-                foreach ($requestHeaders->get('authorization', [], false) as $authHeader) {
-                    $authValues = array_map('trim', explode(',', $authHeader));
+        foreach ($requestHeaders->get('authorization', [], false) as $authHeader) {
+            $authValues = array_map('trim', explode(',', $authHeader));
 
-                    foreach ($authValues as $authValue) {
-                        if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
-                            try {
-                                $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
-                            } catch (InvalidArgumentException $e) {
-                                throw new InvalidArgumentException($e);
-                            }
-
-                            if (!$token) {
-                                throw new BadRequestHttpException($settings->invalidHeader);
-                            }
-
-                            break 2;
-                        }
+            foreach ($authValues as $authValue) {
+                if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
+                    try {
+                        $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException($e);
                     }
-                }
 
-                if (!isset($token)) {
-                    throw new BadRequestHttpException($settings->invalidHeader);
-                }
-
-                $this->_validateExpiry($token);
-                return $token;
-
-            case 'cookie':
-                try {
-                    $token = Craft::$app->getGql()->getTokenByAccessToken($_COOKIE['gql_accessToken']);
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException($e);
-                }
-
-                if (!isset($token)) {
-                    throw new BadRequestHttpException($settings->invalidHeader);
-                }
-
-                $this->_validateExpiry($token);
-                return $token;
-
-            case 'jwt':
-                foreach ($requestHeaders->get('authorization', [], false) as $authHeader) {
-                    $authValues = array_map('trim', explode(',', $authHeader));
-
-                    foreach ($authValues as $authValue) {
-                        if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
-                            try {
-                                $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
-                            } catch (InvalidArgumentException $e) {
-                                throw new InvalidArgumentException($e);
-                            }
-
-                            if (!$token) {
-                                throw new BadRequestHttpException($settings->invalidHeader);
-                            }
-
-                            break 2;
-                        }
-
-                        if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
-                            try {
-                                $jwtConfig = Configuration::forSymmetricSigner(
-                                    new Sha256(),
-                                    InMemory::plainText($settings->jwtSecretKey)
-                                );
-
-                                $validator = new SignedWith(
-                                    new Sha256(),
-                                    InMemory::plainText($settings->jwtSecretKey)
-                                );
-
-                                $jwtConfig->setValidationConstraints($validator);
-                                $constraints = $jwtConfig->validationConstraints();
-
-                                $jwt = $jwtConfig->parser()->parse($matches[1]);
-
-                                $event = new JwtValidateEvent([
-                                    'config' => $jwtConfig,
-                                ]);
-
-                                $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
-
-                                try {
-                                    $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
-                                } catch (RequiredConstraintsViolated $e) {
-                                    throw new Error(json_encode($e->violations()));
-                                }
-
-                                $accessToken = $jwt->claims()->get('accessToken');
-                                $token = Craft::$app->getGql()->getTokenByAccessToken($accessToken);
-                            } catch (InvalidArgumentException $e) {
-                                throw new InvalidArgumentException($e);
-                            }
-
-                            if (!$token) {
-                                throw new BadRequestHttpException($settings->invalidHeader);
-                            }
-
-                            break 2;
-                        }
+                    if (!$token) {
+                        throw new BadRequestHttpException($settings->invalidHeader);
                     }
+
+                    break 2;
                 }
 
-                if (!isset($token)) {
-                    throw new BadRequestHttpException($settings->invalidHeader);
-                }
+                if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
+                    try {
+                        $jwtConfig = Configuration::forSymmetricSigner(
+                            new Sha256(),
+                            InMemory::plainText($settings->jwtSecretKey)
+                        );
 
-                $this->_validateExpiry($token);
-                return $token;
+                        $validator = new SignedWith(
+                            new Sha256(),
+                            InMemory::plainText($settings->jwtSecretKey)
+                        );
+
+                        $jwtConfig->setValidationConstraints($validator);
+                        $constraints = $jwtConfig->validationConstraints();
+
+                        $jwt = $jwtConfig->parser()->parse($matches[1]);
+
+                        $event = new JwtValidateEvent([
+                            'config' => $jwtConfig,
+                        ]);
+
+                        $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
+
+                        try {
+                            $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
+                        } catch (RequiredConstraintsViolated $e) {
+                            throw new Error(json_encode($e->violations()));
+                        }
+
+                        $accessToken = $jwt->claims()->get('accessToken');
+                        $token = Craft::$app->getGql()->getTokenByAccessToken($accessToken);
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException($e);
+                    }
+
+                    if (!$token) {
+                        throw new BadRequestHttpException($settings->invalidHeader);
+                    }
+
+                    break 2;
+                }
+            }
         }
+
+        if (!isset($token)) {
+            throw new BadRequestHttpException($settings->invalidHeader);
+        }
+
+        $this->_validateExpiry($token);
+        return $token;
     }
 
     public function rewriteJwtHeader()
     {
-        if (GraphqlAuthentication::$plugin->getSettings()->tokenType !== 'jwt') {
-            return;
-        }
-
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
@@ -305,36 +254,13 @@ class TokenService extends Component
             'accessToken' => $accessToken,
             'enabled' => true,
             'schemaId' => $schemaId,
+            'expiryDate' => (new DateTime())->modify("+ {$settings->jwtExpiration}"),
         ];
-
-        switch ($settings->tokenType) {
-            case 'response':
-            case 'cookie':
-                if ($settings->expiration) {
-                    $fields['expiryDate'] = (new DateTime())->modify("+ {$settings->expiration}");
-                }
-                break;
-
-            case 'jwt':
-                $fields['expiryDate'] = (new DateTime())->modify("+ {$settings->jwtExpiration}");
-                break;
-
-            default:
-                break;
-        }
 
         $token = new GqlToken($fields);
 
         if (!Craft::$app->getGql()->saveToken($token)) {
             throw new Error(json_encode($token->getErrors()));
-        }
-
-        if ($settings->tokenType !== 'jwt') {
-            if ($settings->tokenType === 'cookie') {
-                $this->_setCookie('gql_accessToken', $accessToken, $settings->expiration);
-            }
-
-            return $accessToken;
         }
 
         if (!$settings->jwtSecretKey) {

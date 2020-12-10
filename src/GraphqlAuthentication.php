@@ -90,19 +90,17 @@ class GraphqlAuthentication extends Plugin
             [$this, 'onRegisterCPUrlRules']
         );
 
-        if ($this->getSettings()->tokenType === 'jwt') {
-            Event::on(
-                Cp::class,
-                Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-                function (RegisterCpNavItemsEvent $event) {
-                    $event->navItems[] = [
-                        'url' => 'graphql-authentication/refresh-tokens',
-                        'label' => 'JWT Refresh Tokens',
-                        'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
-                    ];
-                }
-            );
-        }
+        Event::on(
+            Cp::class,
+            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
+            function (RegisterCpNavItemsEvent $event) {
+                $event->navItems[] = [
+                    'url' => 'graphql-authentication/refresh-tokens',
+                    'label' => 'JWT Refresh Tokens',
+                    'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
+                ];
+            }
+        );
     }
 
     // Settings
