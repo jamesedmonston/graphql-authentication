@@ -108,7 +108,7 @@ class TokenService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
         $event->mutations['refreshToken'] = [
-            'description' => "Refreshes a user's JWT. It first checks for the occurence of the automatically-set `gql_refreshToken` cookie, and falls back to the argument.",
+            'description' => "Refreshes a user's JWT. Checks for the occurrence of the `gql_refreshToken` cookie, and falls back to `refreshToken` argument.",
             'type' => Type::nonNull(JWT::getType()),
             'args' => [
                 'refreshToken' => Type::string(),
