@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.3 - 2020-12-08
+
+### Changed
+
+- `jwtExpiresAt` and `refreshTokenExpiresAt` are now returned in milliseconds to make JS validation simpler (this will always end in `000` as token expiry is stored in seconds in the database)
+
 ## 1.3.2 - 2020-12-08
 
 ### Fixed
