@@ -12,7 +12,6 @@ use craft\models\GqlToken;
 use craft\services\Gql;
 use DateTime;
 use DateTimeImmutable;
-use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
 use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
@@ -27,7 +26,7 @@ use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use Throwable;
 use yii\base\Event;
 use yii\base\InvalidArgumentException;
-use yii\web\BadRequestHttpException;
+use yii\web\UnauthorizedHttpException;
 
 class TokenService extends Component
 {
@@ -118,26 +117,26 @@ class TokenService extends Component
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
-                    throw new Error($settings->invalidRefreshToken);
+                    throw new InvalidArgumentException($settings->invalidRefreshToken);
                 }
 
                 $this->_clearExpiredTokens();
                 $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
-                    throw new Error($settings->invalidRefreshToken);
+                    throw new InvalidArgumentException($settings->invalidRefreshToken);
                 }
 
                 $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
 
                 if (!$user) {
-                    throw new Error($settings->userNotFound);
+                    throw new InvalidArgumentException($settings->userNotFound);
                 }
 
                 $schemaId = $refreshTokenElement->schemaId;
 
                 if (!$user) {
-                    throw new Error($settings->invalidSchema);
+                    throw new InvalidArgumentException($settings->invalidSchema);
                 }
 
                 Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
@@ -165,7 +164,7 @@ class TokenService extends Component
                     }
 
                     if (!$token) {
-                        throw new BadRequestHttpException($settings->invalidHeader);
+                        throw new UnauthorizedHttpException($settings->invalidHeader);
                     }
 
                     break 2;
@@ -197,7 +196,7 @@ class TokenService extends Component
                         try {
                             $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
                         } catch (RequiredConstraintsViolated $e) {
-                            throw new Error(json_encode($e->violations()));
+                            throw new UnauthorizedHttpException(json_encode($e->violations()));
                         }
 
                         $accessToken = $jwt->claims()->get('accessToken');
@@ -207,7 +206,7 @@ class TokenService extends Component
                     }
 
                     if (!$token) {
-                        throw new BadRequestHttpException($settings->invalidHeader);
+                        throw new UnauthorizedHttpException($settings->invalidHeader);
                     }
 
                     break 2;
@@ -216,7 +215,7 @@ class TokenService extends Component
         }
 
         if (!isset($token)) {
-            throw new BadRequestHttpException($settings->invalidHeader);
+            throw new UnauthorizedHttpException($settings->invalidHeader);
         }
 
         $this->_validateExpiry($token);
@@ -260,11 +259,11 @@ class TokenService extends Component
         $token = new GqlToken($fields);
 
         if (!Craft::$app->getGql()->saveToken($token)) {
-            throw new Error(json_encode($token->getErrors()));
+            throw new UnauthorizedHttpException(json_encode($token->getErrors()));
         }
 
         if (!$settings->jwtSecretKey) {
-            throw new Error($settings->invalidJwtSecretKey);
+            throw new InvalidArgumentException($settings->invalidJwtSecretKey);
         }
 
         $jwtConfig = Configuration::forSymmetricSigner(
@@ -306,7 +305,7 @@ class TokenService extends Component
         ]);
 
         if (!Craft::$app->getElements()->saveElement($refreshTokenElement)) {
-            throw new Error(json_encode($refreshTokenElement->getErrors()));
+            throw new InvalidArgumentException(json_encode($refreshTokenElement->getErrors()));
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);
@@ -361,7 +360,7 @@ class TokenService extends Component
             return;
         }
 
-        throw new BadRequestHttpException(GraphqlAuthentication::$plugin->getSettings()->invalidHeader);
+        throw new UnauthorizedHttpException(GraphqlAuthentication::$plugin->getSettings()->invalidHeader);
     }
 
     protected function _clearExpiredTokens()

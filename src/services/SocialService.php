@@ -9,8 +9,8 @@ use craft\helpers\StringHelper;
 use craft\services\Gql;
 use Facebook\Facebook;
 use Google_Client;
-use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
+use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\base\Event;
@@ -104,7 +104,7 @@ class SocialService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error($settings->invalidSchema);
+                        throw new InvalidArgumentException($settings->invalidSchema);
                     }
 
                     $idToken = $arguments['idToken'];
@@ -113,7 +113,7 @@ class SocialService extends Component
 
                     if (!$user) {
                         if (!$settings->allowRegistration) {
-                            throw new Error($settings->userNotFound);
+                            throw new InvalidArgumentException($settings->userNotFound);
                         }
 
                         $user = $userService->create([
@@ -144,7 +144,7 @@ class SocialService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error($settings->invalidSchema);
+                            throw new InvalidArgumentException($settings->invalidSchema);
                         }
 
                         $idToken = $arguments['idToken'];
@@ -153,7 +153,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new Error($settings->invalidSchema);
+                                throw new InvalidArgumentException($settings->invalidSchema);
                             }
 
                             $user = $userService->create([
@@ -182,7 +182,7 @@ class SocialService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error($settings->invalidSchema);
+                        throw new InvalidArgumentException($settings->invalidSchema);
                     }
 
                     $code = $arguments['code'];
@@ -191,7 +191,7 @@ class SocialService extends Component
 
                     if (!$user) {
                         if (!$settings->allowRegistration) {
-                            throw new Error($settings->userNotFound);
+                            throw new InvalidArgumentException($settings->userNotFound);
                         }
 
                         $user = $userService->create([
@@ -222,7 +222,7 @@ class SocialService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error($settings->invalidSchema);
+                            throw new InvalidArgumentException($settings->invalidSchema);
                         }
 
                         $code = $arguments['code'];
@@ -231,7 +231,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new Error($settings->invalidSchema);
+                                throw new InvalidArgumentException($settings->invalidSchema);
                             }
 
                             $user = $userService->create([
@@ -261,7 +261,7 @@ class SocialService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error($settings->invalidSchema);
+                        throw new InvalidArgumentException($settings->invalidSchema);
                     }
 
                     $oauthToken = $arguments['oauthToken'];
@@ -271,7 +271,7 @@ class SocialService extends Component
 
                     if (!$user) {
                         if (!$settings->allowRegistration) {
-                            throw new Error($settings->userNotFound);
+                            throw new InvalidArgumentException($settings->userNotFound);
                         }
 
                         $user = $userService->create([
@@ -303,7 +303,7 @@ class SocialService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error($settings->invalidSchema);
+                            throw new InvalidArgumentException($settings->invalidSchema);
                         }
 
                         $oauthToken = $arguments['oauthToken'];
@@ -313,7 +313,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new Error($settings->invalidSchema);
+                                throw new InvalidArgumentException($settings->invalidSchema);
                             }
 
                             $user = $userService->create([
@@ -354,13 +354,13 @@ class SocialService extends Component
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            throw new Error($settings->googleTokenIdInvalid);
+            throw new InvalidArgumentException($settings->googleTokenIdInvalid);
         }
 
         $email = $payload['email'];
 
         if (!$email || !isset($email)) {
-            throw new Error($settings->emailNotInScope);
+            throw new InvalidArgumentException($settings->emailNotInScope);
         }
 
         if ($settings->allowedGoogleDomains) {
@@ -398,14 +398,14 @@ class SocialService extends Component
         $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $settings->facebookRedirectUrl);
 
         if (!$accessToken) {
-            throw new Error($settings->invalidOauthToken);
+            throw new InvalidArgumentException($settings->invalidOauthToken);
         }
 
         $user = $client->get('/me?fields=id,name,email', $accessToken->getValue())->getGraphUser();
         $email = $user['email'];
 
         if (!$email || !isset($email)) {
-            throw new Error($settings->emailNotInScope);
+            throw new InvalidArgumentException($settings->emailNotInScope);
         }
 
         if ($settings->allowedFacebookDomains) {
@@ -435,7 +435,7 @@ class SocialService extends Component
         $sessionOauthTokenSecret = $session->get('oauthTokenSecret');
 
         if ($oauthToken !== $sessionOauthToken) {
-            throw new Error($settings->invalidOauthToken);
+            throw new InvalidArgumentException($settings->invalidOauthToken);
         }
 
         $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret, $sessionOauthToken, $sessionOauthTokenSecret);
@@ -447,7 +447,7 @@ class SocialService extends Component
         $email = $user->email;
 
         if (!$email || !isset($email)) {
-            throw new Error($settings->emailNotInScope);
+            throw new InvalidArgumentException($settings->emailNotInScope);
         }
 
         if ($settings->allowedTwitterDomains) {
@@ -477,14 +477,14 @@ class SocialService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!StringHelper::contains($email, '@')) {
-            throw new Error($settings->invalidEmailAddress);
+            throw new InvalidArgumentException($settings->invalidEmailAddress);
         }
 
         $domain = explode('@', $email)[1];
         $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
 
         if (!in_array($domain, $domains)) {
-            throw new Error($error);
+            throw new InvalidArgumentException($error);
         }
 
         return true;

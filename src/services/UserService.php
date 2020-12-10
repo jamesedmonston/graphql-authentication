@@ -11,8 +11,8 @@ use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
 use craft\services\Gql;
-use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
+use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\base\Event;
@@ -54,7 +54,7 @@ class UserService extends Component
                 $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error($settings->userNotFound);
+                    throw new InvalidArgumentException($settings->userNotFound);
                 }
 
                 return $user;
@@ -91,7 +91,7 @@ class UserService extends Component
                 }
 
                 if (!$schemaId) {
-                    throw new Error($settings->invalidSchema);
+                    throw new InvalidArgumentException($settings->invalidSchema);
                 }
 
                 $token = $tokenService->create($user, $schemaId);
@@ -116,7 +116,7 @@ class UserService extends Component
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
-                        throw new Error($settings->invalidSchema);
+                        throw new InvalidArgumentException($settings->invalidSchema);
                     }
 
                     $user = $this->create($arguments, $settings->userGroup);
@@ -153,7 +153,7 @@ class UserService extends Component
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
-                            throw new Error($settings->invalidSchema);
+                            throw new InvalidArgumentException($settings->invalidSchema);
                         }
 
                         $user = $this->create($arguments, $userGroup->id);
@@ -201,13 +201,13 @@ class UserService extends Component
                 $user = $users->getUserByUid($id);
 
                 if (!$user || !$users->isVerificationCodeValidForUser($user, $code)) {
-                    throw new Error($settings->invalidRequest);
+                    throw new InvalidArgumentException($settings->invalidRequest);
                 }
 
                 $user->newPassword = $password;
 
                 if (!$elements->saveElement($user)) {
-                    throw new Error(json_encode($user->getErrors()));
+                    throw new InvalidArgumentException(json_encode($user->getErrors()));
                 }
 
                 return $settings->passwordSaved;
@@ -226,14 +226,14 @@ class UserService extends Component
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error($settings->invalidPasswordUpdate);
+                    throw new InvalidArgumentException($settings->invalidPasswordUpdate);
                 }
 
                 $newPassword = $arguments['newPassword'];
                 $confirmPassword = $arguments['confirmPassword'];
 
                 if ($newPassword !== $confirmPassword) {
-                    throw new Error($settings->invalidPasswordMatch);
+                    throw new InvalidArgumentException($settings->invalidPasswordMatch);
                 }
 
                 $currentPassword = $arguments['currentPassword'];
@@ -247,7 +247,7 @@ class UserService extends Component
 
                 if (!$user->authenticate($currentPassword)) {
                     $permissions->saveUserPermissions($user->id, $userPermissions);
-                    throw new Error($settings->invalidPasswordUpdate);
+                    throw new InvalidArgumentException($settings->invalidPasswordUpdate);
                 }
 
                 $permissions->saveUserPermissions($user->id, $userPermissions);
@@ -255,7 +255,7 @@ class UserService extends Component
                 $user->newPassword = $newPassword;
 
                 if (!$elements->saveElement($user)) {
-                    throw new Error(json_encode($user->getErrors()));
+                    throw new InvalidArgumentException(json_encode($user->getErrors()));
                 }
 
                 return $settings->passwordUpdated;
@@ -277,7 +277,7 @@ class UserService extends Component
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error($settings->invalidUserUpdate);
+                    throw new InvalidArgumentException($settings->invalidUserUpdate);
                 }
 
                 if (isset($arguments['email'])) {
@@ -308,7 +308,7 @@ class UserService extends Component
                 }
 
                 if (!$elements->saveElement($user)) {
-                    throw new Error(json_encode($user->getErrors()));
+                    throw new InvalidArgumentException(json_encode($user->getErrors()));
                 }
 
                 return $user;
@@ -323,7 +323,7 @@ class UserService extends Component
                 $token = $tokenService->getHeaderToken();
 
                 if (!$token) {
-                    throw new Error($settings->tokenNotFound);
+                    throw new InvalidArgumentException($settings->tokenNotFound);
                 }
 
                 $gql->deleteTokenById($token->id);
@@ -340,13 +340,13 @@ class UserService extends Component
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
-                    throw new Error($settings->tokenNotFound);
+                    throw new InvalidArgumentException($settings->tokenNotFound);
                 }
 
                 $savedTokens = $gql->getTokens();
 
                 if (!$savedTokens || !count($savedTokens)) {
-                    throw new Error($settings->tokenNotFound);
+                    throw new InvalidArgumentException($settings->tokenNotFound);
                 }
 
                 foreach ($savedTokens as $savedToken) {
@@ -400,7 +400,7 @@ class UserService extends Component
         $elements = Craft::$app->getElements();
 
         if (!$elements->saveElement($user)) {
-            throw new Error(json_encode($user->getErrors()));
+            throw new InvalidArgumentException(json_encode($user->getErrors()));
         }
 
         $users = Craft::$app->getUsers();
@@ -442,7 +442,7 @@ class UserService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
 
         if (!$user) {
-            throw new Error($settings->invalidLogin);
+            throw new InvalidArgumentException($settings->invalidLogin);
         }
 
         $permissions = Craft::$app->getUserPermissions();
@@ -454,7 +454,7 @@ class UserService extends Component
 
         if (!$user->authenticate($password)) {
             $permissions->saveUserPermissions($user->id, $userPermissions);
-            throw new Error($settings->invalidLogin);
+            throw new InvalidArgumentException($settings->invalidLogin);
         }
 
         $permissions->saveUserPermissions($user->id, $userPermissions);
