@@ -38,9 +38,9 @@ class Auth extends ObjectType
             $fields['accessToken'] = Type::nonNull(Type::string());
         } else {
             $fields['jwt'] = Type::nonNull(Type::string());
-            $fields['jwtExpiresAt'] = Type::nonNull(Type::int());
+            $fields['jwtExpiresAt'] = Type::nonNull(Type::float());
             $fields['refreshToken'] = Type::nonNull(Type::string());
-            $fields['refreshTokenExpiresAt'] = Type::nonNull(Type::int());
+            $fields['refreshTokenExpiresAt'] = Type::nonNull(Type::float());
         }
 
         return GqlEntityRegistry::createEntity(static::getName(), new ObjectType([

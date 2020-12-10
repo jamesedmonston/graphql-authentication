@@ -387,9 +387,9 @@ class TokenService extends Component
 
         return [
             'jwt' => $jwt->toString(),
-            'jwtExpiresAt' => $jwtExpiration->getTimestamp(),
+            'jwtExpiresAt' => $jwtExpiration->getTimestamp() * 1000,
             'refreshToken' => $refreshToken,
-            'refreshTokenExpiresAt' => $refreshTokenExpiration->getTimestamp(),
+            'refreshTokenExpiresAt' => $refreshTokenExpiration->getTimestamp() * 1000,
         ];
     }
 

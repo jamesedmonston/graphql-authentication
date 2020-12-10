@@ -27,9 +27,9 @@ class JWT extends ObjectType
 
         $fields = [
             'jwt' => Type::nonNull(Type::string()),
-            'jwtExpiresAt' => Type::nonNull(Type::int()),
+            'jwtExpiresAt' => Type::nonNull(Type::float()),
             'refreshToken' => Type::nonNull(Type::string()),
-            'refreshTokenExpiresAt' => Type::nonNull(Type::int()),
+            'refreshTokenExpiresAt' => Type::nonNull(Type::float()),
         ];
 
         return GqlEntityRegistry::createEntity(static::class, new ObjectType([
