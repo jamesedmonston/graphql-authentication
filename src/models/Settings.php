@@ -22,8 +22,6 @@ class Settings extends Model
     public $granularSchemas = [];
 
     // Tokens
-    public $expiration = '1 week';
-    public $setCookie = null;
     public $jwtExpiration = '30 minutes';
     public $jwtRefreshExpiration = '3 months';
     public $jwtSecretKey = null;
@@ -110,8 +108,6 @@ class Settings extends Model
                     'assetQueries',
                     'assetMutations',
                     'granularSchemas',
-                    'expiration',
-                    'setCookie',
                     'jwtExpiration',
                     'jwtRefreshExpiration',
                     'jwtSecretKey',
