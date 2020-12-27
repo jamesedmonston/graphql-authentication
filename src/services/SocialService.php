@@ -5,6 +5,8 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Craft;
 use craft\base\Component;
+use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\helpers\StringHelper;
 use craft\services\Gql;
 use Facebook\Facebook;
@@ -30,118 +32,103 @@ class SocialService extends Component
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
-            [$this, 'registerGqlQueries']
+            function (RegisterGqlQueriesEvent $event) {
+                $this->registerGoogleQueries($event);
+                $this->registerFacebookQueries($event);
+                $this->registerTwitterQueries($event);
+            }
         );
 
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_MUTATIONS,
-            [$this, 'registerGqlMutations']
+            function (RegisterGqlMutationsEvent $event) {
+                $this->registerGoogleMutations($event);
+                $this->registerFacebookMutations($event);
+                $this->registerTwitterMutations($event);
+            }
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    public function registerGoogleQueries(Event $event)
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
 
-        if ($this->_validateFacebookSettings()) {
-            $event->queries['facebookOauthUrl'] = [
-                'description' => 'Generates the Facebook OAuth URL for allowing users to authenticate.',
-                'type' => Type::nonNull(Type::string()),
-                'args' => [],
-                'resolve' => function () use ($settings) {
-                    $client = new Facebook([
-                        'app_id' => $settings->facebookAppId,
-                        'app_secret' => $settings->facebookAppSecret,
-                    ]);
-
-                    $url = $client->getRedirectLoginHelper()->getLoginUrl($settings->facebookRedirectUrl, ['email']);
-                    return $url;
-                },
-            ];
-        }
-
-        if ($this->_validateTwitterSettings()) {
-            $event->queries['twitterOauthUrl'] = [
-                'description' => 'Generates the Twitter OAuth URL for allowing users to authenticate.',
-                'type' => Type::nonNull(Type::string()),
-                'args' => [],
-                'resolve' => function () use ($settings) {
-                    $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret);
-                    $requestToken = $client->oauth('oauth/request_token', ['oauth_callback' => $settings->twitterRedirectUrl]);
-
-                    $oauthToken = $requestToken['oauth_token'];
-                    $oauthTokenSecret = $requestToken['oauth_token_secret'];
-
-                    $session = Craft::$app->getSession();
-                    $session->set('oauthToken', $oauthToken);
-                    $session->set('oauthTokenSecret', $oauthTokenSecret);
-
-                    $url = $client->url('oauth/authorize', ['oauth_token' => $oauthToken]);
-                    return $url;
-                },
-            ];
-        }
     }
 
-    public function registerGqlMutations(Event $event)
+    public function registerFacebookQueries(Event $event)
     {
+        if (!$this->_validateFacebookSettings()) {
+            return;
+        }
+
+        $event->queries['facebookOauthUrl'] = [
+            'description' => 'Generates the Facebook OAuth URL for allowing users to authenticate.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function () {
+                $settings = GraphqlAuthentication::$plugin->getSettings();
+
+                $client = new Facebook([
+                    'app_id' => $settings->facebookAppId,
+                    'app_secret' => $settings->facebookAppSecret,
+                ]);
+
+                $url = $client->getRedirectLoginHelper()->getLoginUrl($settings->facebookRedirectUrl, ['email']);
+                return $url;
+            },
+        ];
+    }
+
+    public function registerTwitterQueries(Event $event)
+    {
+        if (!$this->_validateTwitterSettings()) {
+            return;
+        }
+
+        $event->queries['twitterOauthUrl'] = [
+            'description' => 'Generates the Twitter OAuth URL for allowing users to authenticate.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function () {
+                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret);
+                $requestToken = $client->oauth('oauth/request_token', ['oauth_callback' => $settings->twitterRedirectUrl]);
+
+                $oauthToken = $requestToken['oauth_token'];
+                $oauthTokenSecret = $requestToken['oauth_token_secret'];
+
+                $session = Craft::$app->getSession();
+                $session->set('oauthToken', $oauthToken);
+                $session->set('oauthTokenSecret', $oauthTokenSecret);
+
+                $url = $client->url('oauth/authorize', ['oauth_token' => $oauthToken]);
+                return $url;
+            },
+        ];
+    }
+
+    public function registerGoogleMutations(Event $event)
+    {
+        if (!$this->_validateGoogleSettings()) {
+            return;
+        }
+
         $users = Craft::$app->getUsers();
-        $gql = Craft::$app->getGql();
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
-        if ($settings->permissionType === 'single' && $settings->googleClientId) {
-            $event->mutations['googleSignIn'] = [
-                'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
-                'type' => Type::nonNull(Auth::getType()),
-                'args' => [
-                    'idToken' => Type::nonNull(Type::string()),
-                ],
-                'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService) {
-                    $schemaId = $settings->schemaId;
-
-                    if (!$schemaId) {
-                        throw new InvalidArgumentException($settings->invalidSchema);
-                    }
-
-                    $idToken = $arguments['idToken'];
-                    $tokenUser = $this->_getUserFromGoogleToken($idToken);
-                    $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
-
-                    if (!$user) {
-                        if (!$settings->allowRegistration) {
-                            throw new InvalidArgumentException($settings->userNotFound);
-                        }
-
-                        $user = $userService->create([
-                            'email' => $tokenUser['email'],
-                            'password' => '',
-                            'firstName' => $tokenUser['firstName'],
-                            'lastName' => $tokenUser['lastName'],
-                        ], $settings->userGroup);
-                    }
-
-                    $token = $tokenService->create($user, $schemaId);
-                    return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
-                },
-            ];
-        }
-
-        if ($settings->permissionType === 'multiple' && $settings->googleClientId) {
-            foreach ($userGroups as $userGroup) {
-                $handle = ucfirst($userGroup->handle);
-
-                $event->mutations["googleSignIn{$handle}"] = [
-                    'description' => "Authenticates a {$userGroup->name} using a Google Sign-In ID token. Returns user and token.",
+        switch ($settings->permissionType) {
+            case 'single':
+                $event->mutations['googleSignIn'] = [
+                    'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService, $userGroup) {
-                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                        $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
                             throw new InvalidArgumentException($settings->invalidSchema);
@@ -152,8 +139,8 @@ class SocialService extends Component
                         $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
 
                         if (!$user) {
-                            if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                            if (!$settings->allowRegistration) {
+                                throw new InvalidArgumentException($settings->userNotFound);
                             }
 
                             $user = $userService->create([
@@ -161,65 +148,86 @@ class SocialService extends Component
                                 'password' => '',
                                 'firstName' => $tokenUser['firstName'],
                                 'lastName' => $tokenUser['lastName'],
-                            ], $userGroup->id);
+                            ], $settings->userGroup);
                         }
 
                         $token = $tokenService->create($user, $schemaId);
                         return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
                     },
                 ];
-            }
+                break;
+
+            case 'multiple':
+                foreach ($userGroups as $userGroup) {
+                    $handle = ucfirst($userGroup->handle);
+
+                    $event->mutations["googleSignIn{$handle}"] = [
+                        'description' => "Authenticates a {$userGroup->name} using a Google Sign-In ID token. Returns user and token.",
+                        'type' => Type::nonNull(Auth::getType()),
+                        'args' => [
+                            'idToken' => Type::nonNull(Type::string()),
+                        ],
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                            $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+
+                            if (!$schemaId) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $idToken = $arguments['idToken'];
+                            $tokenUser = $this->_getUserFromGoogleToken($idToken);
+                            $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+
+                            if (!$user) {
+                                if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
+                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                }
+
+                                $user = $userService->create([
+                                    'email' => $tokenUser['email'],
+                                    'password' => '',
+                                    'firstName' => $tokenUser['firstName'],
+                                    'lastName' => $tokenUser['lastName'],
+                                ], $userGroup->id);
+                            }
+
+                            $assignedGroups = array_column($user->groups, 'id');
+
+                            if (!in_array($userGroup->id, $assignedGroups)) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $token = $tokenService->create($user, $schemaId);
+                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        },
+                    ];
+                }
+                break;
+        }
+    }
+
+    public function registerFacebookMutations(Event $event)
+    {
+        if (!$this->_validateFacebookSettings()) {
+            return;
         }
 
-        if ($settings->permissionType === 'single' && $this->_validateFacebookSettings()) {
-            $event->mutations['facebookSignIn'] = [
-                'description' => 'Authenticates a user using a Facebook Sign-In token. Returns user and token.',
-                'type' => Type::nonNull(Auth::getType()),
-                'args' => [
-                    'code' => Type::nonNull(Type::string()),
-                ],
-                'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService) {
-                    $schemaId = $settings->schemaId;
+        $users = Craft::$app->getUsers();
+        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $userService = GraphqlAuthentication::$plugin->getInstance()->user;
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
-                    if (!$schemaId) {
-                        throw new InvalidArgumentException($settings->invalidSchema);
-                    }
-
-                    $code = $arguments['code'];
-                    $tokenUser = $this->_getUserFromFacebookToken($code);
-                    $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
-
-                    if (!$user) {
-                        if (!$settings->allowRegistration) {
-                            throw new InvalidArgumentException($settings->userNotFound);
-                        }
-
-                        $user = $userService->create([
-                            'email' => $tokenUser['email'],
-                            'password' => '',
-                            'firstName' => $tokenUser['firstName'],
-                            'lastName' => $tokenUser['lastName'],
-                        ], $settings->userGroup);
-                    }
-
-                    $token = $tokenService->create($user, $schemaId);
-                    return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
-                },
-            ];
-        }
-
-        if ($settings->permissionType === 'multiple' && $this->_validateTwitterSettings()) {
-            foreach ($userGroups as $userGroup) {
-                $handle = ucfirst($userGroup->handle);
-
-                $event->mutations["facebookSignIn{$handle}"] = [
-                    'description' => "Authenticates a {$userGroup->name} using a Facebook Sign-In token. Returns user and token.",
+        switch ($settings->permissionType) {
+            case 'single':
+                $event->mutations['facebookSignIn'] = [
+                    'description' => 'Authenticates a user using a Facebook Sign-In token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService, $userGroup) {
-                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                        $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
                             throw new InvalidArgumentException($settings->invalidSchema);
@@ -230,8 +238,8 @@ class SocialService extends Component
                         $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
 
                         if (!$user) {
-                            if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                            if (!$settings->allowRegistration) {
+                                throw new InvalidArgumentException($settings->userNotFound);
                             }
 
                             $user = $userService->create([
@@ -239,68 +247,87 @@ class SocialService extends Component
                                 'password' => '',
                                 'firstName' => $tokenUser['firstName'],
                                 'lastName' => $tokenUser['lastName'],
-                            ], $userGroup->id);
+                            ], $settings->userGroup);
                         }
 
                         $token = $tokenService->create($user, $schemaId);
                         return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
                     },
                 ];
-            }
+                break;
+
+            case 'multiple':
+                foreach ($userGroups as $userGroup) {
+                    $handle = ucfirst($userGroup->handle);
+
+                    $event->mutations["facebookSignIn{$handle}"] = [
+                        'description' => "Authenticates a {$userGroup->name} using a Facebook Sign-In token. Returns user and token.",
+                        'type' => Type::nonNull(Auth::getType()),
+                        'args' => [
+                            'code' => Type::nonNull(Type::string()),
+                        ],
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                            $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+
+                            if (!$schemaId) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $code = $arguments['code'];
+                            $tokenUser = $this->_getUserFromFacebookToken($code);
+                            $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+
+                            if (!$user) {
+                                if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
+                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                }
+
+                                $user = $userService->create([
+                                    'email' => $tokenUser['email'],
+                                    'password' => '',
+                                    'firstName' => $tokenUser['firstName'],
+                                    'lastName' => $tokenUser['lastName'],
+                                ], $userGroup->id);
+                            }
+
+                            $assignedGroups = array_column($user->groups, 'id');
+
+                            if (!in_array($userGroup->id, $assignedGroups)) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $token = $tokenService->create($user, $schemaId);
+                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        },
+                    ];
+                }
+                break;
+        }
+    }
+
+    public function registerTwitterMutations(Event $event)
+    {
+        if (!$this->_validateTwitterSettings()) {
+            return;
         }
 
-        if ($settings->permissionType === 'single' && $this->_validateTwitterSettings()) {
-            $event->mutations['twitterSignIn'] = [
-                'description' => 'Authenticates a user using a Twitter Sign-In token. Returns user and token.',
-                'type' => Type::nonNull(Auth::getType()),
-                'args' => [
-                    'oauthToken' => Type::nonNull(Type::string()),
-                    'oauthVerifier' => Type::nonNull(Type::string()),
-                ],
-                'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService) {
-                    $schemaId = $settings->schemaId;
+        $users = Craft::$app->getUsers();
+        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $userService = GraphqlAuthentication::$plugin->getInstance()->user;
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
 
-                    if (!$schemaId) {
-                        throw new InvalidArgumentException($settings->invalidSchema);
-                    }
-
-                    $oauthToken = $arguments['oauthToken'];
-                    $oauthVerifier = $arguments['oauthVerifier'];
-                    $tokenUser = $this->_getUserFromTwitterToken($oauthToken, $oauthVerifier);
-                    $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
-
-                    if (!$user) {
-                        if (!$settings->allowRegistration) {
-                            throw new InvalidArgumentException($settings->userNotFound);
-                        }
-
-                        $user = $userService->create([
-                            'email' => $tokenUser['email'],
-                            'password' => '',
-                            'firstName' => $tokenUser['firstName'],
-                            'lastName' => $tokenUser['lastName'],
-                        ], $settings->userGroup);
-                    }
-
-                    $token = $tokenService->create($user, $schemaId);
-                    return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
-                },
-            ];
-        }
-
-        if ($settings->permissionType === 'multiple' && $this->_validateTwitterSettings()) {
-            foreach ($userGroups as $userGroup) {
-                $handle = ucfirst($userGroup->handle);
-
-                $event->mutations["twitterSignIn{$handle}"] = [
-                    'description' => "Authenticates a {$userGroup->name} using a Twitter Sign-In token. Returns user and token.",
+        switch ($settings->permissionType) {
+            case 'single':
+                $event->mutations['twitterSignIn'] = [
+                    'description' => 'Authenticates a user using a Twitter Sign-In token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'oauthToken' => Type::nonNull(Type::string()),
                         'oauthVerifier' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $gql, $settings, $userService, $tokenService, $userGroup) {
-                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                        $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
                             throw new InvalidArgumentException($settings->invalidSchema);
@@ -312,8 +339,8 @@ class SocialService extends Component
                         $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
 
                         if (!$user) {
-                            if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                            if (!$settings->allowRegistration) {
+                                throw new InvalidArgumentException($settings->userNotFound);
                             }
 
                             $user = $userService->create([
@@ -321,30 +348,85 @@ class SocialService extends Component
                                 'password' => '',
                                 'firstName' => $tokenUser['firstName'],
                                 'lastName' => $tokenUser['lastName'],
-                            ], $userGroup->id);
+                            ], $settings->userGroup);
                         }
 
                         $token = $tokenService->create($user, $schemaId);
                         return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
                     },
                 ];
-            }
+                break;
+
+            case 'multiple':
+                foreach ($userGroups as $userGroup) {
+                    $handle = ucfirst($userGroup->handle);
+
+                    $event->mutations["twitterSignIn{$handle}"] = [
+                        'description' => "Authenticates a {$userGroup->name} using a Twitter Sign-In token. Returns user and token.",
+                        'type' => Type::nonNull(Auth::getType()),
+                        'args' => [
+                            'oauthToken' => Type::nonNull(Type::string()),
+                            'oauthVerifier' => Type::nonNull(Type::string()),
+                        ],
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                            $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+
+                            if (!$schemaId) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $oauthToken = $arguments['oauthToken'];
+                            $oauthVerifier = $arguments['oauthVerifier'];
+                            $tokenUser = $this->_getUserFromTwitterToken($oauthToken, $oauthVerifier);
+                            $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+
+                            if (!$user) {
+                                if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
+                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                }
+
+                                $user = $userService->create([
+                                    'email' => $tokenUser['email'],
+                                    'password' => '',
+                                    'firstName' => $tokenUser['firstName'],
+                                    'lastName' => $tokenUser['lastName'],
+                                ], $userGroup->id);
+                            }
+
+                            $assignedGroups = array_column($user->groups, 'id');
+
+                            if (!in_array($userGroup->id, $assignedGroups)) {
+                                throw new InvalidArgumentException($settings->invalidSchema);
+                            }
+
+                            $token = $tokenService->create($user, $schemaId);
+                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        },
+                    ];
+                }
+                break;
         }
     }
 
     // Protected Methods
     // =========================================================================
 
+    protected function _validateGoogleSettings(): bool
+    {
+        $settings = GraphqlAuthentication::$plugin->getSettings();
+        return (bool) $settings->googleClientId;
+    }
+
     protected function _validateFacebookSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-        return $settings->facebookAppId && $settings->facebookAppSecret && $settings->facebookRedirectUrl;
+        return (bool) $settings->facebookAppId && $settings->facebookAppSecret && $settings->facebookRedirectUrl;
     }
 
     protected function _validateTwitterSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-        return $settings->twitterApiKey && $settings->twitterApiKeySecret && $settings->twitterRedirectUrl;
+        return (bool) $settings->twitterApiKey && $settings->twitterApiKeySecret && $settings->twitterRedirectUrl;
     }
 
     protected function _getUserFromGoogleToken(string $idToken): array
