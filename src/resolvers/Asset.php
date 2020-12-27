@@ -46,11 +46,8 @@ class Asset extends ElementResolver
 
             if (StringHelper::contains($token->name, 'user-')) {
                 $user = $tokenService->getUserFromToken();
-                $arguments['uploader'] = $user->id;
 
                 if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                    unset($arguments['uploader']);
-
                     $settings = GraphqlAuthentication::$plugin->getSettings();
                     $authorOnlyVolumes = $settings->assetQueries ?? [];
 
@@ -77,6 +74,8 @@ class Asset extends ElementResolver
 
                         $arguments['uploader'] = $user->id;
                     }
+                } else {
+                    $arguments['uploader'] = $user->id;
                 }
             }
         }

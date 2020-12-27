@@ -46,11 +46,8 @@ class Entry extends ElementResolver
 
             if (StringHelper::contains($token->name, 'user-')) {
                 $user = $tokenService->getUserFromToken();
-                $arguments['authorId'] = $user->id;
 
                 if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                    unset($arguments['authorId']);
-
                     $settings = GraphqlAuthentication::$plugin->getSettings();
                     $authorOnlySections = $settings->entryQueries ?? [];
 
@@ -77,6 +74,8 @@ class Entry extends ElementResolver
 
                         $arguments['authorId'] = $user->id;
                     }
+                } else {
+                    $arguments['authorId'] = $user->id;
                 }
             }
         }
