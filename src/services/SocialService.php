@@ -194,7 +194,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
@@ -294,7 +294,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
@@ -398,7 +398,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
