@@ -135,7 +135,7 @@ class TokenService extends Component
 
                 $schemaId = $refreshTokenElement->schemaId;
 
-                if (!$user) {
+                if (!$schemaId) {
                     throw new InvalidArgumentException($settings->invalidSchema);
                 }
 
