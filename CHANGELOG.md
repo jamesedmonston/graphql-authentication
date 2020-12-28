@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.0 - Unreleased
+
+### Added
+
+- Added `viewer` query
+- Added `updateViewer` mutation
+
+### Changed
+
+- Removed support for non-JWT tokens (note: _this is a breaking change_)
+- Deprecated `getUser` query (this will be removed in a future release)
+- Deprecated `updateUser` mutation (this will be removed in a future release) ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+- Improved error handling, production environments now return useful error messages and codes instead of `Internal server error`
+
+### Fixed
+
+- Fixed issue with `authorId` restrictions sometimes causing incorrect results to be returned ([#34](https://github.com/jamesedmonston/graphql-authentication/issues/34) via [@daltonrooney](https://github.com/daltonrooney))
+- Fixed issue with users being able to assign themselves schemas, using social mutations (via [@daltonrooney](https://github.com/daltonrooney))
+
 ## 1.3.3 - 2020-12-10
 
 ### Changed
