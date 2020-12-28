@@ -12,7 +12,6 @@ use craft\services\Gql;
 use Facebook\Facebook;
 use Google_Client;
 use GraphQL\Type\Definition\Type;
-use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\base\Event;
@@ -118,6 +117,7 @@ class SocialService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         switch ($settings->permissionType) {
             case 'single':
@@ -127,11 +127,11 @@ class SocialService extends Component
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $errorService) {
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            throw new InvalidArgumentException($settings->invalidSchema);
+                            $errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $idToken = $arguments['idToken'];
@@ -140,7 +140,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!$settings->allowRegistration) {
-                                throw new InvalidArgumentException($settings->userNotFound);
+                                $errorService->throw($settings->userNotFound, 'INVALID');
                             }
 
                             $user = $userService->create([
@@ -167,11 +167,11 @@ class SocialService extends Component
                         'args' => [
                             'idToken' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $errorService, $userGroup) {
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $idToken = $arguments['idToken'];
@@ -180,7 +180,7 @@ class SocialService extends Component
 
                             if (!$user) {
                                 if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                    $errorService->throw($settings->invalidSchema, 'INVALID');
                                 }
 
                                 $user = $userService->create([
@@ -194,7 +194,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
@@ -217,6 +217,7 @@ class SocialService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         switch ($settings->permissionType) {
             case 'single':
@@ -226,11 +227,11 @@ class SocialService extends Component
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $errorService) {
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            throw new InvalidArgumentException($settings->invalidSchema);
+                            $errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $code = $arguments['code'];
@@ -239,7 +240,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!$settings->allowRegistration) {
-                                throw new InvalidArgumentException($settings->userNotFound);
+                                $errorService->throw($settings->userNotFound, 'INVALID');
                             }
 
                             $user = $userService->create([
@@ -266,11 +267,11 @@ class SocialService extends Component
                         'args' => [
                             'code' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $errorService, $userGroup) {
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $code = $arguments['code'];
@@ -279,7 +280,7 @@ class SocialService extends Component
 
                             if (!$user) {
                                 if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                    $errorService->throw($settings->invalidSchema, 'INVALID');
                                 }
 
                                 $user = $userService->create([
@@ -293,7 +294,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
@@ -316,6 +317,7 @@ class SocialService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         switch ($settings->permissionType) {
             case 'single':
@@ -326,11 +328,11 @@ class SocialService extends Component
                         'oauthToken' => Type::nonNull(Type::string()),
                         'oauthVerifier' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService) {
+                    'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $errorService, $tokenService) {
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            throw new InvalidArgumentException($settings->invalidSchema);
+                            $errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $oauthToken = $arguments['oauthToken'];
@@ -340,7 +342,7 @@ class SocialService extends Component
 
                         if (!$user) {
                             if (!$settings->allowRegistration) {
-                                throw new InvalidArgumentException($settings->userNotFound);
+                                $errorService->throw($settings->userNotFound, 'INVALID');
                             }
 
                             $user = $userService->create([
@@ -368,11 +370,11 @@ class SocialService extends Component
                             'oauthToken' => Type::nonNull(Type::string()),
                             'oauthVerifier' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($users, $settings, $userService, $tokenService, $errorService, $userGroup) {
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $oauthToken = $arguments['oauthToken'];
@@ -382,7 +384,7 @@ class SocialService extends Component
 
                             if (!$user) {
                                 if (!($settings->granularSchemas["group-{$userGroup->id}"]['allowRegistration'] ?? false)) {
-                                    throw new InvalidArgumentException($settings->invalidSchema);
+                                    $errorService->throw($settings->invalidSchema, 'INVALID');
                                 }
 
                                 $user = $userService->create([
@@ -396,7 +398,7 @@ class SocialService extends Component
                             $assignedGroups = array_column($user->groups, 'id');
 
                             if (!in_array($userGroup->id, $assignedGroups)) {
-                                throw new InvalidArgumentException($settings->invalidSchema);
+                                $errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $token = $tokenService->create($user, $schemaId);
@@ -432,17 +434,18 @@ class SocialService extends Component
     protected function _getUserFromGoogleToken(string $idToken): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
         $client = new Google_Client(['client_id' => $settings->googleClientId]);
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            throw new InvalidArgumentException($settings->googleTokenIdInvalid);
+            $errorService->throw($settings->googleTokenIdInvalid, 'INVALID');
         }
 
         $email = $payload['email'];
 
         if (!$email || !isset($email)) {
-            throw new InvalidArgumentException($settings->emailNotInScope);
+            $errorService->throw($settings->emailNotInScope, 'INVALID');
         }
 
         if ($settings->allowedGoogleDomains) {
@@ -471,6 +474,7 @@ class SocialService extends Component
     protected function _getUserFromFacebookToken(string $code): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         $client = new Facebook([
             'app_id' => $settings->facebookAppId,
@@ -480,14 +484,14 @@ class SocialService extends Component
         $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $settings->facebookRedirectUrl);
 
         if (!$accessToken) {
-            throw new InvalidArgumentException($settings->invalidOauthToken);
+            $errorService->throw($settings->invalidOauthToken, 'INVALID');
         }
 
         $user = $client->get('/me?fields=id,name,email', $accessToken->getValue())->getGraphUser();
         $email = $user['email'];
 
         if (!$email || !isset($email)) {
-            throw new InvalidArgumentException($settings->emailNotInScope);
+            $errorService->throw($settings->emailNotInScope, 'INVALID');
         }
 
         if ($settings->allowedFacebookDomains) {
@@ -512,12 +516,13 @@ class SocialService extends Component
     protected function _getUserFromTwitterToken(string $oauthToken, string $oauthVerifier): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
         $session = Craft::$app->getSession();
         $sessionOauthToken = $session->get('oauthToken');
         $sessionOauthTokenSecret = $session->get('oauthTokenSecret');
 
         if ($oauthToken !== $sessionOauthToken) {
-            throw new InvalidArgumentException($settings->invalidOauthToken);
+            $errorService->throw($settings->invalidOauthToken, 'INVALID');
         }
 
         $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret, $sessionOauthToken, $sessionOauthTokenSecret);
@@ -529,7 +534,7 @@ class SocialService extends Component
         $email = $user->email;
 
         if (!$email || !isset($email)) {
-            throw new InvalidArgumentException($settings->emailNotInScope);
+            $errorService->throw($settings->emailNotInScope, 'INVALID');
         }
 
         if ($settings->allowedTwitterDomains) {
@@ -557,16 +562,17 @@ class SocialService extends Component
     protected function _verifyEmailDomain(string $email, string $domains, string $error): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         if (!StringHelper::contains($email, '@')) {
-            throw new InvalidArgumentException($settings->invalidEmailAddress);
+            $errorService->throw($settings->invalidEmailAddress, 'INVALID');
         }
 
         $domain = explode('@', $email)[1];
         $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
 
         if (!in_array($domain, $domains)) {
-            throw new InvalidArgumentException($error);
+            $errorService->throw($error, 'INVALID');
         }
 
         return true;

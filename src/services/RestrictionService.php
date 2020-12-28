@@ -15,13 +15,11 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\services\Gql;
 use GraphQL\Type\Definition\Type;
-use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
 use jamesedmonston\graphqlauthentication\resolvers\Entry as EntryResolver;
 use Throwable;
 use yii\base\Event;
-use yii\web\ForbiddenHttpException;
 
 class RestrictionService extends Component
 {
@@ -226,7 +224,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->authorId !== (string) $user->id) {
-                throw new ForbiddenHttpException($settings->forbiddenMutation);
+                GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
     }
@@ -267,7 +265,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                throw new ForbiddenHttpException($settings->forbiddenMutation);
+                GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
     }
@@ -333,9 +331,10 @@ class RestrictionService extends Component
     {
         $entry = Craft::$app->getElements()->getElementById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         if (!$entry) {
-            throw new InvalidArgumentException($settings->entryNotFound);
+            $errorService->throw($settings->entryNotFound, 'INVALID');
         }
 
         if (!$entry->authorId) {
@@ -352,7 +351,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-            throw new ForbiddenHttpException($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -377,7 +376,7 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new ForbiddenHttpException($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
     }
 
@@ -385,9 +384,10 @@ class RestrictionService extends Component
     {
         $asset = Craft::$app->getAssets()->getAssetById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         if (!$asset) {
-            throw new InvalidArgumentException($settings->assetNotFound);
+            $errorService->throw($settings->assetNotFound, 'INVALID');
         }
 
         if (!$asset->uploaderId) {
@@ -404,7 +404,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-            throw new ForbiddenHttpException($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -429,7 +429,7 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new ForbiddenHttpException($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
     }
 }

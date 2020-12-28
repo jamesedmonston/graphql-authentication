@@ -18,6 +18,7 @@ use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
+use jamesedmonston\graphqlauthentication\services\ErrorService;
 use jamesedmonston\graphqlauthentication\services\RestrictionService;
 use jamesedmonston\graphqlauthentication\services\SocialService;
 use jamesedmonston\graphqlauthentication\services\TokenService;
@@ -77,12 +78,14 @@ class GraphqlAuthentication extends Plugin
             'user' => UserService::class,
             'restriction' => RestrictionService::class,
             'social' => SocialService::class,
+            'error' => ErrorService::class,
         ]);
 
         $this->token->init();
         $this->user->init();
         $this->restriction->init();
         $this->social->init();
+        $this->error->init();
 
         Event::on(
             UrlManager::class,

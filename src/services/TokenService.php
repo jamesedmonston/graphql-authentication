@@ -26,7 +26,6 @@ use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use Throwable;
 use yii\base\Event;
 use yii\base\InvalidArgumentException;
-use yii\web\UnauthorizedHttpException;
 
 class TokenService extends Component
 {
@@ -106,6 +105,7 @@ class TokenService extends Component
     public function registerGqlMutations(Event $event)
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         $event->mutations['refreshToken'] = [
             'description' => "Refreshes a user's JWT. Checks for the occurrence of the `gql_refreshToken` cookie, and falls back to `refreshToken` argument.",
@@ -113,30 +113,30 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings) {
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
-                    throw new InvalidArgumentException($settings->invalidRefreshToken);
+                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
                 }
 
                 $this->_clearExpiredTokens();
                 $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
-                    throw new InvalidArgumentException($settings->invalidRefreshToken);
+                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
                 }
 
                 $user = Craft::$app->getUsers()->getUserById($refreshTokenElement->userId);
 
                 if (!$user) {
-                    throw new InvalidArgumentException($settings->userNotFound);
+                    $errorService->throw($settings->userNotFound, 'INVALID');
                 }
 
                 $schemaId = $refreshTokenElement->schemaId;
 
                 if (!$schemaId) {
-                    throw new InvalidArgumentException($settings->invalidSchema);
+                    $errorService->throw($settings->invalidSchema, 'INVALID');
                 }
 
                 Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
@@ -151,6 +151,7 @@ class TokenService extends Component
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         foreach ($requestHeaders->get('authorization', [], false) as $authHeader) {
             $authValues = array_map('trim', explode(',', $authHeader));
@@ -160,11 +161,11 @@ class TokenService extends Component
                     try {
                         $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
                     } catch (InvalidArgumentException $e) {
-                        throw new InvalidArgumentException($e);
+                        $errorService->throw($e, 'INVALID');
                     }
 
                     if (!$token) {
-                        throw new UnauthorizedHttpException($settings->invalidHeader);
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
                     }
 
                     break 2;
@@ -196,17 +197,17 @@ class TokenService extends Component
                         try {
                             $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
                         } catch (RequiredConstraintsViolated $e) {
-                            throw new UnauthorizedHttpException(json_encode($e->violations()));
+                            $errorService->throw(json_encode($e->violations()), 'FORBIDDEN');
                         }
 
                         $accessToken = $jwt->claims()->get('accessToken');
                         $token = Craft::$app->getGql()->getTokenByAccessToken($accessToken);
                     } catch (InvalidArgumentException $e) {
-                        throw new InvalidArgumentException($e);
+                        $errorService->throw($e, 'INVALID');
                     }
 
                     if (!$token) {
-                        throw new UnauthorizedHttpException($settings->invalidHeader);
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
                     }
 
                     break 2;
@@ -215,7 +216,7 @@ class TokenService extends Component
         }
 
         if (!isset($token)) {
-            throw new UnauthorizedHttpException($settings->invalidHeader);
+            $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
         }
 
         $this->_validateExpiry($token);
@@ -245,6 +246,7 @@ class TokenService extends Component
         $this->_clearExpiredTokens();
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
         $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
         $time = microtime(true);
 
@@ -259,11 +261,11 @@ class TokenService extends Component
         $token = new GqlToken($fields);
 
         if (!Craft::$app->getGql()->saveToken($token)) {
-            throw new UnauthorizedHttpException(json_encode($token->getErrors()));
+            $errorService->throw(json_encode($token->getErrors()), 'FORBIDDEN');
         }
 
         if (!$settings->jwtSecretKey) {
-            throw new InvalidArgumentException($settings->invalidJwtSecretKey);
+            $errorService->throw($settings->invalidJwtSecretKey, 'INVALID');
         }
 
         $jwtConfig = Configuration::forSymmetricSigner(
@@ -305,7 +307,7 @@ class TokenService extends Component
         ]);
 
         if (!Craft::$app->getElements()->saveElement($refreshTokenElement)) {
-            throw new InvalidArgumentException(json_encode($refreshTokenElement->getErrors()));
+            $errorService->throw(json_encode($refreshTokenElement->getErrors()), 'INVALID');
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);
@@ -360,7 +362,7 @@ class TokenService extends Component
             return;
         }
 
-        throw new UnauthorizedHttpException(GraphqlAuthentication::$plugin->getSettings()->invalidHeader);
+        GraphqlAuthentication::$plugin->getInstance()->error->throw(GraphqlAuthentication::$plugin->getSettings()->invalidHeader, 'FORBIDDEN');
     }
 
     protected function _clearExpiredTokens()
