@@ -93,7 +93,7 @@ class UserService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings) {
+            'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
                 $user = $this->_authenticate($arguments);
                 $schemaId = $settings->schemaId ?? null;
 
@@ -127,7 +127,7 @@ class UserService extends Component
                     ],
                     UserArguments::getContentArguments()
                 ),
-                'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings) {
+                'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
@@ -164,7 +164,7 @@ class UserService extends Component
                         ],
                         UserArguments::getContentArguments()
                     ),
-                    'resolve' => function ($source, array $arguments) use ($gql, $tokenService, $settings, $userGroup) {
+                    'resolve' => function ($source, array $arguments) use ($tokenService, $settings, $userGroup) {
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
