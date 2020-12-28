@@ -152,7 +152,7 @@ class SocialService extends Component
                         }
 
                         $token = $tokenService->create($user, $schemaId);
-                        return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        return $userService->getResponseFields($user, $schemaId, $token);
                     },
                 ];
                 break;
@@ -198,7 +198,7 @@ class SocialService extends Component
                             }
 
                             $token = $tokenService->create($user, $schemaId);
-                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                            return $userService->getResponseFields($user, $schemaId, $token);
                         },
                     ];
                 }
@@ -251,7 +251,7 @@ class SocialService extends Component
                         }
 
                         $token = $tokenService->create($user, $schemaId);
-                        return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        return $userService->getResponseFields($user, $schemaId, $token);
                     },
                 ];
                 break;
@@ -297,7 +297,7 @@ class SocialService extends Component
                             }
 
                             $token = $tokenService->create($user, $schemaId);
-                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                            return $userService->getResponseFields($user, $schemaId, $token);
                         },
                     ];
                 }
@@ -352,7 +352,7 @@ class SocialService extends Component
                         }
 
                         $token = $tokenService->create($user, $schemaId);
-                        return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                        return $userService->getResponseFields($user, $schemaId, $token);
                     },
                 ];
                 break;
@@ -400,7 +400,7 @@ class SocialService extends Component
                             }
 
                             $token = $tokenService->create($user, $schemaId);
-                            return GraphqlAuthentication::$plugin->getInstance()->user->getResponseFields($user, $schemaId, $token);
+                            return $userService->getResponseFields($user, $schemaId, $token);
                         },
                     ];
                 }
