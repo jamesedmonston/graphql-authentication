@@ -8,13 +8,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- Added `viewer` query
-- Added `updateViewer` mutation
+- Added `viewer` query ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+- Added `updateViewer` mutation ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
 
 ### Changed
 
-- Removed support for non-JWT tokens (note: _this is a breaking change_)
-- Deprecated `getUser` query (this will be removed in a future release)
+- Removed support for non-JWT tokens (note: **this is a breaking change**)
+- Deprecated `getUser` query (this will be removed in a future release) ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
 - Deprecated `updateUser` mutation (this will be removed in a future release) ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
 - Improved error handling, production environments now return useful error messages and codes instead of `Internal server error`
 
