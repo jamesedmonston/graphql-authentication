@@ -151,7 +151,7 @@ class UserService extends Component
                     ],
                     UserArguments::getContentArguments()
                 ),
-                'resolve' => function ($source, array $arguments) use ($tokenService, $settings) {
+                'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     $schemaId = $settings->schemaId;
 
                     if (!$schemaId) {
@@ -188,7 +188,7 @@ class UserService extends Component
                         ],
                         UserArguments::getContentArguments()
                     ),
-                    'resolve' => function ($source, array $arguments) use ($tokenService, $settings, $userGroup) {
+                    'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                         if (!$schemaId) {
@@ -232,7 +232,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $users, $settings) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $settings, $errorService) {
                 $password = $arguments['password'];
                 $code = $arguments['code'];
                 $id = $arguments['id'];
@@ -261,7 +261,7 @@ class UserService extends Component
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions, $tokenService, $settings) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $permissions, $settings, $tokenService, $errorService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -312,7 +312,7 @@ class UserService extends Component
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $tokenService, $settings) {
+            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -365,7 +365,7 @@ class UserService extends Component
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $tokenService, $settings) {
+            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -411,7 +411,7 @@ class UserService extends Component
             'description' => 'Deletes authenticated user access token. Useful for logging out of current device. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($gql, $tokenService, $settings) {
+            'resolve' => function () use ($gql, $settings, $tokenService, $errorService) {
                 $token = $tokenService->getHeaderToken();
 
                 if (!$token) {
@@ -428,7 +428,7 @@ class UserService extends Component
             'description' => 'Deletes all access tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($gql, $tokenService, $settings) {
+            'resolve' => function () use ($gql, $settings, $tokenService, $errorService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -492,7 +492,7 @@ class UserService extends Component
         $elements = Craft::$app->getElements();
 
         if (!$elements->saveElement($user)) {
-            $errorService->throw(json_encode($user->getErrors()), 'INVALID');
+            GraphqlAuthentication::$plugin->getInstance()->error->throw(json_encode($user->getErrors()), 'INVALID');
         }
 
         $users = Craft::$app->getUsers();
