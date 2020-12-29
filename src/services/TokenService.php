@@ -46,7 +46,6 @@ class TokenService extends Component
      *     function(JwtCreateEvent $event) {
      *         $builder = $event->builder;
      *         $user = $event->user;
-     *
      *         $builder->withClaim('customClaim', 'customValue');
      *     }
      * );

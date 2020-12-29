@@ -18,10 +18,14 @@ use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
+use jamesedmonston\graphqlauthentication\services\AppleService;
 use jamesedmonston\graphqlauthentication\services\ErrorService;
+use jamesedmonston\graphqlauthentication\services\FacebookService;
+use jamesedmonston\graphqlauthentication\services\GoogleService;
 use jamesedmonston\graphqlauthentication\services\RestrictionService;
 use jamesedmonston\graphqlauthentication\services\SocialService;
 use jamesedmonston\graphqlauthentication\services\TokenService;
+use jamesedmonston\graphqlauthentication\services\TwitterService;
 use jamesedmonston\graphqlauthentication\services\UserService;
 use yii\base\Event;
 
@@ -78,6 +82,10 @@ class GraphqlAuthentication extends Plugin
             'user' => UserService::class,
             'restriction' => RestrictionService::class,
             'social' => SocialService::class,
+            'google' => GoogleService::class,
+            'facebook' => FacebookService::class,
+            'twitter' => TwitterService::class,
+            'apple' => AppleService::class,
             'error' => ErrorService::class,
         ]);
 
@@ -85,6 +93,10 @@ class GraphqlAuthentication extends Plugin
         $this->user->init();
         $this->restriction->init();
         $this->social->init();
+        $this->google->init();
+        $this->facebook->init();
+        $this->twitter->init();
+        $this->apple->init();
         $this->error->init();
 
         Event::on(
