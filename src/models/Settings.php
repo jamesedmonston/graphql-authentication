@@ -41,6 +41,10 @@ class Settings extends Model
     public $twitterRedirectUrl = null;
     public $allowedTwitterDomains = null;
 
+    public $appleClientId = null;
+    public $appleClientSecret = null;
+    public $appleRedirectUrl = null;
+
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
     public $invalidSchema = 'No schema has been set for this user group';
@@ -122,6 +126,9 @@ class Settings extends Model
                     'twitterApiKeySecret',
                     'twitterRedirectUrl',
                     'allowedTwitterDomains',
+                    'appleClientId',
+                    'appleClientSecret',
+                    'appleRedirectUrl',
                 ],
                 'default',
             ],
