@@ -452,7 +452,7 @@ class UserService extends Component
         ];
     }
 
-    public function create(array $arguments, Int $userGroup): User
+    public function create(array $arguments, int $userGroup): User
     {
         $email = $arguments['email'];
         $password = $arguments['password'];

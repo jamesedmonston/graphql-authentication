@@ -42,7 +42,11 @@ class SocialService extends Component
         $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
 
         if (!$user) {
-            if (!$settings->allowRegistration) {
+            if (!$userGroupId && !$settings->allowRegistration) {
+                $errorService->throw($settings->userNotFound, 'INVALID');
+            }
+
+            if ($userGroupId && !($settings->granularSchemas["group-{$userGroupId}"]['allowRegistration'] ?? false)) {
                 $errorService->throw($settings->userNotFound, 'INVALID');
             }
 
@@ -51,7 +55,7 @@ class SocialService extends Component
                 'password' => '',
                 'firstName' => $tokenUser['firstName'],
                 'lastName' => $tokenUser['lastName'],
-            ], $settings->userGroup);
+            ], $userGroupId ?? $settings->userGroup);
         }
 
         if ($userGroupId) {
