@@ -31,7 +31,7 @@ class SocialService extends Component
         return true;
     }
 
-    public function authenticate(array $tokenUser, int $schemaId, int $userGroupId): array
+    public function authenticate(array $tokenUser, int $schemaId, int $userGroupId = null): array
     {
         $users = Craft::$app->getUsers();
         $settings = GraphqlAuthentication::$plugin->getSettings();
