@@ -248,6 +248,11 @@ class TokenService extends Component
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+
+        if (!$settings->jwtSecretKey) {
+            $errorService->throw($settings->invalidJwtSecretKey, 'INVALID');
+        }
+
         $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
         $time = microtime(true);
 
@@ -263,10 +268,6 @@ class TokenService extends Component
 
         if (!Craft::$app->getGql()->saveToken($token)) {
             $errorService->throw(json_encode($token->getErrors()), 'FORBIDDEN');
-        }
-
-        if (!$settings->jwtSecretKey) {
-            $errorService->throw($settings->invalidJwtSecretKey, 'INVALID');
         }
 
         $jwtConfig = Configuration::forSymmetricSigner(
