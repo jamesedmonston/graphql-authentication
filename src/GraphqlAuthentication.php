@@ -19,6 +19,7 @@ use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
 use jamesedmonston\graphqlauthentication\services\AppleService;
+use jamesedmonston\graphqlauthentication\services\CacheService;
 use jamesedmonston\graphqlauthentication\services\ErrorService;
 use jamesedmonston\graphqlauthentication\services\FacebookService;
 use jamesedmonston\graphqlauthentication\services\GoogleService;
@@ -87,6 +88,7 @@ class GraphqlAuthentication extends Plugin
             'twitter' => TwitterService::class,
             'apple' => AppleService::class,
             'error' => ErrorService::class,
+            'cache' => CacheService::class,
         ]);
 
         $this->token->init();
@@ -98,6 +100,7 @@ class GraphqlAuthentication extends Plugin
         $this->twitter->init();
         $this->apple->init();
         $this->error->init();
+        $this->cache->init();
 
         Event::on(
             UrlManager::class,

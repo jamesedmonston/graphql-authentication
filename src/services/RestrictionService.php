@@ -31,6 +31,8 @@ class RestrictionService extends Component
      */
     public function init()
     {
+        parent::init();
+
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
@@ -65,12 +67,6 @@ class RestrictionService extends Component
             Asset::class,
             Asset::EVENT_BEFORE_DELETE,
             [$this, 'ensureAssetMutationAllowed']
-        );
-
-        Event::on(
-            Gql::class,
-            Gql::EVENT_BEFORE_EXECUTE_GQL_QUERY,
-            [$this, 'injectUniqueCache']
         );
     }
 
@@ -268,27 +264,6 @@ class RestrictionService extends Component
                 GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
-    }
-
-    // inject a unique caching key per user, to ensure users don't see each other's cached content
-
-    public function injectUniqueCache(Event $event)
-    {
-        if (!$this->shouldRestrictRequests()) {
-            return;
-        }
-
-        try {
-            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-            $token = $tokenService->getHeaderToken();
-            $cacheKey = $token->accessToken;
-
-            if (StringHelper::contains($token->name, 'user-')) {
-                $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
-            }
-
-            $event->variables['gql_cacheKey'] = $cacheKey;
-        } catch (Throwable $e) {}
     }
 
     public function shouldRestrictRequests(): bool
