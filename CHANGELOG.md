@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Added
 
 - Added support for Sign in with Apple ([#14](https://github.com/jamesedmonston/graphql-authentication/issues/14))
+- Added support for limiting user groups to Craft multi-site sites
 - Added `viewer` query ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
 - Added `updateViewer` mutation ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
 
