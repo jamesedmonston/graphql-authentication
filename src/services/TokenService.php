@@ -256,15 +256,13 @@ class TokenService extends Component
         $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
         $time = microtime(true);
 
-        $fields = [
+        $token = new GqlToken([
             'name' => "user-{$user->id}-{$time}",
             'accessToken' => $accessToken,
             'enabled' => true,
             'schemaId' => $schemaId,
             'expiryDate' => (new DateTime())->modify("+ {$settings->jwtExpiration}"),
-        ];
-
-        $token = new GqlToken($fields);
+        ]);
 
         if (!Craft::$app->getGql()->saveToken($token)) {
             $errorService->throw(json_encode($token->getErrors()), 'FORBIDDEN');
