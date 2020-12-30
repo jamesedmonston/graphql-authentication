@@ -90,7 +90,7 @@ class FacebookService extends Component
                         $code = $arguments['code'];
                         $tokenUser = $this->_getUserFromToken($code);
 
-                        $user = $socialService->authenticate($tokenUser);
+                        $user = $socialService->authenticate($tokenUser, $schemaId);
                         return $user;
                     },
                 ];
