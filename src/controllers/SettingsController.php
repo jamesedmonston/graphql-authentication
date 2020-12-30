@@ -60,7 +60,7 @@ class SettingsController extends Controller
 
         $userOptions = [
             [
-                'label' => '',
+                'label' => '-',
                 'value' => '',
             ],
         ];
@@ -72,13 +72,29 @@ class SettingsController extends Controller
             ];
         }
 
+        $sites = Craft::$app->getSites()->getAllSites();
+
+        $siteOptions = [
+            [
+                'label' => 'All Sites',
+                'value' => '',
+            ],
+        ];
+
+        foreach ($sites as $site) {
+            $siteOptions[] = [
+                'label' => $site->name,
+                'value' => $site->id,
+            ];
+        }
+
         $gql = Craft::$app->getGql();
         $schemas = $gql->getSchemas();
         $publicSchema = $gql->getPublicSchema();
 
         $schemaOptions = [
             [
-                'label' => '',
+                'label' => '-',
                 'value' => '',
             ],
         ];
@@ -141,6 +157,7 @@ class SettingsController extends Controller
             'tabs',
             'settings',
             'userOptions',
+            'siteOptions',
             'schemaOptions',
             'entryQueries',
             'entryMutations',

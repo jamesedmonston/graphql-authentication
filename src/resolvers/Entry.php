@@ -50,13 +50,19 @@ class Entry extends ElementResolver
                 if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                     $settings = GraphqlAuthentication::$plugin->getSettings();
                     $authorOnlySections = $settings->entryQueries ?? [];
+                    $siteId = $settings->siteId ?? null;
 
                     if ($settings->permissionType === 'multiple') {
                         $userGroup = $user->getGroups()[0] ?? null;
 
                         if ($userGroup) {
                             $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
+                            $siteId = $settings->granularSchemas["group-{$userGroup->id}"]['siteId'] ?? null;
                         }
+                    }
+
+                    if ($siteId) {
+                        $arguments['siteId'] = $siteId;
                     }
 
                     foreach ($authorOnlySections as $section => $value) {

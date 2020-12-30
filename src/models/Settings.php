@@ -13,6 +13,7 @@ class Settings extends Model
     public $schemaId = null;
     public $allowRegistration = true;
     public $userGroup = null;
+    public $siteId = null;
     public $entryQueries = null;
     public $entryMutations = null;
     public $assetQueries = null;
