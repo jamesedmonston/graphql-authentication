@@ -224,14 +224,16 @@ class TokenService extends Component
 
     public function rewriteJwtHeader()
     {
+        if (!GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
+            return;
+        }
+
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
         try {
-            if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
-                $token = $this->getHeaderToken();
-                $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
-            }
+            $token = $this->getHeaderToken();
+            $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
         } catch (Throwable $e) {}
     }
 
