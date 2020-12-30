@@ -354,7 +354,6 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $settings = GraphqlAuthentication::$plugin->getSettings();
         $authorOnlySections = $settings->entryQueries ?? [];
 
         if ($settings->permissionType === 'multiple') {
@@ -407,7 +406,6 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $settings = GraphqlAuthentication::$plugin->getSettings();
         $authorOnlyVolumes = $settings->assetQueries ?? [];
 
         if ($settings->permissionType === 'multiple') {
