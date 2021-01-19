@@ -16,7 +16,7 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
 use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
 use jamesedmonston\graphqlauthentication\events\JwtValidateEvent;
-use jamesedmonston\graphqlauthentication\gql\JWT;
+use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
@@ -104,22 +104,22 @@ class TokenService extends Component
     public function registerGqlMutations(Event $event)
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $userService = GraphqlAuthentication::$plugin->getInstance()->user;
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         $event->mutations['refreshToken'] = [
             'description' => "Refreshes a user's JWT. Checks for the occurrence of the `gql_refreshToken` cookie, and falls back to `refreshToken` argument.",
-            'type' => Type::nonNull(JWT::getType()),
+            'type' => Type::nonNull(Auth::getType()),
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $userService, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
                     $errorService->throw($settings->invalidRefreshToken, 'INVALID');
                 }
 
-                $this->_clearExpiredTokens();
                 $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
@@ -140,7 +140,7 @@ class TokenService extends Component
 
                 Craft::$app->getElements()->deleteElementById($refreshTokenElement->id);
                 $token = $this->create($user, $schemaId);
-                return $token;
+                return $userService->getResponseFields($user, $schemaId, $token);
             },
         ];
     }
