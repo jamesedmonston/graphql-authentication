@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.1 - 2021-01-19
+
+### Fixed
+
+- Fixed issue with `refreshToken` mutation not always working in production environments
+
 ## 1.4.0 - 2020-12-30
 
 ### Added
