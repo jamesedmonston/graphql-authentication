@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Changed
 
+- Improved performance of clearing expired tokens
 - Removed deprecated `getUser` and `updateUser` – use `getViewer` and `updateViewer` instead
 
 ### Fixed
