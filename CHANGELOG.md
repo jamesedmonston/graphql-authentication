@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.5.0 - Unreleased
+
+### Changed
+
+- Removed deprecated `getUser` and `updateUser` – use `getViewer` and `updateViewer` instead
+
+### Fixed
+
+- Fixed issue with entry/category/asset fields not saving on `register` or `updateViewer` mutations ([#35](https://github.com/jamesedmonston/graphql-authentication/issues/35) via [@howells](https://github.com/howells))
+- Fixed compatibility issue with Craft 3.6.x ([#36](https://github.com/jamesedmonston/graphql-authentication/issues/36) via [@benrnorman]https://github.com/benrnorman)
+
 ## 1.4.1 - 2021-01-19
 
 ### Fixed
