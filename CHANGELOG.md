@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - Fixed issue with entry/category/asset fields not saving on `register` or `updateViewer` mutations ([#35](https://github.com/jamesedmonston/graphql-authentication/issues/35) via [@howells](https://github.com/howells))
-- Fixed compatibility issue with Craft 3.6.x ([#36](https://github.com/jamesedmonston/graphql-authentication/issues/36) via [@benrnorman]https://github.com/benrnorman)
+- Fixed compatibility issue with Craft 3.6.x ([#36](https://github.com/jamesedmonston/graphql-authentication/issues/36) via [@benrnorman](https://github.com/benrnorman))
 
 ## 1.4.1 - 2021-01-19
 
