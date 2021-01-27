@@ -6,9 +6,9 @@ use Craft;
 use craft\base\Component;
 use craft\controllers\GraphqlController;
 use craft\elements\User;
-use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
+use craft\records\GqlToken as RecordsGqlToken;
 use craft\services\Gql;
 use DateTime;
 use DateTimeImmutable;
@@ -120,6 +120,7 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidRefreshToken, 'INVALID');
                 }
 
+                $this->_clearExpiredTokens();
                 $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
@@ -367,31 +368,17 @@ class TokenService extends Component
 
     protected function _clearExpiredTokens()
     {
-        $now = time();
-
+        $gqlTokens = RecordsGqlToken::find()->where('expiryDate <= CURRENT_TIMESTAMP')->where('name LIKE "%user-%"')->all();
         $gql = Craft::$app->getGql();
-        $gqlTokens = $gql->getTokens();
 
         foreach ($gqlTokens as $gqlToken) {
-            if (!StringHelper::contains($gqlToken->name, 'user-')) {
-                continue;
-            }
-
-            if (strtotime($gqlToken->expiryDate->format('Y-m-d H:i:s')) > $now) {
-                continue;
-            }
-
             $gql->deleteTokenById($gqlToken->id);
         }
 
+        $refreshTokens = RefreshToken::find()->where('expiryDate <= CURRENT_TIMESTAMP')->all();
         $elements = Craft::$app->getElements();
-        $refreshTokens = RefreshToken::find()->all();
 
         foreach ($refreshTokens as $refreshToken) {
-            if (strtotime(date_create($refreshToken->expiryDate)->format('Y-m-d H:i:s')) > $now) {
-                continue;
-            }
-
             $elements->deleteElementById($refreshToken->id);
         }
     }

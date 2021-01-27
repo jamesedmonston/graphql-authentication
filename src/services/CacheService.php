@@ -46,5 +46,4 @@ class CacheService extends Component
             $event->variables['gql_cacheKey'] = $cacheKey;
         } catch (Throwable $e) {}
     }
-
 }
