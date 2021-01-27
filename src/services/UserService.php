@@ -6,7 +6,7 @@ use Craft;
 use craft\base\Component;
 use craft\elements\User;
 use craft\gql\arguments\elements\User as UserArguments;
-use craft\gql\types\generators\UserType;
+use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
@@ -48,7 +48,7 @@ class UserService extends Component
 
         $event->queries['viewer'] = [
             'description' => 'Gets authenticated user.',
-            'type' => UserType::generateType(User::class),
+            'type' => ElementsUser::getType(),
             'args' => [],
             'resolve' => function () use ($settings, $errorService) {
                 $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
@@ -63,7 +63,7 @@ class UserService extends Component
 
         $event->queries['getUser'] = [
             'description' => 'Deprecated. Please use `viewer` query.',
-            'type' => UserType::generateType(User::class),
+            'type' => ElementsUser::getType(),
             'args' => [],
             'resolve' => function () use ($settings, $errorService) {
                 $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
@@ -304,7 +304,7 @@ class UserService extends Component
 
         $event->mutations['updateViewer'] = [
             'description' => 'Updates authenticated user. Returns user.',
-            'type' => UserType::generateType(User::class),
+            'type' => ElementsUser::getType(),
             'args' => array_merge(
                 [
                     'email' => Type::string(),
@@ -365,7 +365,7 @@ class UserService extends Component
 
         $event->mutations['updateUser'] = [
             'description' => 'Deprecated. Please use `updateViewer` mutation.',
-            'type' => UserType::generateType(User::class),
+            'type' => ElementsUser::getType(),
             'args' => array_merge(
                 [
                     'email' => Type::string(),

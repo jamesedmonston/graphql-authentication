@@ -11,6 +11,6 @@ class ErrorService extends Component
     // =========================================================================
 
     function throw (string $message, string $code): Error {
-        throw new Error($message, null, null, null, null, null, ['code' => $code]);
+        throw new Error($message, null, null, [], null, null, ['code' => $code]);
     }
 }
