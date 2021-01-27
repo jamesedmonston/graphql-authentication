@@ -86,6 +86,7 @@ class UserService extends Component
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+        $fieldsService = Craft::$app->getFields();
 
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
@@ -312,7 +313,7 @@ class UserService extends Component
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService) {
+            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService, $fieldsService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -343,7 +344,15 @@ class UserService extends Component
                         continue;
                     }
 
-                    $user->setFieldValue($key, $arguments[$key][0]);
+                    $field = $fieldsService->getFieldByHandle($key);
+                    $type = get_class($field);
+                    $value = $arguments[$key];
+
+                    if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets'])) {
+                        $value = $value[0];
+                    }
+
+                    $user->setFieldValue($key, $value);
                 }
 
                 if (!$elements->saveElement($user)) {
@@ -365,7 +374,7 @@ class UserService extends Component
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService) {
+            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService, $fieldsService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
@@ -396,7 +405,15 @@ class UserService extends Component
                         continue;
                     }
 
-                    $user->setFieldValue($key, $arguments[$key][0]);
+                    $field = $fieldsService->getFieldByHandle($key);
+                    $type = get_class($field);
+                    $value = $arguments[$key];
+
+                    if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets'])) {
+                        $value = $value[0];
+                    }
+
+                    $user->setFieldValue($key, $value);
                 }
 
                 if (!$elements->saveElement($user)) {
@@ -470,6 +487,7 @@ class UserService extends Component
         }
 
         $customFields = UserArguments::getContentArguments();
+        $fieldsService = Craft::$app->getFields();
 
         foreach ($customFields as $key) {
             if (is_array($key) && isset($key['name'])) {
@@ -480,7 +498,15 @@ class UserService extends Component
                 continue;
             }
 
-            $user->setFieldValue($key, $arguments[$key][0]);
+            $field = $fieldsService->getFieldByHandle($key);
+            $type = get_class($field);
+            $value = $arguments[$key];
+
+            if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets'])) {
+                $value = $value[0];
+            }
+
+            $user->setFieldValue($key, $value);
         }
 
         $requiresVerification = Craft::$app->getProjectConfig()->get('users.requireEmailVerification');
