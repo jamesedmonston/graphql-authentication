@@ -4,12 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.5.0 - Unreleased
+## 1.5.0 - 2020-02-01
 
 ### Changed
 
 - Improved performance of clearing expired tokens
 - Removed deprecated `getUser` and `updateUser` – use `getViewer` and `updateViewer` instead
+- User types/fragments now need to be spread in authentication responses (see [here](https://github.com/jamesedmonston/graphql-authentication/issues/35#issuecomment-768528135))
 
 ### Fixed
 
