@@ -368,7 +368,7 @@ class TokenService extends Component
 
     protected function _clearExpiredTokens()
     {
-        $gqlTokens = RecordsGqlToken::find()->where('expiryDate <= CURRENT_TIMESTAMP')->where('name LIKE "%user-%"')->all();
+        $gqlTokens = RecordsGqlToken::find()->where('expiryDate <= CURRENT_TIMESTAMP')->andWhere('name LIKE "%user-%"')->all();
         $gql = Craft::$app->getGql();
 
         foreach ($gqlTokens as $gqlToken) {
