@@ -235,6 +235,7 @@ class UserService extends Component
                     $errorService->throw(json_encode($user->getErrors()), 'INVALID');
                 }
 
+                $users->activateUser($user);
                 return $settings->passwordSaved;
             },
         ];
