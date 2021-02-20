@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.4 - 2020-02-20
+
+### Fixed
+
+- Fixed issue with users not being activated through the `setPassword` mutation
+
 ## 1.4.3 - 2020-02-11
 
 ### Fixed
