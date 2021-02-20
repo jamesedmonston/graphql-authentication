@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- Fixed issue with users not being activated through the `setPassword` mutation
+- Fixed issue with users not being activated through the `setPassword` mutation ([#38](https://github.com/jamesedmonston/graphql-authentication/issues/38) via [@magicspon](https://github.com/magicspon))
 
 ## 1.4.3 - 2021-02-11
 
