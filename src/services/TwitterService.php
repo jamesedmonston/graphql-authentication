@@ -48,8 +48,17 @@ class TwitterService extends Component
             'args' => [],
             'resolve' => function () {
                 $settings = GraphqlAuthentication::$plugin->getSettings();
-                $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret);
-                $requestToken = $client->oauth('oauth/request_token', ['oauth_callback' => $settings->twitterRedirectUrl]);
+                $client = new TwitterOAuth(
+                    GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
+                    GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret)
+                );
+                $requestToken = $client->oauth(
+                    'oauth/request_token',
+                    [
+                        'oauth_callback' =>
+                        GraphqlAuthentication::$plugin->getSettingsData($settings->twitterRedirectUrl)
+                    ]
+                );
 
                 $oauthToken = $requestToken['oauth_token'];
                 $oauthTokenSecret = $requestToken['oauth_token_secret'];
@@ -153,10 +162,20 @@ class TwitterService extends Component
             $errorService->throw($settings->invalidOauthToken, 'INVALID');
         }
 
-        $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret, $sessionOauthToken, $sessionOauthTokenSecret);
+        $client = new TwitterOAuth(
+            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
+            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret),
+            $sessionOauthToken,
+            $sessionOauthTokenSecret
+        );
         $accessToken = $client->oauth('oauth/access_token', ['oauth_verifier' => $oauthVerifier]);
 
-        $client = new TwitterOAuth($settings->twitterApiKey, $settings->twitterApiKeySecret, $accessToken['oauth_token'], $accessToken['oauth_token_secret']);
+        $client = new TwitterOAuth(
+            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
+            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret),
+            $accessToken['oauth_token'],
+            $accessToken['oauth_token_secret']
+        );
         $user = $client->get('account/verify_credentials', ['include_email' => true, 'entities' => false, 'skip_status' => true]);
 
         $email = $user->email;
