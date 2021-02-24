@@ -107,9 +107,11 @@ class GoogleService extends Component
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+
         $client = new Google_Client([
-            'client_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->googleClientId)
+            'client_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->googleClientId),
         ]);
+
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {

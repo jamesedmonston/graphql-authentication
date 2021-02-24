@@ -48,15 +48,17 @@ class TwitterService extends Component
             'args' => [],
             'resolve' => function () {
                 $settings = GraphqlAuthentication::$plugin->getSettings();
+
                 $client = new TwitterOAuth(
                     GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
                     GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret)
                 );
+
                 $requestToken = $client->oauth(
                     'oauth/request_token',
                     [
                         'oauth_callback' =>
-                        GraphqlAuthentication::$plugin->getSettingsData($settings->twitterRedirectUrl)
+                        GraphqlAuthentication::$plugin->getSettingsData($settings->twitterRedirectUrl),
                     ]
                 );
 
@@ -168,6 +170,7 @@ class TwitterService extends Component
             $sessionOauthToken,
             $sessionOauthTokenSecret
         );
+
         $accessToken = $client->oauth('oauth/access_token', ['oauth_verifier' => $oauthVerifier]);
 
         $client = new TwitterOAuth(
@@ -176,8 +179,8 @@ class TwitterService extends Component
             $accessToken['oauth_token'],
             $accessToken['oauth_token_secret']
         );
-        $user = $client->get('account/verify_credentials', ['include_email' => true, 'entities' => false, 'skip_status' => true]);
 
+        $user = $client->get('account/verify_credentials', ['include_email' => true, 'entities' => false, 'skip_status' => true]);
         $email = $user->email;
 
         if (!$email || !isset($email)) {
