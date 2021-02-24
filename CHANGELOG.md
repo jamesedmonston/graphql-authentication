@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- Added ability to set JWT Secret Key and Social app IDs/secrets via environment variables (thanks to [@dorinean](https://github.com/dorineal) for the pull request!)
+- Added ability to set JWT Secret Key and Social app IDs/secrets via environment variables (thanks to [@dorineal](https://github.com/dorineal) for the pull request!)
 
 ## 1.4.4 - 2021-02-20
 
