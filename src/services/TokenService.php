@@ -173,14 +173,16 @@ class TokenService extends Component
 
                 if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
                     try {
+                        $jwtSecretKey = GraphqlAuthentication::$plugin->getSettingsData($settings->jwtSecretKey);
+
                         $jwtConfig = Configuration::forSymmetricSigner(
                             new Sha256(),
-                            InMemory::plainText($settings->jwtSecretKey)
+                            InMemory::plainText($jwtSecretKey)
                         );
 
                         $validator = new SignedWith(
                             new Sha256(),
-                            InMemory::plainText($settings->jwtSecretKey)
+                            InMemory::plainText($jwtSecretKey)
                         );
 
                         $jwtConfig->setValidationConstraints($validator);
@@ -269,9 +271,11 @@ class TokenService extends Component
             $errorService->throw(json_encode($token->getErrors()), 'FORBIDDEN');
         }
 
+        $jwtSecretKey = GraphqlAuthentication::$plugin->getSettingsData($settings->jwtSecretKey);
+
         $jwtConfig = Configuration::forSymmetricSigner(
             new Sha256(),
-            InMemory::plainText($settings->jwtSecretKey)
+            InMemory::plainText($jwtSecretKey)
         );
 
         $now = new DateTimeImmutable();

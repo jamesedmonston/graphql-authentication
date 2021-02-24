@@ -30,11 +30,12 @@
   ],
 }) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'JWT Secret Key',
   instructions: 'The secret key used to sign JWTs (this is randomly generated, but feel free to use your own).',
   name: 'jwtSecretKey',
   value: settings.jwtSecretKey,
+  suggestEnvVars: true,
 }) }}
 
 {{ forms.selectField({
