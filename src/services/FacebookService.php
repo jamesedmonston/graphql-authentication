@@ -50,11 +50,18 @@ class FacebookService extends Component
                 $settings = GraphqlAuthentication::$plugin->getSettings();
 
                 $client = new Facebook([
-                    'app_id' => $settings->facebookAppId,
-                    'app_secret' => $settings->facebookAppSecret,
+                    'app_id' => GraphqlAuthentication::$plugin->getSettingsData(
+                        $settings->facebookAppId
+                    ),
+                    'app_secret' => GraphqlAuthentication::$plugin->getSettingsData(
+                        $settings->facebookAppSecret
+                    ),
                 ]);
 
-                $url = $client->getRedirectLoginHelper()->getLoginUrl($settings->facebookRedirectUrl, ['email']);
+                $url = $client->getRedirectLoginHelper()->getLoginUrl(
+                    GraphqlAuthentication::$plugin->getSettingsData($settings->facebookRedirectUrl),
+                    ['email']
+                );
                 return $url;
             },
         ];
@@ -140,11 +147,15 @@ class FacebookService extends Component
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         $client = new Facebook([
-            'app_id' => $settings->facebookAppId,
-            'app_secret' => $settings->facebookAppSecret,
+            'app_id' => GraphqlAuthentication::$plugin->getSettingsData(
+                $settings->facebookAppId
+            ),
+            'app_secret' => GraphqlAuthentication::$plugin->getSettingsData(
+                $settings->facebookAppSecret
+            ),
         ]);
 
-        $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $settings->facebookRedirectUrl);
+        $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, GraphqlAuthentication::$plugin->getSettingsData($settings->facebookRedirectUrl));
 
         if (!$accessToken) {
             $errorService->throw($settings->invalidOauthToken, 'INVALID');

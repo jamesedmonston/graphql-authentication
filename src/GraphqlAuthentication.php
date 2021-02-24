@@ -139,4 +139,13 @@ class GraphqlAuthentication extends Plugin
         $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
         $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
     }
+
+    public function getSettingsData(string $setting): string
+    {
+        if (Craft::parseEnv($setting)) {
+            return Craft::parseEnv($setting);
+        } else {
+            return $setting;
+        }
+    }
 }

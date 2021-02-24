@@ -57,8 +57,12 @@ class AppleService extends Component
                 $url = 'https://appleid.apple.com/auth/authorize?' . http_build_query([
                     'response_type' => 'code',
                     'response_mode' => 'form_post',
-                    'client_id' => $settings->appleClientId,
-                    'redirect_uri' => $settings->appleRedirectUrl,
+                    'client_id' => GraphqlAuthentication::$plugin->getSettingsData(
+                        $settings->appleClientId
+                    ),
+                    'redirect_uri' => GraphqlAuthentication::$plugin->getSettingsData(
+                        $settings->appleRedirectUrl
+                    ),
                     'state' => $state,
                     'scope' => 'name email',
                 ]);
@@ -163,9 +167,11 @@ class AppleService extends Component
                 'form_params' => [
                     'grant_type' => 'authorization_code',
                     'code' => $code,
-                    'client_id' => $settings->appleClientId,
-                    'client_secret' => $settings->appleClientSecret,
-                    'redirect_uri' => $settings->appleRedirectUrl,
+                    'client_id' => GraphqlAuthentication::$plugin->getSettingsData(
+                        $settings->appleClientId
+                    ),
+                    'client_secret' => GraphqlAuthentication::$plugin->getSettingsData($settings->appleClientSecret),
+                    'redirect_uri' => GraphqlAuthentication::$plugin->getSettingsData($settings->appleRedirectUrl),
                 ],
             ])->getBody()->getContents());
         } catch (Throwable $e) {
