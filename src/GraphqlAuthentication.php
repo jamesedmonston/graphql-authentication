@@ -144,8 +144,8 @@ class GraphqlAuthentication extends Plugin
     {
         if (Craft::parseEnv($setting)) {
             return Craft::parseEnv($setting);
-        } else {
-            return $setting;
         }
+
+        return $setting;
     }
 }
