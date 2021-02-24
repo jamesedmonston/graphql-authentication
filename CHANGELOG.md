@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.5.0 - 2021-02-24
+
+### Added
+
+- Added ability to set JWT Secret Key and Social app IDs/secrets via environment variables (thanks to [@dorinean](https://github.com/dorineal) for the pull request!)
+
 ## 1.4.4 - 2021-02-20
 
 ### Fixed
