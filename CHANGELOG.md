@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.6.0 - 2021-03-10
+
+### Added
+
+- Added `activateUser` mutation for activating users who have received a Craft activation email ([#41](https://github.com/jamesedmonston/graphql-authentication/issues/41) via [@andrewfairlie](https://github.com/andrewfairlie) and [@magicspon](https://github.com/magicspon))
+
 ## 1.5.0 - 2021-02-24
 
 ### Added
