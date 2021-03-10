@@ -210,6 +210,28 @@ class UserService extends Component
             },
         ];
 
+        $event->mutations['activateUser'] = [
+            'description' => 'Activates user. Requires `code` and `id` from Craft activation email. Returns success message.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [
+                'code' => Type::nonNull(Type::string()),
+                'id' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($source, array $arguments) use ($users, $settings, $errorService) {
+                $code = $arguments['code'];
+                $id = $arguments['id'];
+
+                $user = $users->getUserByUid($id);
+
+                if (!$user || !$users->isVerificationCodeValidForUser($user, $code)) {
+                    $errorService->throw($settings->invalidRequest, 'INVALID');
+                }
+
+                $users->activateUser($user);
+                return $settings->userActivated;
+            },
+        ];
+
         $event->mutations['setPassword'] = [
             'description' => 'Sets password for unauthenticated user. Requires `code` and `id` from Craft reset password email. Returns success message.',
             'type' => Type::nonNull(Type::string()),

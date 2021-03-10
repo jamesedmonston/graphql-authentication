@@ -59,6 +59,7 @@ class Settings extends Model
     public $invalidRefreshToken = 'Invalid Refresh Token';
     public $invalidEmailAddress = 'Invalid email address';
 
+    public $userActivated = 'Successfully activated user';
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';

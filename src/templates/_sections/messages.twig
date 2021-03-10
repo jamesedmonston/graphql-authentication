@@ -11,6 +11,13 @@
 <h2>Responses</h2>
 
 {{ forms.textField({
+  label: 'User Activated',
+  name: 'userActivated',
+  value: settings.userActivated,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'Password Saved',
   name: 'passwordSaved',
   value: settings.passwordSaved,
