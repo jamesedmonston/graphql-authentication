@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.7.0 - 2021-03-15
+
+### Added
+
+- Added `resendActivation` mutation for allowing users to resend an activation email ([#41](https://github.com/jamesedmonston/graphql-authentication/issues/43) via [@andrewfairlie](https://github.com/andrewfairlie))
+- Added separate (customisable) response for unactivated users trying to authenticate ([#41](https://github.com/jamesedmonston/graphql-authentication/issues/43) via [@andrewfairlie](https://github.com/andrewfairlie))
+
+### Fixed
+
+- Fixed error that occurred when trying to clear expired tokens whilst using PostgreSQL ([#41](https://github.com/jamesedmonston/graphql-authentication/issues/42) via [@bartroelands](https://github.com/bartroelands))
+
 ## 1.6.1 - 2021-03-10
 
 ### Fixed
