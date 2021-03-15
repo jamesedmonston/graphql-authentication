@@ -90,6 +90,10 @@ class UserService extends Component
                     $errorService->throw($settings->invalidLogin, 'INVALID');
                 }
 
+                if ($user->status !== 'active') {
+                    $errorService->throw($settings->userNotActivated, 'INVALID');
+                }
+
                 $permissions = Craft::$app->getUserPermissions();
                 $userPermissions = $permissions->getPermissionsByUserId($user->id);
 

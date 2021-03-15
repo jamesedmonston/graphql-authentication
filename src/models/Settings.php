@@ -68,6 +68,7 @@ class Settings extends Model
     public $userNotFound = "We couldn't find any matching users";
     public $entryNotFound = "We couldn't find any matching entries";
     public $assetNotFound = "We couldn't find any matching assets";
+    public $userNotActivated = "Please activate your account before logging in";
     public $emailNotInScope = 'No email in scope';
 
     public $forbiddenMutation = "User doesn't have permission to perform this mutation";
