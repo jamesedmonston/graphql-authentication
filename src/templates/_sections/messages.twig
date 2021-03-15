@@ -18,6 +18,13 @@
 }) }}
 
 {{ forms.textField({
+  label: 'Activation Email Sent',
+  name: 'activationEmailSent',
+  value: settings.activationEmailSent,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'User Activated',
   name: 'userActivated',
   value: settings.userActivated,

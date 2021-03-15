@@ -194,26 +194,6 @@ class UserService extends Component
             }
         }
 
-        $event->mutations['forgottenPassword'] = [
-            'description' => "Sends a password reset email to the user's email address. Returns success message.",
-            'type' => Type::nonNull(Type::string()),
-            'args' => [
-                'email' => Type::nonNull(Type::string()),
-            ],
-            'resolve' => function ($source, array $arguments) use ($users, $settings) {
-                $email = $arguments['email'];
-                $user = $users->getUserByUsernameOrEmail($email);
-                $message = $settings->passwordResetSent;
-
-                if (!$user) {
-                    return $message;
-                }
-
-                $users->sendPasswordResetEmail($user);
-                return $message;
-            },
-        ];
-
         $event->mutations['activateUser'] = [
             'description' => 'Activates user. Requires `code` and `id` from Craft activation email. Returns success message.',
             'type' => Type::nonNull(Type::string()),
@@ -233,6 +213,46 @@ class UserService extends Component
 
                 $users->activateUser($user);
                 return $settings->userActivated;
+            },
+        ];
+
+        $event->mutations['resendActivation'] = [
+            'description' => "Resends an activation email to the user. Returns success message.",
+            'type' => Type::nonNull(Type::string()),
+            'args' => [
+                'email' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($source, array $arguments) use ($users, $settings) {
+                $email = $arguments['email'];
+                $user = $users->getUserByUsernameOrEmail($email);
+                $message = $settings->activationEmailSent;
+
+                if (!$user) {
+                    return $message;
+                }
+
+                $users->sendActivationEmail($user);
+                return $message;
+            },
+        ];
+
+        $event->mutations['forgottenPassword'] = [
+            'description' => "Sends a password reset email to the user's email address. Returns success message.",
+            'type' => Type::nonNull(Type::string()),
+            'args' => [
+                'email' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($source, array $arguments) use ($users, $settings) {
+                $email = $arguments['email'];
+                $user = $users->getUserByUsernameOrEmail($email);
+                $message = $settings->passwordResetSent;
+
+                if (!$user) {
+                    return $message;
+                }
+
+                $users->sendPasswordResetEmail($user);
+                return $message;
             },
         ];
 
