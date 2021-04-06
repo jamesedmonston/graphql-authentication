@@ -161,7 +161,7 @@ class TokenService extends Component
                     try {
                         $token = Craft::$app->getGql()->getTokenByAccessToken($matches[1]);
                     } catch (InvalidArgumentException $e) {
-                        $errorService->throw($e, 'INVALID');
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
                     }
 
                     if (!$token) {
@@ -172,40 +172,48 @@ class TokenService extends Component
                 }
 
                 if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
+                    $jwtSecretKey = GraphqlAuthentication::$plugin->getSettingsData($settings->jwtSecretKey);
+
+                    $jwtConfig = Configuration::forSymmetricSigner(
+                        new Sha256(),
+                        InMemory::plainText($jwtSecretKey)
+                    );
+
+                    $validator = new SignedWith(
+                        new Sha256(),
+                        InMemory::plainText($jwtSecretKey)
+                    );
+
+                    $jwtConfig->setValidationConstraints($validator);
+                    $constraints = $jwtConfig->validationConstraints();
+
+                    if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    }
+
                     try {
-                        $jwtSecretKey = GraphqlAuthentication::$plugin->getSettingsData($settings->jwtSecretKey);
-
-                        $jwtConfig = Configuration::forSymmetricSigner(
-                            new Sha256(),
-                            InMemory::plainText($jwtSecretKey)
-                        );
-
-                        $validator = new SignedWith(
-                            new Sha256(),
-                            InMemory::plainText($jwtSecretKey)
-                        );
-
-                        $jwtConfig->setValidationConstraints($validator);
-                        $constraints = $jwtConfig->validationConstraints();
-
                         $jwt = $jwtConfig->parser()->parse($matches[1]);
+                    } catch (RequiredConstraintsViolated $e) {
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    }
 
-                        $event = new JwtValidateEvent([
-                            'config' => $jwtConfig,
-                        ]);
+                    $event = new JwtValidateEvent([
+                        'config' => $jwtConfig,
+                    ]);
 
-                        $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
+                    $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
 
-                        try {
-                            $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
-                        } catch (RequiredConstraintsViolated $e) {
-                            $errorService->throw(json_encode($e->violations()), 'FORBIDDEN');
-                        }
+                    try {
+                        $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
+                    } catch (RequiredConstraintsViolated $e) {
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    }
 
+                    try {
                         $accessToken = $jwt->claims()->get('accessToken');
                         $token = Craft::$app->getGql()->getTokenByAccessToken($accessToken);
                     } catch (InvalidArgumentException $e) {
-                        $errorService->throw($e, 'INVALID');
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
                     }
 
                     if (!$token) {
