@@ -183,7 +183,11 @@ class SettingsController extends Controller
 
             $section = array_values(array_filter($sections, function ($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
-            }))[0];
+            }))[0] ?? null;
+
+            if (!$section) {
+                continue;
+            }
 
             if ($section->type === 'single') {
                 continue;
@@ -227,7 +231,11 @@ class SettingsController extends Controller
 
             $volume = array_values(array_filter($volumes, function ($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
-            }))[0];
+            }))[0] ?? null;
+
+            if (!$volume) {
+                continue;
+            }
 
             $name = $volume->name;
             $handle = $volume->handle;
