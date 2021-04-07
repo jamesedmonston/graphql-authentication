@@ -15,13 +15,14 @@
   first: true,
 }, null) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'Client ID',
   instructions: 'The client ID from your Google OAuth project.',
   name: 'googleClientId',
   value: settings.googleClientId,
   placeholder: 'xxxx-xxxx.apps.googleusercontent.com',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
 {{ forms.textField({
@@ -41,31 +42,34 @@
   first: true,
 }, null) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'App ID',
   instructions: 'The App ID from your Facebook app.',
   name: 'facebookAppId',
   value: settings.facebookAppId,
-  placeholder: '1716990698455471',
+  placeholder: 'xxxxxxxxxxxxxxxx',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'App Secret',
   instructions: 'The App Secret from your Facebook app.',
   name: 'facebookAppSecret',
   value: settings.facebookAppSecret,
-  placeholder: 'fc499fd8250d2821bb41cf75ceead942',
+  placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'Redirect URL',
   instructions: 'The URL to redirect to after authenticating.',
   name: 'facebookRedirectUrl',
   value: settings.facebookRedirectUrl,
-  placeholder: 'https://yoursite.com',
+  placeholder: 'https://yoursite.com/redirect',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
 {{ forms.textField({
@@ -85,31 +89,34 @@
   first: true,
 }, null) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'API Key',
   instructions: 'The API Key from your Twitter app.',
   name: 'twitterApiKey',
   value: settings.twitterApiKey,
-  placeholder: 'fZ60QeEmjHKIqq7a7NxcfOBPN',
+  placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxx',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'API Key Secret',
   instructions: 'The API Key Secret from your Twitter app.',
   name: 'twitterApiKeySecret',
   value: settings.twitterApiKeySecret,
-  placeholder: 'EjszP3Ax1J2Y3VfDdDTqpgRr0Wb5IWibIgeSbQA1VzyWMUhzRR',
+  placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
-{{ forms.textField({
+{{ forms.autosuggestField({
   label: 'Redirect URL',
   instructions: 'The URL to redirect to after authenticating.',
   name: 'twitterRedirectUrl',
   value: settings.twitterRedirectUrl,
-  placeholder: 'https://yoursite.com',
+  placeholder: 'https://yoursite.com/redirect',
   required: false,
+  suggestEnvVars: true,
 }) }}
 
 {{ forms.textField({
@@ -123,4 +130,37 @@
 
 <hr/>
 <h2>Apple</h2>
-<p>Coming soon!</p>
+
+{{ forms.field({
+  instructions: 'Use the `appleOauthUrl` query to get the authorization URL, then use the `appleSignIn` mutation to authenticate a user, after filling in the all fields below.',
+  first: true,
+}, null) }}
+
+{{ forms.autosuggestField({
+  label: 'App Client ID',
+  instructions: 'The App Client ID from your Apple app.',
+  name: 'appleClientId',
+  value: settings.appleClientId,
+  placeholder: 'com.yourapp.id',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+  label: 'App Client Secret',
+  instructions: 'The App Client Secret from your Apple app.',
+  name: 'appleClientSecret',
+  value: settings.appleClientSecret,
+  placeholder: 'xxxxxxxxxx',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+  label: 'Redirect URL',
+  instructions: 'The URL to redirect to after authenticating.',
+  name: 'appleRedirectUrl',
+  value: settings.appleRedirectUrl,
+  placeholder: 'https://yoursite.com/redirect',
+  required: false,
+}) }}

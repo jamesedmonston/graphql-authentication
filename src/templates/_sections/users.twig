@@ -20,8 +20,8 @@
 
   {% set schemaInput = schemaOptions ? forms.selectField({
       name: 'schemaId',
-      options: schemaOptions,
       value: settings.schemaId,
+      options: schemaOptions,
     }) : tag('p', {
       class: ['warning', 'with-icon'],
       text: 'No schemas exist yet.'|t('app'),
@@ -51,6 +51,17 @@
     value: settings.userGroup,
     options: userOptions,
   }) }}
+
+
+  {% if siteOptions|length > 2 %}
+    {{ forms.selectField({
+      label: 'Site',
+      instructions: 'The site users will be restricted to querying/mutating.',
+      name: 'siteId',
+      value: settings.siteId,
+      options: siteOptions,
+    }) }}
+  {% endif %}
 
   {% if not settings.schemaId %}
     {{ forms.field({
@@ -160,7 +171,7 @@
   {% endif %}
 {% else %}
   {% for userGroup in userOptions %}
-    {% if userGroup.label != '' %}
+    {% if userGroup.label != '-' %}
       <hr/>
       <h2>{{ userGroup.label }}</h2>
 
@@ -168,8 +179,8 @@
 
       {% set schemaInput = schemaOptions ? forms.selectField({
           name: 'granularSchemas[' ~ groupKey ~ '][schemaId]',
-          options: schemaOptions,
           value: settings.granularSchemas[groupKey].schemaId ?? null,
+          options: schemaOptions,
         }) : tag('p', {
           class: ['warning', 'with-icon'],
           text: 'No schemas exist yet.'|t('app'),
@@ -190,6 +201,16 @@
         name: 'granularSchemas[' ~ groupKey ~ '][allowRegistration]',
         on: settings.granularSchemas[groupKey].allowRegistration ?? null,
       })) }}
+
+      {% if siteOptions|length > 2 %}
+        {{ forms.selectField({
+          label: 'Site',
+          instructions: 'The site that this user group will be restricted to querying/mutating.',
+          name: 'granularSchemas[' ~ groupKey ~ '][siteId]',
+          value: settings.granularSchemas[groupKey].siteId ?? null,
+          options: siteOptions,
+        }) }}
+      {% endif %}
 
       {% if not settings.granularSchemas[groupKey].schemaId ?? null %}
         {{ forms.field({

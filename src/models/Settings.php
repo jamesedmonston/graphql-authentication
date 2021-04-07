@@ -13,6 +13,7 @@ class Settings extends Model
     public $schemaId = null;
     public $allowRegistration = true;
     public $userGroup = null;
+    public $siteId = null;
     public $entryQueries = null;
     public $entryMutations = null;
     public $assetQueries = null;
@@ -22,9 +23,6 @@ class Settings extends Model
     public $granularSchemas = [];
 
     // Tokens
-    public $tokenType = 'jwt';
-    public $expiration = '1 week';
-    public $setCookie = null;
     public $jwtExpiration = '30 minutes';
     public $jwtRefreshExpiration = '3 months';
     public $jwtSecretKey = null;
@@ -44,6 +42,10 @@ class Settings extends Model
     public $twitterRedirectUrl = null;
     public $allowedTwitterDomains = null;
 
+    public $appleClientId = null;
+    public $appleClientSecret = null;
+    public $appleRedirectUrl = null;
+
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
     public $invalidSchema = 'No schema has been set for this user group';
@@ -57,6 +59,9 @@ class Settings extends Model
     public $invalidRefreshToken = 'Invalid Refresh Token';
     public $invalidEmailAddress = 'Invalid email address';
 
+    public $userNotActivated = "Please activate your account before logging in";
+    public $activationEmailSent = 'You will receive an email if it matches an account in our system';
+    public $userActivated = 'Successfully activated user';
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';
@@ -80,7 +85,6 @@ class Settings extends Model
             [
                 [
                     'permissionType',
-                    'tokenType',
                     'invalidHeader',
                     'invalidSchema',
                     'invalidRequest',
@@ -112,8 +116,6 @@ class Settings extends Model
                     'assetQueries',
                     'assetMutations',
                     'granularSchemas',
-                    'expiration',
-                    'setCookie',
                     'jwtExpiration',
                     'jwtRefreshExpiration',
                     'jwtSecretKey',
@@ -128,6 +130,9 @@ class Settings extends Model
                     'twitterApiKeySecret',
                     'twitterRedirectUrl',
                     'allowedTwitterDomains',
+                    'appleClientId',
+                    'appleClientSecret',
+                    'appleRedirectUrl',
                 ],
                 'default',
             ],

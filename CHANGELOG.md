@@ -4,6 +4,93 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.7.0 - 2021-03-15
+
+### Added
+
+- Added `resendActivation` mutation for allowing users to resend an activation email ([#43](https://github.com/jamesedmonston/graphql-authentication/issues/43) via [@andrewfairlie](https://github.com/andrewfairlie))
+- Added separate (customisable) response for unactivated users trying to authenticate ([#43](https://github.com/jamesedmonston/graphql-authentication/issues/43) via [@andrewfairlie](https://github.com/andrewfairlie))
+
+### Fixed
+
+- Fixed error that occurred when trying to clear expired tokens whilst using PostgreSQL ([#42](https://github.com/jamesedmonston/graphql-authentication/issues/42) via [@bartroelands](https://github.com/bartroelands))
+
+## 1.6.1 - 2021-03-10
+
+### Fixed
+
+- Fixed issue where the `JWT Refresh Tokens` sidebar item was showing for non-admins (the page was never accessible, though!)
+
+## 1.6.0 - 2021-03-10
+
+### Added
+
+- Added `activateUser` mutation for activating users who have received a Craft activation email ([#41](https://github.com/jamesedmonston/graphql-authentication/issues/41) via [@andrewfairlie](https://github.com/andrewfairlie) and [@magicspon](https://github.com/magicspon))
+
+## 1.5.0 - 2021-02-24
+
+### Added
+
+- Added ability to set JWT Secret Key and Social app IDs/secrets via environment variables (thanks to [@dorineal](https://github.com/dorineal) for the pull request!)
+
+## 1.4.4 - 2021-02-20
+
+### Fixed
+
+- Fixed issue with users not being activated through the `setPassword` mutation ([#38](https://github.com/jamesedmonston/graphql-authentication/issues/38) via [@magicspon](https://github.com/magicspon))
+
+## 1.4.3 - 2021-02-11
+
+### Fixed
+
+- Fixed issue with tokens being removed before they had expired
+
+## 1.4.2 - 2021-02-01
+
+### Changed
+
+- Improved performance of clearing expired tokens
+- Removed deprecated `getUser` and `updateUser` – use `viewer` and `updateViewer` instead
+- User types/fragments now need to be spread in authentication responses (see [here](https://github.com/jamesedmonston/graphql-authentication/issues/35#issuecomment-768528135))
+
+### Fixed
+
+- Fixed issue with entry/category/asset fields not saving on `register` or `updateViewer` mutations ([#35](https://github.com/jamesedmonston/graphql-authentication/issues/35) via [@howells](https://github.com/howells))
+- Fixed compatibility issue with Craft 3.6.x ([#36](https://github.com/jamesedmonston/graphql-authentication/issues/36) via [@benrnorman](https://github.com/benrnorman))
+
+## 1.4.1 - 2021-01-19
+
+### Fixed
+
+- Fixed issue with `refreshToken` mutation not always working in production environments
+
+## 1.4.0 - 2020-12-30
+
+### Added
+
+- Added support for Sign in with Apple ([#14](https://github.com/jamesedmonston/graphql-authentication/issues/14))
+- Added support for limiting user groups to Craft multi-site sites
+- Added `viewer` query ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+- Added `updateViewer` mutation ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+
+### Changed
+
+- Removed support for non-JWT tokens (note: **this is a breaking change**)
+- Deprecated `getUser` query (this will be removed in a future release) ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+- Deprecated `updateUser` mutation (this will be removed in a future release) ([#30](https://github.com/jamesedmonston/graphql-authentication/commit/cc02b84ddbd2cc50c593082bbca3ca0773a6cd61) via [@tam](https://github.com/Tam))
+- Improved error handling, production environments now return useful error messages and codes instead of `Internal server error` ([#31](https://github.com/jamesedmonston/graphql-authentication/issues/31) via [@tam](https://github.com/Tam))
+
+### Fixed
+
+- Fixed issue with `authorId` restrictions sometimes causing incorrect results to be returned ([#34](https://github.com/jamesedmonston/graphql-authentication/issues/34) via [@daltonrooney](https://github.com/daltonrooney))
+- Fixed issue with users being able to assign themselves schemas, using social mutations (via [@daltonrooney](https://github.com/daltonrooney))
+
+## 1.3.3 - 2020-12-10
+
+### Changed
+
+- `jwtExpiresAt` and `refreshTokenExpiresAt` are now returned in milliseconds to make JS validation simpler (this will always end in `000` as token expiry is stored in seconds in the database)
+
 ## 1.3.2 - 2020-12-08
 
 ### Fixed

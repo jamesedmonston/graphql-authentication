@@ -14,7 +14,6 @@ use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\services\Gql;
-use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
@@ -32,6 +31,8 @@ class RestrictionService extends Component
      */
     public function init()
     {
+        parent::init();
+
         Event::on(
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
@@ -66,12 +67,6 @@ class RestrictionService extends Component
             Asset::class,
             Asset::EVENT_BEFORE_DELETE,
             [$this, 'ensureAssetMutationAllowed']
-        );
-
-        Event::on(
-            Gql::class,
-            Gql::EVENT_BEFORE_EXECUTE_GQL_QUERY,
-            [$this, 'injectUniqueCache']
         );
     }
 
@@ -225,7 +220,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->authorId !== (string) $user->id) {
-                throw new Error($settings->forbiddenMutation);
+                GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
     }
@@ -266,30 +261,9 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                throw new Error($settings->forbiddenMutation);
+                GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
-    }
-
-    // inject a unique caching key per user, to ensure users don't see each other's cached content
-
-    public function injectUniqueCache(Event $event)
-    {
-        if (!$this->shouldRestrictRequests()) {
-            return;
-        }
-
-        try {
-            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-            $token = $tokenService->getHeaderToken();
-            $cacheKey = $token->accessToken;
-
-            if (StringHelper::contains($token->name, 'user-')) {
-                $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
-            }
-
-            $event->variables['gql_cacheKey'] = $cacheKey;
-        } catch (Throwable $e) {}
     }
 
     public function shouldRestrictRequests(): bool
@@ -332,9 +306,10 @@ class RestrictionService extends Component
     {
         $entry = Craft::$app->getElements()->getElementById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         if (!$entry) {
-            throw new Error($settings->entryNotFound);
+            $errorService->throw($settings->entryNotFound, 'INVALID');
         }
 
         if (!$entry->authorId) {
@@ -351,10 +326,9 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-            throw new Error($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $settings = GraphqlAuthentication::$plugin->getSettings();
         $authorOnlySections = $settings->entryQueries ?? [];
 
         if ($settings->permissionType === 'multiple') {
@@ -376,7 +350,7 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new Error($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
     }
 
@@ -384,9 +358,10 @@ class RestrictionService extends Component
     {
         $asset = Craft::$app->getAssets()->getAssetById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
+        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         if (!$asset) {
-            throw new Error($settings->assetNotFound);
+            $errorService->throw($settings->assetNotFound, 'INVALID');
         }
 
         if (!$asset->uploaderId) {
@@ -403,10 +378,9 @@ class RestrictionService extends Component
         $scope = $tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-            throw new Error($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $settings = GraphqlAuthentication::$plugin->getSettings();
         $authorOnlyVolumes = $settings->assetQueries ?? [];
 
         if ($settings->permissionType === 'multiple') {
@@ -428,7 +402,7 @@ class RestrictionService extends Component
                 continue;
             }
 
-            throw new Error($settings->forbiddenMutation);
+            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
     }
 }
