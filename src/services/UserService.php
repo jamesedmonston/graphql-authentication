@@ -138,6 +138,7 @@ class UserService extends Component
                         'password' => Type::nonNull(Type::string()),
                         'firstName' => Type::nonNull(Type::string()),
                         'lastName' => Type::nonNull(Type::string()),
+                        'preferredLanguage' => Type::string(),
                     ],
                     UserArguments::getContentArguments()
                 ),
@@ -342,27 +343,37 @@ class UserService extends Component
                     'email' => Type::string(),
                     'firstName' => Type::string(),
                     'lastName' => Type::string(),
+                    'preferredLanguage' => Type::string(),
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($elements, $settings, $tokenService, $errorService, $fieldsService) {
+            'resolve' => function ($source, array $arguments) use ($elements, $users, $settings, $tokenService, $errorService, $fieldsService) {
                 $user = $tokenService->getUserFromToken();
 
                 if (!$user) {
                     $errorService->throw($settings->invalidUserUpdate, 'INVALID');
                 }
 
-                if (isset($arguments['email'])) {
-                    $user->username = $arguments['email'];
-                    $user->email = $arguments['email'];
+                $email = $arguments['email'];
+                $firstName = $arguments['firstName'];
+                $lastName = $arguments['lastName'];
+                $preferredLanguage = $arguments['preferredLanguage'];
+
+                if (isset($email)) {
+                    $user->username = $email;
+                    $user->email = $email;
                 }
 
-                if (isset($arguments['firstName'])) {
-                    $user->firstName = $arguments['firstName'];
+                if (isset($firstName)) {
+                    $user->firstName = $firstName;
                 }
 
-                if (isset($arguments['lastName'])) {
-                    $user->lastName = $arguments['lastName'];
+                if (isset($lastName)) {
+                    $user->lastName = $lastName;
+                }
+
+                if (isset($preferredLanguage)) {
+                    $users->saveUserPreferences($user, ['language' => $preferredLanguage]);
                 }
 
                 $customFields = UserArguments::getContentArguments();
@@ -500,6 +511,12 @@ class UserService extends Component
 
         if ($requiresVerification) {
             $users->sendActivationEmail($user);
+        }
+
+        $preferredLanguage = $arguments['preferredLanguage'];
+
+        if (isset($preferredLanguage)) {
+            $users->saveUserPreferences($user, ['language' => $preferredLanguage]);
         }
 
         $this->_updateLastLogin($user);
