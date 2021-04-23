@@ -146,14 +146,19 @@ class TokenService extends Component
         ];
     }
 
-    public function getHeaderToken(): GqlToken
+    public function getHeaderToken(): ?GqlToken
     {
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
-        foreach ($requestHeaders->get('authorization', [], false) as $authHeader) {
+        $authHeaders = $requestHeaders->get('authorization', [], false);
+
+        if (empty($authHeaders))
+        	return null;
+
+        foreach ($authHeaders as $authHeader) {
             $authValues = array_map('trim', explode(',', $authHeader));
 
             foreach ($authValues as $authValue) {
