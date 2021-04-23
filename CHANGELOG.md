@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.8.0 - Unreleased
+
+### Added
+
+- Added `preferredLanguage` argument to `register` and `updateViewer` mutations ([#49](https://github.com/jamesedmonston/graphql-authentication/issues/49) via [@andrewfairlie](https://github.com/andrewfairlie))
+
+### Changed
+
+- `firstName` and `lastName` are now optional on the `register` mutation
+
+### Fixed
+
+- Fixed error when sending a malformed JWT (PR [#48](https://github.com/jamesedmonston/graphql-authentication/pull/48) via [@tam](https://github.com/tam))
+- Fixed potential error when visiting the plugin settings
+
 ## 1.7.0 - 2021-03-15
 
 ### Added
