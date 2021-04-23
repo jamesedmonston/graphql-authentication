@@ -18,7 +18,6 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
 use jamesedmonston\graphqlauthentication\resolvers\Entry as EntryResolver;
-use Throwable;
 use yii\base\Event;
 
 class RestrictionService extends Component
@@ -277,8 +276,9 @@ class RestrictionService extends Component
         ) {
             $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
 
-            if (!$token)
-            	return false;
+            if (!$token) {
+                return false;
+            }
 
             return StringHelper::contains($token->name ?? '', 'user-');
         }

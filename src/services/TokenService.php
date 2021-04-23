@@ -152,11 +152,11 @@ class TokenService extends Component
         $requestHeaders = $request->getHeaders();
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-
         $authHeaders = $requestHeaders->get('authorization', [], false);
 
-        if (empty($authHeaders))
-        	return null;
+        if (empty($authHeaders)) {
+            return null;
+        }
 
         foreach ($authHeaders as $authHeader) {
             $authValues = array_map('trim', explode(',', $authHeader));
