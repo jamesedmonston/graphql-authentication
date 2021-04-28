@@ -176,6 +176,8 @@ class UserService extends Component
                             'password' => Type::nonNull(Type::string()),
                             'firstName' => Type::nonNull(Type::string()),
                             'lastName' => Type::nonNull(Type::string()),
+                            'firstName' => Type::string(),
+                            'lastName' => Type::string(),
                         ],
                         UserArguments::getContentArguments()
                     ),
