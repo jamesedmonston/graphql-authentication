@@ -138,6 +138,7 @@ class UserService extends Component
                         'password' => Type::nonNull(Type::string()),
                         'firstName' => Type::string(),
                         'lastName' => Type::string(),
+                        'username' => Type::string(),
                         'preferredLanguage' => Type::string(),
                     ],
                     UserArguments::getContentArguments()
@@ -174,10 +175,9 @@ class UserService extends Component
                         [
                             'email' => Type::nonNull(Type::string()),
                             'password' => Type::nonNull(Type::string()),
-                            'firstName' => Type::nonNull(Type::string()),
-                            'lastName' => Type::nonNull(Type::string()),
                             'firstName' => Type::string(),
                             'lastName' => Type::string(),
+                            'username' => Type::string(),
                         ],
                         UserArguments::getContentArguments()
                     ),
@@ -345,6 +345,7 @@ class UserService extends Component
                     'email' => Type::string(),
                     'firstName' => Type::string(),
                     'lastName' => Type::string(),
+                    'username' => Type::string(),
                     'preferredLanguage' => Type::string(),
                 ],
                 UserArguments::getContentArguments()
@@ -359,11 +360,15 @@ class UserService extends Component
                 $email = $arguments['email'];
                 $firstName = $arguments['firstName'];
                 $lastName = $arguments['lastName'];
+                $username = $arguments['username'];
                 $preferredLanguage = $arguments['preferredLanguage'];
 
                 if (isset($email)) {
-                    $user->username = $email;
                     $user->email = $email;
+                }
+
+                if (isset($username)) {
+                    $user->username = $username;
                 }
 
                 if (isset($firstName)) {
@@ -459,9 +464,10 @@ class UserService extends Component
         $password = $arguments['password'];
         $firstName = $arguments['firstName'];
         $lastName = $arguments['lastName'];
+        $username = isset($arguments['username']) ? $arguments['username'] : $email;
 
         $user = new User();
-        $user->username = $email;
+        $user->username = $username;
         $user->email = $email;
         $user->firstName = $firstName;
         $user->lastName = $lastName;
