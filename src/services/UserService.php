@@ -136,6 +136,7 @@ class UserService extends Component
                     [
                         'email' => Type::nonNull(Type::string()),
                         'password' => Type::nonNull(Type::string()),
+                        'username' => Type::string(),
                         'firstName' => Type::string(),
                         'lastName' => Type::string(),
                         'preferredLanguage' => Type::string(),
@@ -341,6 +342,7 @@ class UserService extends Component
             'args' => array_merge(
                 [
                     'email' => Type::string(),
+                    'username' => Type::string(),
                     'firstName' => Type::string(),
                     'lastName' => Type::string(),
                     'preferredLanguage' => Type::string(),
@@ -360,8 +362,15 @@ class UserService extends Component
                 $preferredLanguage = $arguments['preferredLanguage'];
 
                 if (isset($email)) {
-                    $user->username = $email;
+                    if ($user->username === $user->email) {
+                        $user->username = $email;
+                    }
+
                     $user->email = $email;
+                }
+
+                if (isset($username)) {
+                    $user->username = $username;
                 }
 
                 if (isset($firstName)) {
@@ -455,14 +464,25 @@ class UserService extends Component
     {
         $email = $arguments['email'];
         $password = $arguments['password'];
-        $firstName = $arguments['firstName'];
-        $lastName = $arguments['lastName'];
+        $username = $arguments['username'] ?? null;
+        $firstName = $arguments['firstName'] ?? null;
+        $lastName = $arguments['lastName'] ?? null;
 
         $user = new User();
         $user->username = $email;
         $user->email = $email;
-        $user->firstName = $firstName;
-        $user->lastName = $lastName;
+
+        if ($username) {
+            $user->username = $username;
+        }
+
+        if ($firstName) {
+            $user->firstName = $firstName;
+        }
+
+        if ($lastName) {
+            $user->lastName = $lastName;
+        }
 
         if ($password) {
             $user->newPassword = $password;
@@ -513,9 +533,9 @@ class UserService extends Component
             $users->sendActivationEmail($user);
         }
 
-        $preferredLanguage = $arguments['preferredLanguage'];
+        $preferredLanguage = $arguments['preferredLanguage'] ?? null;
 
-        if (isset($preferredLanguage)) {
+        if ($preferredLanguage) {
             $users->saveUserPreferences($user, ['language' => $preferredLanguage]);
         }
 
