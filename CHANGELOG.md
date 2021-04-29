@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Added
 
 - Added `preferredLanguage` argument to `register` and `updateViewer` mutations ([#49](https://github.com/jamesedmonston/graphql-authentication/issues/49) via [@andrewfairlie](https://github.com/andrewfairlie))
+- Added `username` arguments to `register` and `updateViewer` mutations. If username isn't set, it will fall back to the user's email address.
 
 ### Changed
 
