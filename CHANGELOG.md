@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.8.0 - Unreleased
+## 1.8.0 - 2021-04-29
 
 ### Added
 
 - Added `preferredLanguage` argument to `register` and `updateViewer` mutations ([#49](https://github.com/jamesedmonston/graphql-authentication/issues/49) via [@andrewfairlie](https://github.com/andrewfairlie))
-- Added `username` arguments to `register` and `updateViewer` mutations. If username isn't set, it will fall back to the user's email address.
+- Added `username` arguments to `register` and `updateViewer` mutations. If username isn't set, it will fall back to the user's email address
 
 ### Changed
 
@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
+- Fixed potential issue with queries against the public schema (PR [#48](https://github.com/jamesedmonston/graphql-authentication/pull/48) via [@tam](https://github.com/tam))
 - Fixed error when sending a malformed JWT (PR [#48](https://github.com/jamesedmonston/graphql-authentication/pull/48) via [@tam](https://github.com/tam))
 - Fixed potential error when visiting the plugin settings
 
