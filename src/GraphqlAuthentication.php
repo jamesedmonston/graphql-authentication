@@ -102,13 +102,13 @@ class GraphqlAuthentication extends Plugin
         $this->error->init();
         $this->cache->init();
 
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            [$this, 'onRegisterCPUrlRules']
-        );
-
         if (Craft::$app->getUser()->getIsAdmin()) {
+            Event::on(
+                UrlManager::class,
+                UrlManager::EVENT_REGISTER_CP_URL_RULES,
+                [$this, 'onRegisterCPUrlRules']
+            );
+
             Event::on(
                 Cp::class,
                 Cp::EVENT_REGISTER_CP_NAV_ITEMS,
