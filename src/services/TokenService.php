@@ -6,12 +6,14 @@ use Craft;
 use craft\base\Component;
 use craft\controllers\GraphqlController;
 use craft\elements\User;
+use craft\events\RegisterGqlMutationsEvent;
 use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
 use craft\records\GqlToken as RecordsGqlToken;
 use craft\services\Gql;
 use DateTime;
 use DateTimeImmutable;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
 use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
@@ -23,7 +25,6 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
-use Throwable;
 use yii\base\Event;
 use yii\base\InvalidArgumentException;
 
@@ -101,7 +102,12 @@ class TokenService extends Component
         );
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers token management mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $userService = GraphqlAuthentication::$plugin->getInstance()->user;
@@ -146,6 +152,12 @@ class TokenService extends Component
         ];
     }
 
+    /**
+     * Grabs the token from the `Authorization` header
+     *
+     * @return GqlToken
+     * @throws Error
+     */
     public function getHeaderToken(): ?GqlToken
     {
         $request = Craft::$app->getRequest();
@@ -238,6 +250,9 @@ class TokenService extends Component
         return $token;
     }
 
+    /**
+     * Rewrites the access token from the decoded JWT into the headers
+     */
     public function rewriteJwtHeader()
     {
         if (!GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
@@ -247,17 +262,30 @@ class TokenService extends Component
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
-        try {
-            $token = $this->getHeaderToken();
-            $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
-        } catch (Throwable $e) {}
+        $token = $this->getHeaderToken();
+        $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
     }
 
+    /**
+     * Returns the user entity linked to a token
+     *
+     * @return User
+     */
     public function getUserFromToken(): User
     {
-        return Craft::$app->getUsers()->getUserById($this->_extractUserId());
+        $token = $this->getHeaderToken();
+        $userId = explode('-', $token->name)[1];
+        return Craft::$app->getUsers()->getUserById($userId);
     }
 
+    /**
+     * Creates a Craft access token, and encodes it into a JWT
+     *
+     * @param User $user
+     * @param Int $schemaId
+     * @return array
+     * @throws Error
+     */
     public function create(User $user, Int $schemaId)
     {
         $this->_clearExpiredTokens();
@@ -341,7 +369,15 @@ class TokenService extends Component
     // Protected Methods
     // =========================================================================
 
-    protected function _setCookie(string $name, string $token, $expiration = null): bool
+    /**
+     * Sets a cookie with a response
+     *
+     * @param string $name
+     * @param string $token
+     * @param string $expiration
+     * @return bool
+     */
+    protected function _setCookie(string $name, string $token, string $expiration = null): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $expiry = 0;
@@ -364,12 +400,12 @@ class TokenService extends Component
         ]);
     }
 
-    protected function _extractUserId(): string
-    {
-        $token = $this->getHeaderToken();
-        return explode('-', $token->name)[1];
-    }
-
+    /**
+     * Validates token expiry date
+     *
+     * @param GqlToken $token
+     * @throws Error
+     */
     protected function _validateExpiry(GqlToken $token)
     {
         if (!$token->expiryDate) {
@@ -383,6 +419,9 @@ class TokenService extends Component
         GraphqlAuthentication::$plugin->getInstance()->error->throw(GraphqlAuthentication::$plugin->getSettings()->invalidHeader, 'FORBIDDEN');
     }
 
+    /**
+     * Clears expires access and refresh tokens
+     */
     protected function _clearExpiredTokens()
     {
         $gqlTokens = RecordsGqlToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->andWhere("name LIKE '%user-%'")->all();

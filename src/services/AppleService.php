@@ -4,7 +4,10 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use GuzzleHttp\Client;
 use jamesedmonston\graphqlauthentication\gql\Auth;
@@ -37,7 +40,12 @@ class AppleService extends Component
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    /**
+     * Registers Sign in with Apple queries
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -68,7 +76,12 @@ class AppleService extends Component
         ];
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers Sign in with Apple mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -139,12 +152,25 @@ class AppleService extends Component
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Ensures settings are set
+     *
+     * @return bool
+     */
     protected function _validateSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-        return (bool) $settings->appleClientId && $settings->appleClientSecret && $settings->appleRedirectUrl;
+        return (bool) $settings->appleClientId && (bool) $settings->appleClientSecret && (bool) $settings->appleRedirectUrl;
     }
 
+    /**
+     * Gets user details from Sign in with Apple token
+     *
+     * @param string $code
+     * @param string $state
+     * @return array
+     * @throws Error
+     */
     protected function _getUserFromToken(string $code, string $state): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();

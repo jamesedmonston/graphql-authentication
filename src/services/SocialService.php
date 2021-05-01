@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\helpers\StringHelper;
+use GraphQL\Error\Error;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 class SocialService extends Component
@@ -12,6 +13,15 @@ class SocialService extends Component
     // Public Methods
     // =========================================================================
 
+    /**
+     * Verifies emails against allowed domains
+     *
+     * @param string $email
+     * @param string $domains
+     * @param string $error
+     * @return bool
+     * @throws Error
+     */
     public function verifyEmailDomain(string $email, string $domains, string $error): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -31,6 +41,15 @@ class SocialService extends Component
         return true;
     }
 
+    /**
+     * Authenticates a user through social sign-in
+     *
+     * @param array $tokenUser
+     * @param int $schemaId
+     * @param int $userGroupId
+     * @return array
+     * @throws Error
+     */
     public function authenticate(array $tokenUser, int $schemaId, int $userGroupId = null): array
     {
         $users = Craft::$app->getUsers();

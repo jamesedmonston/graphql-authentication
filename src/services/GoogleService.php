@@ -4,8 +4,10 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\events\RegisterGqlMutationsEvent;
 use craft\services\Gql;
 use Google_Client;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -30,7 +32,12 @@ class GoogleService extends Component
         );
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers Google Sign-In mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -97,12 +104,24 @@ class GoogleService extends Component
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Ensures settings are set
+     *
+     * @return bool
+     */
     protected function _validateSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         return (bool) $settings->googleClientId;
     }
 
+    /**
+     * Gets user details from Google Sign-In token
+     *
+     * @param string $idToken
+     * @return array
+     * @throws Error
+     */
     protected function _getUserFromToken(string $idToken): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();

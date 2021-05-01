@@ -5,7 +5,10 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Craft;
 use craft\base\Component;
+use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -36,7 +39,12 @@ class TwitterService extends Component
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    /**
+     * Registers Login with Twitter queries
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -75,7 +83,12 @@ class TwitterService extends Component
         ];
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers Login with Twitter mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -146,12 +159,25 @@ class TwitterService extends Component
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Ensures settings are set
+     *
+     * @return bool
+     */
     protected function _validateSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-        return (bool) $settings->twitterApiKey && $settings->twitterApiKeySecret && $settings->twitterRedirectUrl;
+        return (bool) $settings->twitterApiKey && (bool) $settings->twitterApiKeySecret && (bool) $settings->twitterRedirectUrl;
     }
 
+    /**
+     * Gets user details from Login with Twitter token
+     *
+     * @param string $oauthToken
+     * @param string $oauthVerifier
+     * @return array
+     * @throws Error
+     */
     protected function _getUserFromToken(string $oauthToken, string $oauthVerifier): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();

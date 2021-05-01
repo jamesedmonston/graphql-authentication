@@ -5,12 +5,15 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\elements\User;
+use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
 use craft\services\Gql;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -41,7 +44,12 @@ class UserService extends Component
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    /**
+     * Registers user queries
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
@@ -62,7 +70,12 @@ class UserService extends Component
         ];
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers user mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         $elements = Craft::$app->getElements();
         $users = Craft::$app->getUsers();
@@ -460,6 +473,14 @@ class UserService extends Component
         ];
     }
 
+    /**
+     * Creates a user
+     *
+     * @param array $arguments
+     * @param int $userGroup
+     * @return User
+     * @throws Error
+     */
     public function create(array $arguments, int $userGroup): User
     {
         $email = $arguments['email'];
@@ -543,7 +564,15 @@ class UserService extends Component
         return $user;
     }
 
-    public function getResponseFields(User $user, int $schemaId, $token): array
+    /**
+     * Formats authentication/registration mutation responses
+     *
+     * @param User $user
+     * @param int $schemaId
+     * @param array $schemaId
+     * @return array
+     */
+    public function getResponseFields(User $user, int $schemaId, array $token): array
     {
         return [
             'user' => $user,
@@ -558,6 +587,11 @@ class UserService extends Component
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Updates user's last login time
+     *
+     * @param User $user
+     */
     protected function _updateLastLogin(User $user)
     {
         $now = DateTimeHelper::currentUTCDateTime();

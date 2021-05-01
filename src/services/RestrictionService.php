@@ -7,6 +7,7 @@ use craft\base\Component;
 use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\events\ModelEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
@@ -14,6 +15,7 @@ use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\services\Gql;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
@@ -69,7 +71,12 @@ class RestrictionService extends Component
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    /**
+     * Overwrites default Craft resolvers with plugin's restriction-enabled ones from /resolvers
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         $event->queries['entries'] = [
             'description' => 'This query is used to query for entries.',
@@ -114,6 +121,12 @@ class RestrictionService extends Component
         ];
     }
 
+    /**
+     * Loops through mutation fields and checks them against validators
+     *
+     * @param ModelEvent $event
+     * @throws Error
+     */
     public function restrictMutationFields(ModelEvent $event)
     {
         if (!$this->shouldRestrictRequests()) {
@@ -183,6 +196,13 @@ class RestrictionService extends Component
         }
     }
 
+    /**
+     * Ensures user isn't trying to mutate a private entry
+     *
+     * @param ModelEvent $event
+     * @return bool
+     * @throws Error
+     */
     public function ensureEntryMutationAllowed(ModelEvent $event)
     {
         if (!$this->shouldRestrictRequests()) {
@@ -224,17 +244,24 @@ class RestrictionService extends Component
         }
     }
 
-    public function ensureAssetMutationAllowed(ModelEvent $event)
+    /**
+     * Ensures user isn't trying to mutate a private asset
+     *
+     * @param ModelEvent $event
+     * @return bool
+     * @throws Error
+     */
+    public function ensureAssetMutationAllowed(ModelEvent $event): bool
     {
         if (!$this->shouldRestrictRequests()) {
-            return;
+            return true;
         }
 
         $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
         if ($event->isNew) {
             $event->sender->uploaderId = $user->id;
-            return;
+            return true;
         }
 
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -251,7 +278,7 @@ class RestrictionService extends Component
         $assetVolume = Craft::$app->getVolumes()->getVolumeById($event->sender->volumeId)->handle;
 
         if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
-            return;
+            return true;
         }
 
         foreach ($authorOnlyVolumes as $volume => $value) {
@@ -263,8 +290,15 @@ class RestrictionService extends Component
                 GraphqlAuthentication::$plugin->getInstance()->error->throw($settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
+
+        return true;
     }
 
+    /**
+     * Ensures plugin should be adding user/schema restrictions
+     *
+     * @return bool
+     */
     public function shouldRestrictRequests(): bool
     {
         $request = Craft::$app->getRequest();
@@ -286,6 +320,11 @@ class RestrictionService extends Component
         return false;
     }
 
+    /**
+     * Checks if request is coming from Craft's built-in GraphiQL explorer
+     *
+     * @return bool
+     */
     public function isGraphiqlRequest(): bool
     {
         $referrer = Craft::$app->getRequest()->getReferrer() ?? '';
@@ -301,7 +340,14 @@ class RestrictionService extends Component
     // Protected Methods
     // =========================================================================
 
-    protected function _ensureValidEntry(int $id)
+    /**
+     * Ensures entry being accessed isn't private
+     *
+     * @param int $id
+     * @return bool
+     * @throws Error
+     */
+    protected function _ensureValidEntry(int $id): bool
     {
         $entry = Craft::$app->getElements()->getElementById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -312,14 +358,14 @@ class RestrictionService extends Component
         }
 
         if (!$entry->authorId) {
-            return;
+            return true;
         }
 
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
         $user = $tokenService->getUserFromToken();
 
         if ((string) $entry->authorId === (string) $user->id) {
-            return;
+            return true;
         }
 
         $scope = $tokenService->getHeaderToken()->getScope();
@@ -351,9 +397,18 @@ class RestrictionService extends Component
 
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
+
+        return true;
     }
 
-    protected function _ensureValidAsset(int $id)
+    /**
+     * Ensures asset being accessed isn't private
+     *
+     * @param int $id
+     * @return bool
+     * @throws Error
+     */
+    protected function _ensureValidAsset(int $id): bool
     {
         $asset = Craft::$app->getAssets()->getAssetById($id);
         $settings = GraphqlAuthentication::$plugin->getSettings();
@@ -364,14 +419,14 @@ class RestrictionService extends Component
         }
 
         if (!$asset->uploaderId) {
-            return;
+            return true;
         }
 
         $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
         $user = $tokenService->getUserFromToken();
 
         if ((string) $asset->uploaderId === (string) $user->id) {
-            return;
+            return true;
         }
 
         $scope = $tokenService->getHeaderToken()->getScope();
@@ -403,5 +458,7 @@ class RestrictionService extends Component
 
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
+
+        return true;
     }
 }

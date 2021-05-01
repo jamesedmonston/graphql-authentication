@@ -4,8 +4,11 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
 use Facebook\Facebook;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -36,7 +39,12 @@ class FacebookService extends Component
         );
     }
 
-    public function registerGqlQueries(Event $event)
+    /**
+     * Registers Facebook Login queries
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -63,7 +71,12 @@ class FacebookService extends Component
         ];
     }
 
-    public function registerGqlMutations(Event $event)
+    /**
+     * Registers Facebook Login mutations
+     *
+     * @param RegisterGqlMutationsEvent $event
+     */
+    public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
         if (!$this->_validateSettings()) {
             return;
@@ -72,7 +85,6 @@ class FacebookService extends Component
         $userGroups = Craft::$app->getUserGroups()->getAllGroups();
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $socialService = GraphqlAuthentication::$plugin->getInstance()->social;
-        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
 
         switch ($settings->permissionType) {
@@ -131,12 +143,24 @@ class FacebookService extends Component
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Ensures settings are set
+     *
+     * @return bool
+     */
     protected function _validateSettings(): bool
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
-        return (bool) $settings->facebookAppId && $settings->facebookAppSecret && $settings->facebookRedirectUrl;
+        return (bool) $settings->facebookAppId && (bool) $settings->facebookAppSecret && (bool) $settings->facebookRedirectUrl;
     }
 
+    /**
+     * Gets user details from Facebook Login token
+     *
+     * @param string $code
+     * @return array
+     * @throws Error
+     */
     protected function _getUserFromToken(string $code): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
