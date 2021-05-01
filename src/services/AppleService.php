@@ -57,17 +57,12 @@ class AppleService extends Component
             'args' => [],
             'resolve' => function () {
                 $settings = GraphqlAuthentication::$plugin->getSettings();
-                $session = Craft::$app->getSession();
-
-                $state = bin2hex(random_bytes(5));
-                $session->set('state', $state);
 
                 $url = 'https://appleid.apple.com/auth/authorize?' . http_build_query([
                     'response_type' => 'code',
                     'response_mode' => 'form_post',
                     'client_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->appleClientId),
                     'redirect_uri' => GraphqlAuthentication::$plugin->getSettingsData($settings->appleRedirectUrl),
-                    'state' => $state,
                     'scope' => 'name email',
                 ]);
 
@@ -99,7 +94,6 @@ class AppleService extends Component
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
-                        'state' => Type::nonNull(Type::string()),
                     ],
                     'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService) {
                         $schemaId = $settings->schemaId;
@@ -109,8 +103,7 @@ class AppleService extends Component
                         }
 
                         $code = $arguments['code'];
-                        $state = $arguments['state'];
-                        $tokenUser = $this->_getUserFromToken($code, $state);
+                        $tokenUser = $this->_getUserFromToken($code);
 
                         $user = $socialService->authenticate($tokenUser, $schemaId);
                         return $user;
@@ -127,7 +120,6 @@ class AppleService extends Component
                         'type' => Type::nonNull(Auth::getType()),
                         'args' => [
                             'code' => Type::nonNull(Type::string()),
-                            'state' => Type::nonNull(Type::string()),
                         ],
                         'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService, $userGroup) {
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
@@ -137,8 +129,7 @@ class AppleService extends Component
                             }
 
                             $code = $arguments['code'];
-                            $state = $arguments['state'];
-                            $tokenUser = $this->_getUserFromToken($code, $state);
+                            $tokenUser = $this->_getUserFromToken($code);
 
                             $user = $socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
@@ -167,21 +158,14 @@ class AppleService extends Component
      * Gets user details from Sign in with Apple token
      *
      * @param string $code
-     * @param string $state
      * @return array
      * @throws Error
      */
-    protected function _getUserFromToken(string $code, string $state): array
+    protected function _getUserFromToken(string $code): array
     {
         $settings = GraphqlAuthentication::$plugin->getSettings();
         $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
         $session = Craft::$app->getSession();
-        $sessionState = $session->get('state');
-
-        if ($state !== $sessionState) {
-            $errorService->throw($settings->invalidOauthToken, 'INVALID');
-        }
-
         $client = new Client();
 
         try {
@@ -210,8 +194,6 @@ class AppleService extends Component
         $name = explode(' ', $claims->name ?? '', 1);
         $firstName = $name[0] ?? '';
         $lastName = $name[1] ?? '';
-
-        $session->remove('state');
 
         return compact(
             'email',
