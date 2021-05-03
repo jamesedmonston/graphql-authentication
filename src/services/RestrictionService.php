@@ -13,7 +13,6 @@ use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\helpers\StringHelper;
-use craft\helpers\UrlHelper;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -301,40 +300,11 @@ class RestrictionService extends Component
      */
     public function shouldRestrictRequests(): bool
     {
-        $request = Craft::$app->getRequest();
-
-        if (
-            !$request->isConsoleRequest &&
-            !$this->isGraphiqlRequest() &&
-            (bool) $request->getBodyParam('query')
-        ) {
-            $token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken();
-
-            if (!$token) {
-                return false;
-            }
-
+        if ($token = GraphqlAuthentication::$plugin->getInstance()->token->getHeaderToken()) {
             return StringHelper::contains($token->name, 'user-');
         }
 
         return false;
-    }
-
-    /**
-     * Checks if request is coming from Craft's built-in GraphiQL explorer
-     *
-     * @return bool
-     */
-    public function isGraphiqlRequest(): bool
-    {
-        $referrer = Craft::$app->getRequest()->getReferrer() ?? '';
-        $graphiqlUrl = UrlHelper::cpUrl() . 'graphiql';
-
-        if (!StringHelper::contains($graphiqlUrl, '/graphiql')) {
-            $graphiqlUrl = str_replace('graphiql', '/graphiql', $graphiqlUrl);
-        }
-
-        return StringHelper::contains($referrer, $graphiqlUrl);
     }
 
     // Protected Methods
