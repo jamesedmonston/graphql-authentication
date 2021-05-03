@@ -5,6 +5,11 @@ namespace jamesedmonston\graphqlauthentication\controllers;
 use Craft;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
+use craft\services\Gql;
+use craft\services\Sections;
+use craft\services\Sites;
+use craft\services\UserGroups;
+use craft\services\Volumes;
 use craft\web\Controller;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\web\HttpException;
@@ -17,13 +22,11 @@ class SettingsController extends Controller
      */
     public function actionIndex()
     {
-        $currentUser = Craft::$app->getUser();
-
-        if (!$currentUser->getIsAdmin()) {
+        if (!Craft::$app->getUser()->getIsAdmin()) {
             throw new HttpException(403);
         }
 
-        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $settings = GraphqlAuthentication::$settings;
         $settings->validate();
 
         $namespace = 'settings';
@@ -56,7 +59,9 @@ class SettingsController extends Controller
             ],
         ];
 
-        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
+        /** @var UserGroups */
+        $userGroupsService = Craft::$app->getUserGroups();
+        $userGroups = $userGroupsService->getAllGroups();
 
         $userOptions = [
             [
@@ -72,7 +77,9 @@ class SettingsController extends Controller
             ];
         }
 
-        $sites = Craft::$app->getSites()->getAllSites();
+        /** @var Sites */
+        $sitesService = Craft::$app->getSites();
+        $sites = $sitesService->getAllSites();
 
         $siteOptions = [
             [
@@ -88,9 +95,10 @@ class SettingsController extends Controller
             ];
         }
 
-        $gql = Craft::$app->getGql();
-        $schemas = $gql->getSchemas();
-        $publicSchema = $gql->getPublicSchema();
+        /** @var Gql */
+        $gqlService = Craft::$app->getGql();
+        $schemas = $gqlService->getSchemas();
+        $publicSchema = $gqlService->getPublicSchema();
 
         $schemaOptions = [
             [
@@ -118,7 +126,7 @@ class SettingsController extends Controller
         $assetMutations = null;
 
         if ($settings->permissionType === 'single' && $settings->schemaId) {
-            $schemaPermissions = $this->_getSchemaPermissions($gql->getSchemaById($settings->schemaId));
+            $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($settings->schemaId));
             $entryQueries = $schemaPermissions['entryQueries'];
             $entryMutations = $schemaPermissions['entryMutations'];
             $assetQueries = $schemaPermissions['assetQueries'];
@@ -133,7 +141,7 @@ class SettingsController extends Controller
                     continue;
                 }
 
-                $schema = $gql->getSchemaById($schemaId);
+                $schema = $gqlService->getSchemaById($schemaId);
 
                 if ($schema) {
                     $schemaPermissions = $this->_getSchemaPermissions($schema);
@@ -168,8 +176,13 @@ class SettingsController extends Controller
 
     protected function _getSchemaPermissions(GqlSchema $schema)
     {
-        $sections = Craft::$app->getSections()->getAllSections();
-        $volumes = Craft::$app->getVolumes()->getAllVolumes();
+        /** @var Sections */
+        $sectionsService = Craft::$app->getSections();
+        $sections = $sectionsService->getAllSections();
+
+        /** @var Volumes */
+        $volumesService = Craft::$app->getVolumes();
+        $volumes = $volumesService->getAllVolumes();
 
         $entryQueries = [];
         $entryMutations = [];

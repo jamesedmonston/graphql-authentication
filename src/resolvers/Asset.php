@@ -11,6 +11,7 @@ use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\services\Volumes;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -39,11 +40,11 @@ class Asset extends ElementResolver
             return $query;
         }
 
-        if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
-            $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
+        if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
+            $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $settings = GraphqlAuthentication::$settings;
                 $authorOnlyVolumes = $settings->assetQueries ?? [];
 
                 if ($settings->permissionType === 'multiple') {
@@ -54,6 +55,9 @@ class Asset extends ElementResolver
                     }
                 }
 
+                /** @var Volumes */
+                $volumesService = Craft::$app->getVolumes();
+
                 foreach ($authorOnlyVolumes as $volume => $value) {
                     if (!(bool) $value) {
                         continue;
@@ -63,7 +67,7 @@ class Asset extends ElementResolver
                         continue;
                     }
 
-                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== Craft::$app->getVolumes()->getVolumeByHandle($volume)->id) {
+                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== $volumesService->getVolumeByHandle($volume)->id) {
                         continue;
                     }
 

@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\helpers\StringHelper;
+use craft\services\Users;
 use GraphQL\Error\Error;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
@@ -24,18 +25,15 @@ class SocialService extends Component
      */
     public function verifyEmailDomain(string $email, string $domains, string $error): bool
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-
         if (!StringHelper::contains($email, '@')) {
-            $errorService->throw($settings->invalidEmailAddress, 'INVALID');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidEmailAddress, 'INVALID');
         }
 
         $domain = explode('@', $email)[1];
         $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
 
         if (!in_array($domain, $domains)) {
-            $errorService->throw($error, 'INVALID');
+            GraphqlAuthentication::$errorService->throw($error, 'INVALID');
         }
 
         return true;
@@ -52,13 +50,13 @@ class SocialService extends Component
      */
     public function authenticate(array $tokenUser, int $schemaId, int $userGroupId = null): array
     {
-        $users = Craft::$app->getUsers();
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $userService = GraphqlAuthentication::$plugin->getInstance()->user;
-        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+        $settings = GraphqlAuthentication::$settings;
+        $userService = GraphqlAuthentication::$userService;
+        $errorService = GraphqlAuthentication::$errorService;
 
-        $user = $users->getUserByUsernameOrEmail($tokenUser['email']);
+        /** @var Users */
+        $usersService = Craft::$app->getUsers();
+        $user = $usersService->getUserByUsernameOrEmail($tokenUser['email']);
 
         if (!$user) {
             if (!$userGroupId && !$settings->allowRegistration) {
@@ -85,7 +83,7 @@ class SocialService extends Component
             }
         }
 
-        $token = $tokenService->create($user, $schemaId);
+        $token = GraphqlAuthentication::$tokenService->create($user, $schemaId);
         return $userService->getResponseFields($user, $schemaId, $token);
     }
 }

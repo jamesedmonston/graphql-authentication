@@ -34,7 +34,7 @@ class CacheService extends Component
      */
     public function injectUniqueCache(Event $event)
     {
-        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+        $tokenService = GraphqlAuthentication::$tokenService;
 
         if (!$token = $tokenService->getHeaderToken()) {
             return;

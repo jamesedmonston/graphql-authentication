@@ -7,6 +7,7 @@ use craft\base\Component;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
+use craft\services\UserGroups;
 use Facebook\Facebook;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -55,15 +56,15 @@ class FacebookService extends Component
             'type' => Type::nonNull(Type::string()),
             'args' => [],
             'resolve' => function () {
-                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $settings = GraphqlAuthentication::$settings;
 
                 $client = new Facebook([
-                    'app_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->facebookAppId),
-                    'app_secret' => GraphqlAuthentication::$plugin->getSettingsData($settings->facebookAppSecret),
+                    'app_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
+                    'app_secret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
                 ]);
 
                 $url = $client->getRedirectLoginHelper()->getLoginUrl(
-                    GraphqlAuthentication::$plugin->getSettingsData($settings->facebookRedirectUrl),
+                    GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
                     ['email']
                 );
 
@@ -83,12 +84,7 @@ class FacebookService extends Component
             return;
         }
 
-        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $socialService = GraphqlAuthentication::$plugin->getInstance()->social;
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-
-        switch ($settings->permissionType) {
+        switch (GraphqlAuthentication::$settings->permissionType) {
             case 'single':
                 $event->mutations['facebookSignIn'] = [
                     'description' => 'Authenticates a user using a Facebook Sign-In token. Returns user and token.',
@@ -96,23 +92,28 @@ class FacebookService extends Component
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService) {
+                    'resolve' => function ($source, array $arguments) {
+                        $settings = GraphqlAuthentication::$settings;
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            $errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $code = $arguments['code'];
                         $tokenUser = $this->_getUserFromToken($code);
 
-                        $user = $socialService->authenticate($tokenUser, $schemaId);
+                        $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId);
                         return $user;
                     },
                 ];
                 break;
 
             case 'multiple':
+                /** @var UserGroups */
+                $userGroupsService = Craft::$app->getUserGroups();
+                $userGroups = $userGroupsService->getAllGroups();
+
                 foreach ($userGroups as $userGroup) {
                     $handle = ucfirst($userGroup->handle);
 
@@ -122,17 +123,18 @@ class FacebookService extends Component
                         'args' => [
                             'code' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                            $settings = GraphqlAuthentication::$settings;
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $code = $arguments['code'];
                             $tokenUser = $this->_getUserFromToken($code);
 
-                            $user = $socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
+                            $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
                         },
                     ];
@@ -151,7 +153,7 @@ class FacebookService extends Component
      */
     protected function _validateSettings(): bool
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $settings = GraphqlAuthentication::$settings;
         return (bool) $settings->facebookAppId && (bool) $settings->facebookAppSecret && (bool) $settings->facebookRedirectUrl;
     }
 
@@ -164,15 +166,15 @@ class FacebookService extends Component
      */
     protected function _getUserFromToken(string $code): array
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
 
         $client = new Facebook([
-            'app_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->facebookAppId),
-            'app_secret' => GraphqlAuthentication::$plugin->getSettingsData($settings->facebookAppSecret),
+            'app_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
+            'app_secret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
         ]);
 
-        $redirectUrl = GraphqlAuthentication::$plugin->getSettingsData($settings->facebookRedirectUrl);
+        $redirectUrl = GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl);
         $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $redirectUrl);
 
         if (!$accessToken) {
@@ -187,7 +189,7 @@ class FacebookService extends Component
         }
 
         if ($settings->allowedFacebookDomains) {
-            GraphqlAuthentication::$plugin->getInstance()->social->verifyEmailDomain(
+            GraphqlAuthentication::$socialService->verifyEmailDomain(
                 $email,
                 $settings->allowedFacebookDomains,
                 $settings->facebookEmailMismatch

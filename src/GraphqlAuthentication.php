@@ -45,9 +45,59 @@ class GraphqlAuthentication extends Plugin
     // =========================================================================
 
     /**
-     * @var GraphqlAuthentication
+     * @var TokenService
      */
-    public static $plugin;
+    public static $tokenService;
+
+    /**
+     * @var UserService
+     */
+    public static $userService;
+
+    /**
+     * @var RestrictionService
+     */
+    public static $restrictionService;
+
+    /**
+     * @var SocialService
+     */
+    public static $socialService;
+
+    /**
+     * @var GoogleService
+     */
+    public static $googleService;
+
+    /**
+     * @var FacebookService
+     */
+    public static $facebookService;
+
+    /**
+     * @var TwitterService
+     */
+    public static $twitterService;
+
+    /**
+     * @var AppleService
+     */
+    public static $appleService;
+
+    /**
+     * @var ErrorService
+     */
+    public static $errorService;
+
+    /**
+     * @var CacheService
+     */
+    public static $cacheService;
+
+    /**
+     * @var Settings
+     */
+    public static $settings;
 
     // Public Properties
     // =========================================================================
@@ -76,7 +126,6 @@ class GraphqlAuthentication extends Plugin
     public function init()
     {
         parent::init();
-        self::$plugin = $this;
 
         $this->setComponents([
             'token' => TokenService::class,
@@ -101,6 +150,18 @@ class GraphqlAuthentication extends Plugin
         $this->apple->init();
         $this->error->init();
         $this->cache->init();
+
+        self::$tokenService = $this->token;
+        self::$userService = $this->user;
+        self::$restrictionService = $this->restriction;
+        self::$socialService = $this->social;
+        self::$googleService = $this->google;
+        self::$facebookService = $this->facebook;
+        self::$twitterService = $this->twitter;
+        self::$appleService = $this->apple;
+        self::$errorService = $this->error;
+        self::$cacheService = $this->cache;
+        self::$settings = $this->getSettings();
 
         if (Craft::$app->getUser()->getIsAdmin()) {
             Event::on(

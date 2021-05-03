@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Component;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\services\Gql;
+use craft\services\UserGroups;
 use Google_Client;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -43,12 +44,7 @@ class GoogleService extends Component
             return;
         }
 
-        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $socialService = GraphqlAuthentication::$plugin->getInstance()->social;
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-
-        switch ($settings->permissionType) {
+        switch (GraphqlAuthentication::$settings->permissionType) {
             case 'single':
                 $event->mutations['googleSignIn'] = [
                     'description' => 'Authenticates a user using a Google Sign-In ID token. Returns user and token.',
@@ -56,23 +52,28 @@ class GoogleService extends Component
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService) {
+                    'resolve' => function ($source, array $arguments) {
+                        $settings = GraphqlAuthentication::$settings;
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            $errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $idToken = $arguments['idToken'];
                         $tokenUser = $this->_getUserFromToken($idToken);
 
-                        $user = $socialService->authenticate($tokenUser, $schemaId);
+                        $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId);
                         return $user;
                     },
                 ];
                 break;
 
             case 'multiple':
+                /** @var UserGroups */
+                $userGroupsService = Craft::$app->getUserGroups();
+                $userGroups = $userGroupsService->getAllGroups();
+
                 foreach ($userGroups as $userGroup) {
                     $handle = ucfirst($userGroup->handle);
 
@@ -82,17 +83,18 @@ class GoogleService extends Component
                         'args' => [
                             'idToken' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                            $settings = GraphqlAuthentication::$settings;
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $idToken = $arguments['idToken'];
                             $tokenUser = $this->_getUserFromToken($idToken);
 
-                            $user = $socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
+                            $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
                         },
                     ];
@@ -111,7 +113,7 @@ class GoogleService extends Component
      */
     protected function _validateSettings(): bool
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $settings = GraphqlAuthentication::$settings;
         return (bool) $settings->googleClientId;
     }
 
@@ -124,11 +126,11 @@ class GoogleService extends Component
      */
     protected function _getUserFromToken(string $idToken): array
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = $settings = GraphqlAuthentication::$errorService;
 
         $client = new Google_Client([
-            'client_id' => GraphqlAuthentication::$plugin->getSettingsData($settings->googleClientId),
+            'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->googleClientId),
         ]);
 
         $payload = $client->verifyIdToken($idToken);
@@ -144,7 +146,7 @@ class GoogleService extends Component
         }
 
         if ($settings->allowedGoogleDomains) {
-            GraphqlAuthentication::$plugin->getInstance()->social->verifyEmailDomain(
+            GraphqlAuthentication::$socialService->verifyEmailDomain(
                 $email,
                 $settings->allowedGoogleDomains,
                 $settings->googleEmailMismatch

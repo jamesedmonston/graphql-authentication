@@ -11,6 +11,7 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\services\Sections;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -39,11 +40,11 @@ class Entry extends ElementResolver
             return $query;
         }
 
-        if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
-            $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
+        if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
+            $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $settings = GraphqlAuthentication::$settings;
                 $authorOnlySections = $settings->entryQueries ?? [];
                 $siteId = $settings->siteId ?? null;
 
@@ -60,6 +61,9 @@ class Entry extends ElementResolver
                     $arguments['siteId'] = $siteId;
                 }
 
+                /** @var Sections */
+                $sectionsService = Craft::$app->getSections();
+
                 foreach ($authorOnlySections as $section => $value) {
                     if (!(bool) $value) {
                         continue;
@@ -69,7 +73,7 @@ class Entry extends ElementResolver
                         continue;
                     }
 
-                    if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
+                    if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== $sectionsService->getSectionByHandle($section)->id) {
                         continue;
                     }
 

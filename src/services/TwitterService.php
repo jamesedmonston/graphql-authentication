@@ -8,6 +8,7 @@ use craft\base\Component;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
+use craft\services\UserGroups;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
@@ -55,27 +56,27 @@ class TwitterService extends Component
             'type' => Type::nonNull(Type::string()),
             'args' => [],
             'resolve' => function () {
-                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $settings = GraphqlAuthentication::$settings;
 
                 $client = new TwitterOAuth(
-                    GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
-                    GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret)
+                    GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKey),
+                    GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKeySecret)
                 );
 
                 $requestToken = $client->oauth(
                     'oauth/request_token',
                     [
                         'oauth_callback' =>
-                        GraphqlAuthentication::$plugin->getSettingsData($settings->twitterRedirectUrl),
+                        GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterRedirectUrl),
                     ]
                 );
 
                 $oauthToken = $requestToken['oauth_token'];
                 $oauthTokenSecret = $requestToken['oauth_token_secret'];
 
-                $session = Craft::$app->getSession();
-                $session->set('oauthToken', $oauthToken);
-                $session->set('oauthTokenSecret', $oauthTokenSecret);
+                $sessionService = Craft::$app->getSession();
+                $sessionService->set('oauthToken', $oauthToken);
+                $sessionService->set('oauthTokenSecret', $oauthTokenSecret);
 
                 $url = $client->url('oauth/authorize', ['oauth_token' => $oauthToken]);
                 return $url;
@@ -94,12 +95,7 @@ class TwitterService extends Component
             return;
         }
 
-        $userGroups = Craft::$app->getUserGroups()->getAllGroups();
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $socialService = GraphqlAuthentication::$plugin->getInstance()->social;
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-
-        switch ($settings->permissionType) {
+        switch (GraphqlAuthentication::$settings->permissionType) {
             case 'single':
                 $event->mutations['twitterSignIn'] = [
                     'description' => 'Authenticates a user using a Twitter Sign-In token. Returns user and token.',
@@ -108,24 +104,29 @@ class TwitterService extends Component
                         'oauthToken' => Type::nonNull(Type::string()),
                         'oauthVerifier' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService) {
+                    'resolve' => function ($source, array $arguments) {
+                        $settings = GraphqlAuthentication::$settings;
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            $errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                         }
 
                         $oauthToken = $arguments['oauthToken'];
                         $oauthVerifier = $arguments['oauthVerifier'];
                         $tokenUser = $this->_getUserFromToken($oauthToken, $oauthVerifier);
 
-                        $user = $socialService->authenticate($tokenUser, $schemaId);
+                        $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId);
                         return $user;
                     },
                 ];
                 break;
 
             case 'multiple':
+                /** @var UserGroups */
+                $userGroupsService = Craft::$app->getUserGroups();
+                $userGroups = $userGroupsService->getAllGroups();
+
                 foreach ($userGroups as $userGroup) {
                     $handle = ucfirst($userGroup->handle);
 
@@ -136,18 +137,19 @@ class TwitterService extends Component
                             'oauthToken' => Type::nonNull(Type::string()),
                             'oauthVerifier' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($settings, $socialService, $errorService, $userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                            $settings = GraphqlAuthentication::$settings;
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                $errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
                             }
 
                             $oauthToken = $arguments['oauthToken'];
                             $oauthVerifier = $arguments['oauthVerifier'];
                             $tokenUser = $this->_getUserFromToken($oauthToken, $oauthVerifier);
 
-                            $user = $socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
+                            $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
                         },
                     ];
@@ -166,7 +168,7 @@ class TwitterService extends Component
      */
     protected function _validateSettings(): bool
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
+        $settings = GraphqlAuthentication::$settings;
         return (bool) $settings->twitterApiKey && (bool) $settings->twitterApiKeySecret && (bool) $settings->twitterRedirectUrl;
     }
 
@@ -180,19 +182,20 @@ class TwitterService extends Component
      */
     protected function _getUserFromToken(string $oauthToken, string $oauthVerifier): array
     {
-        $settings = GraphqlAuthentication::$plugin->getSettings();
-        $errorService = GraphqlAuthentication::$plugin->getInstance()->error;
-        $session = Craft::$app->getSession();
-        $sessionOauthToken = $session->get('oauthToken');
-        $sessionOauthTokenSecret = $session->get('oauthTokenSecret');
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
+
+        $sessionService = Craft::$app->getSession();
+        $sessionOauthToken = $sessionService->get('oauthToken');
+        $sessionOauthTokenSecret = $sessionService->get('oauthTokenSecret');
 
         if ($oauthToken !== $sessionOauthToken) {
             $errorService->throw($settings->invalidOauthToken, 'INVALID');
         }
 
         $client = new TwitterOAuth(
-            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
-            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret),
+            GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKey),
+            GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKeySecret),
             $sessionOauthToken,
             $sessionOauthTokenSecret
         );
@@ -200,8 +203,8 @@ class TwitterService extends Component
         $accessToken = $client->oauth('oauth/access_token', ['oauth_verifier' => $oauthVerifier]);
 
         $client = new TwitterOAuth(
-            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKey),
-            GraphqlAuthentication::$plugin->getSettingsData($settings->twitterApiKeySecret),
+            GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKey),
+            GraphqlAuthentication::getInstance()->getSettingsData($settings->twitterApiKeySecret),
             $accessToken['oauth_token'],
             $accessToken['oauth_token_secret']
         );
@@ -214,7 +217,7 @@ class TwitterService extends Component
         }
 
         if ($settings->allowedTwitterDomains) {
-            GraphqlAuthentication::$plugin->getInstance()->social->verifyEmailDomain(
+            GraphqlAuthentication::$socialService->verifyEmailDomain(
                 $email,
                 $settings->allowedTwitterDomains,
                 $settings->twitterEmailMismatch
@@ -225,8 +228,8 @@ class TwitterService extends Component
         $firstName = $name[0] ?? '';
         $lastName = $name[1] ?? '';
 
-        $session->remove('oauthToken');
-        $session->remove('oauthTokenSecret');
+        $sessionService->remove('oauthToken');
+        $sessionService->remove('oauthTokenSecret');
 
         return compact(
             'email',
