@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.0 - Unreleased
+
+### Added
+
+### Changed
+
+- Improved checks for whether or not plugin should be injecting restrictions
+- Reduced number of database calls when injecting unique user cache
+- Removed `state` argument on Sign in with Apple mutations – this didn't work correctly on iOS
+- Removed unused `JWT` GraphQL type
+
+### Fixed
+
+- Fixed `Invalid Authorization Header` error on sites using Apache ([#52](https://github.com/jamesedmonston/graphql-authentication/issues/52) and [#53](https://github.com/jamesedmonston/graphql-authentication/issues/53) via [@GMConsultant](https://github.com/GMConsultant))
+
+### Misc
+
+- Added class method documentation blocks through plugin for easier third-party extensibility
+
 ## 1.8.0 - 2021-04-29
 
 ### Added
