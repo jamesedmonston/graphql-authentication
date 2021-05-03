@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - Improved checks for whether or not plugin should be injecting restrictions
 - Reduced number of database calls when injecting unique user cache
-- Removed `state` argument on Sign in with Apple mutations – this didn't work correctly on iOS
+- Removed `state` argument on Sign in with Apple mutations – this didn't work correctly with the iOS flow
 - Removed unused `JWT` GraphQL type
 
 ### Fixed
