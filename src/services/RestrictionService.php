@@ -314,7 +314,7 @@ class RestrictionService extends Component
                 return false;
             }
 
-            return StringHelper::contains($token->name ?? '', 'user-');
+            return StringHelper::contains($token->name, 'user-');
         }
 
         return false;

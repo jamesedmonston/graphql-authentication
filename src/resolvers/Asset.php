@@ -11,7 +11,6 @@ use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\helpers\StringHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -41,42 +40,37 @@ class Asset extends ElementResolver
         }
 
         if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
-            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-            $token = $tokenService->getHeaderToken();
+            $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
-            if (StringHelper::contains($token->name, 'user-')) {
-                $user = $tokenService->getUserFromToken();
+            if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
+                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $authorOnlyVolumes = $settings->assetQueries ?? [];
 
-                if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                    $settings = GraphqlAuthentication::$plugin->getSettings();
-                    $authorOnlyVolumes = $settings->assetQueries ?? [];
+                if ($settings->permissionType === 'multiple') {
+                    $userGroup = $user->getGroups()[0] ?? null;
 
-                    if ($settings->permissionType === 'multiple') {
-                        $userGroup = $user->getGroups()[0] ?? null;
+                    if ($userGroup) {
+                        $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
+                    }
+                }
 
-                        if ($userGroup) {
-                            $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
-                        }
+                foreach ($authorOnlyVolumes as $volume => $value) {
+                    if (!(bool) $value) {
+                        continue;
                     }
 
-                    foreach ($authorOnlyVolumes as $volume => $value) {
-                        if (!(bool) $value) {
-                            continue;
-                        }
-
-                        if (isset($arguments['volume']) && trim($arguments['volume'][0]) !== $volume) {
-                            continue;
-                        }
-
-                        if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== Craft::$app->getVolumes()->getVolumeByHandle($volume)->id) {
-                            continue;
-                        }
-
-                        $arguments['uploader'] = $user->id;
+                    if (isset($arguments['volume']) && trim($arguments['volume'][0]) !== $volume) {
+                        continue;
                     }
-                } else {
+
+                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== Craft::$app->getVolumes()->getVolumeByHandle($volume)->id) {
+                        continue;
+                    }
+
                     $arguments['uploader'] = $user->id;
                 }
+            } else {
+                $arguments['uploader'] = $user->id;
             }
         }
 

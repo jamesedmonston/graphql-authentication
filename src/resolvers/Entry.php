@@ -11,7 +11,6 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\helpers\StringHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -41,48 +40,43 @@ class Entry extends ElementResolver
         }
 
         if (GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
-            $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-            $token = $tokenService->getHeaderToken();
+            $user = GraphqlAuthentication::$plugin->getInstance()->token->getUserFromToken();
 
-            if (StringHelper::contains($token->name, 'user-')) {
-                $user = $tokenService->getUserFromToken();
+            if (isset($arguments['section']) || isset($arguments['sectionId'])) {
+                $settings = GraphqlAuthentication::$plugin->getSettings();
+                $authorOnlySections = $settings->entryQueries ?? [];
+                $siteId = $settings->siteId ?? null;
 
-                if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                    $settings = GraphqlAuthentication::$plugin->getSettings();
-                    $authorOnlySections = $settings->entryQueries ?? [];
-                    $siteId = $settings->siteId ?? null;
+                if ($settings->permissionType === 'multiple') {
+                    $userGroup = $user->getGroups()[0] ?? null;
 
-                    if ($settings->permissionType === 'multiple') {
-                        $userGroup = $user->getGroups()[0] ?? null;
+                    if ($userGroup) {
+                        $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
+                        $siteId = $settings->granularSchemas["group-{$userGroup->id}"]['siteId'] ?? null;
+                    }
+                }
 
-                        if ($userGroup) {
-                            $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
-                            $siteId = $settings->granularSchemas["group-{$userGroup->id}"]['siteId'] ?? null;
-                        }
+                if ($siteId) {
+                    $arguments['siteId'] = $siteId;
+                }
+
+                foreach ($authorOnlySections as $section => $value) {
+                    if (!(bool) $value) {
+                        continue;
                     }
 
-                    if ($siteId) {
-                        $arguments['siteId'] = $siteId;
+                    if (isset($arguments['section']) && trim($arguments['section'][0]) !== $section) {
+                        continue;
                     }
 
-                    foreach ($authorOnlySections as $section => $value) {
-                        if (!(bool) $value) {
-                            continue;
-                        }
-
-                        if (isset($arguments['section']) && trim($arguments['section'][0]) !== $section) {
-                            continue;
-                        }
-
-                        if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
-                            continue;
-                        }
-
-                        $arguments['authorId'] = $user->id;
+                    if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== Craft::$app->getSections()->getSectionByHandle($section)->id) {
+                        continue;
                     }
-                } else {
+
                     $arguments['authorId'] = $user->id;
                 }
+            } else {
+                $arguments['authorId'] = $user->id;
             }
         }
 
