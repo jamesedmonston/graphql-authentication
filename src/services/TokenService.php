@@ -275,8 +275,20 @@ class TokenService extends Component
     public function getUserFromToken(): User
     {
         $token = $this->getHeaderToken();
+        $id = $this->getUserIdFromToken($token);
+        return Craft::$app->getUsers()->getUserById($id);
+    }
+
+    /**
+     * Returns the user ID from the token name
+     *
+     * @param GqlToken $token
+     * @return User
+     */
+    public function getUserIdFromToken(GqlToken $token): string
+    {
         $userId = explode('-', $token->name)[1];
-        return Craft::$app->getUsers()->getUserById($userId);
+        return $userId;
     }
 
     /**

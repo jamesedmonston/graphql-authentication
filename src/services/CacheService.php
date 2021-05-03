@@ -34,16 +34,16 @@ class CacheService extends Component
      */
     public function injectUniqueCache(Event $event)
     {
-        if (!GraphqlAuthentication::$plugin->getInstance()->restriction->shouldRestrictRequests()) {
+        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
+
+        if (!$token = $tokenService->getHeaderToken()) {
             return;
         }
 
-        $tokenService = GraphqlAuthentication::$plugin->getInstance()->token;
-        $token = $tokenService->getHeaderToken();
         $cacheKey = $token->accessToken;
 
         if (StringHelper::contains($token->name, 'user-')) {
-            $cacheKey = 'user-' . $tokenService->getUserFromToken()->id;
+            $cacheKey = 'user-' . $tokenService->getUserIdFromToken($token);
         }
 
         $event->variables['gql_cacheKey'] = $cacheKey;
