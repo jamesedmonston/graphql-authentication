@@ -190,6 +190,10 @@ class TokenService extends Component
                 }
 
                 if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
+                    if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
+                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    }
+
                     $jwtSecretKey = GraphqlAuthentication::$plugin->getSettingsData($settings->jwtSecretKey);
 
                     $jwtConfig = Configuration::forSymmetricSigner(
@@ -204,10 +208,6 @@ class TokenService extends Component
 
                     $jwtConfig->setValidationConstraints($validator);
                     $constraints = $jwtConfig->validationConstraints();
-
-                    if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
 
                     try {
                         $jwt = $jwtConfig->parser()->parse($matches[1]);
@@ -263,8 +263,9 @@ class TokenService extends Component
         $request = Craft::$app->getRequest();
         $requestHeaders = $request->getHeaders();
 
-        $token = $this->getHeaderToken();
-        $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
+        if ($token = $this->getHeaderToken()) {
+            $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
+        }
     }
 
     /**
