@@ -260,10 +260,9 @@ class TokenService extends Component
             return;
         }
 
-        $request = Craft::$app->getRequest();
-        $requestHeaders = $request->getHeaders();
-
         if ($token = $this->getHeaderToken()) {
+            $request = Craft::$app->getRequest();
+            $requestHeaders = $request->getHeaders();
             $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
         }
     }
