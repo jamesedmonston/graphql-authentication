@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Misc
 
-- Added class method documentation blocks through plugin for easier third-party extensibility
+- Added class method documentation blocks throughout plugin for easier third-party extensibility
 
 ## 1.8.0 - 2021-04-29
 
