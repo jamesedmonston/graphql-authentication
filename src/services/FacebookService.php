@@ -66,6 +66,7 @@ class FacebookService extends Component
                     GraphqlAuthentication::$plugin->getSettingsData($settings->facebookRedirectUrl),
                     ['email']
                 );
+
                 return $url;
             },
         ];
