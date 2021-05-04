@@ -430,7 +430,6 @@ class RestrictionService extends Component
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
-        $volumes = $volumesService->getAllVolumes();
 
         foreach ($authorOnlyVolumes as $volume => $value) {
             if (!(bool) $value) {
