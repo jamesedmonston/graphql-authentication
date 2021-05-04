@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
 use craft\elements\Entry;
+use craft\elements\User;
 use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
@@ -219,16 +220,7 @@ class RestrictionService extends Component
             return;
         }
 
-        $settings = GraphqlAuthentication::$settings;
-        $authorOnlySections = $settings->entryMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
-            }
-        }
+        $authorOnlySections = $this->_getAuthorOnlySections($user);
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
@@ -244,7 +236,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->authorId !== (string) $user->id) {
-                GraphqlAuthentication::$errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+                GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
     }
@@ -269,16 +261,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        $settings = GraphqlAuthentication::$settings;
-        $authorOnlyVolumes = $settings->assetMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
-            }
-        }
+        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
@@ -294,7 +277,7 @@ class RestrictionService extends Component
             }
 
             if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                GraphqlAuthentication::$errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+                GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
             }
         }
 
@@ -319,6 +302,50 @@ class RestrictionService extends Component
     // =========================================================================
 
     /**
+     * Gets author-only sections from plugin settings
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function _getAuthorOnlySections($user): array
+    {
+        $settings = GraphqlAuthentication::$settings;
+        $authorOnlySections = $settings->entryMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
+
+        return $authorOnlySections;
+    }
+
+    /**
+     * Gets author-only volumes from plugin settings
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function _getAuthorOnlyVolumes($user): array
+    {
+        $settings = GraphqlAuthentication::$settings;
+        $authorOnlySections = $settings->assetMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
+
+        return $authorOnlySections;
+    }
+
+    /**
      * Ensures entry being accessed isn't private
      *
      * @param int $id
@@ -327,7 +354,6 @@ class RestrictionService extends Component
      */
     protected function _ensureValidEntry(int $id): bool
     {
-        $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
         /** @var Elements */
@@ -348,21 +374,14 @@ class RestrictionService extends Component
             return true;
         }
 
+        $settings = GraphqlAuthentication::$settings;
         $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlySections = $settings->entryQueries ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
-            }
-        }
+        $authorOnlySections = $this->_getAuthorOnlySections($user);
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
@@ -391,7 +410,6 @@ class RestrictionService extends Component
      */
     protected function _ensureValidAsset(int $id): bool
     {
-        $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
         /** @var Assets */
@@ -412,21 +430,14 @@ class RestrictionService extends Component
             return true;
         }
 
+        $settings = GraphqlAuthentication::$settings;
         $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlyVolumes = $settings->assetQueries ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
-            }
-        }
+        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
