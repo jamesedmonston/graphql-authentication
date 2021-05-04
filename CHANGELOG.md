@@ -8,11 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
+- Added separate `Service ID` and `Service Secret` fields for Sign in with Apple web implementations – if both native and web settings are populated, it is now necessary to pass a `platform` (`NATIVE`/`WEB`) argument to the `appleSignIn` mutation
+
 ### Changed
 
-- Improved checks for whether or not plugin should be injecting restrictions
-- Reduced number of database calls when injecting unique user cache
-- Removed `state` argument on Sign in with Apple mutations – this didn't work correctly with the iOS flow
+- The plugin no longer creates Craft GraphQL tokens – schemas encoded into JWTs are are now directly passed into Craft's GraphQL controller! ([#29](https://github.com/jamesedmonston/graphql-authentication/issues/29) via [@approached](https://github.com/approached))
+- Lots of under-the-hood improvements to improve performance by reducing the number of database calls
 - Removed unused `JWT` GraphQL type
 
 ### Fixed
@@ -22,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Misc
 
 - Added class method documentation blocks throughout plugin for easier third-party extensibility
+- All services are now available as static properties on the plugin instance, i.e. `GraphqlAuthentication::$tokenService`
 
 ## 1.8.0 - 2021-04-29
 
