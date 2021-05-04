@@ -453,7 +453,7 @@ class TokenService extends Component
     }
 
     /**
-     * Clears expires access and refresh tokens
+     * Clears expired access and refresh tokens
      */
     protected function _clearExpiredTokens()
     {
