@@ -212,7 +212,6 @@ class RestrictionService extends Component
             return;
         }
 
-        $settings = GraphqlAuthentication::$settings;
         $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
         if ($event->isNew) {
@@ -220,6 +219,7 @@ class RestrictionService extends Component
             return;
         }
 
+        $settings = GraphqlAuthentication::$settings;
         $authorOnlySections = $settings->entryMutations ?? [];
 
         if ($settings->permissionType === 'multiple') {
@@ -262,7 +262,6 @@ class RestrictionService extends Component
             return true;
         }
 
-        $settings = GraphqlAuthentication::$settings;
         $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
         if ($event->isNew) {
@@ -270,6 +269,7 @@ class RestrictionService extends Component
             return true;
         }
 
+        $settings = GraphqlAuthentication::$settings;
         $authorOnlyVolumes = $settings->assetMutations ?? [];
 
         if ($settings->permissionType === 'multiple') {
