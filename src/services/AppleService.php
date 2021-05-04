@@ -63,7 +63,7 @@ class AppleService extends Component
                 $url = 'https://appleid.apple.com/auth/authorize?' . http_build_query([
                     'response_type' => 'code',
                     'response_mode' => 'form_post',
-                    'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleClientId),
+                    'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleServiceId),
                     'redirect_uri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleRedirectUrl),
                     'scope' => 'name email',
                 ]);
