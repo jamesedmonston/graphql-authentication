@@ -18,6 +18,7 @@ use DateTime;
 use DateTimeImmutable;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
+use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\elements\RefreshToken;
 use jamesedmonston\graphqlauthentication\events\JwtCreateEvent;
 use jamesedmonston\graphqlauthentication\events\JwtValidateEvent;
@@ -205,8 +206,8 @@ class TokenService extends Component
 
                     try {
                         $jwt = $jwtConfig->parser()->parse($matches[1]);
-                    } catch (RequiredConstraintsViolated $e) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    } catch (InvalidArgumentException $e) {
+                        $errorService->throw($e->getMessage(), 'FORBIDDEN');
                     }
 
                     $event = new JwtValidateEvent([
