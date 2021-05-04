@@ -25,15 +25,17 @@ class SocialService extends Component
      */
     public function verifyEmailDomain(string $email, string $domains, string $error): bool
     {
+        $errorService = GraphqlAuthentication::$errorService;
+
         if (!StringHelper::contains($email, '@')) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidEmailAddress, 'INVALID');
+            $errorService->throw(GraphqlAuthentication::$settings->invalidEmailAddress, 'INVALID');
         }
 
         $domain = explode('@', $email)[1];
         $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
 
         if (!in_array($domain, $domains)) {
-            GraphqlAuthentication::$errorService->throw($error, 'INVALID');
+            $errorService->throw($error, 'INVALID');
         }
 
         return true;
