@@ -44,6 +44,8 @@ class Settings extends Model
 
     public $appleClientId = null;
     public $appleClientSecret = null;
+    public $appleServiceId = null;
+    public $appleServiceSecret = null;
     public $appleRedirectUrl = null;
 
     // Messages
@@ -132,6 +134,8 @@ class Settings extends Model
                     'allowedTwitterDomains',
                     'appleClientId',
                     'appleClientSecret',
+                    'appleServiceId',
+                    'appleServiceSecret',
                     'appleRedirectUrl',
                 ],
                 'default',

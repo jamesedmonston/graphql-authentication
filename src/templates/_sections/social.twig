@@ -131,10 +131,7 @@
 <hr/>
 <h2>Apple</h2>
 
-{{ forms.field({
-  instructions: 'Use the `appleOauthUrl` query to get the authorization URL, then use the `appleSignIn` mutation to authenticate a user, after filling in the all fields below.',
-  first: true,
-}, null) }}
+<h3>iOS</h3>
 
 {{ forms.autosuggestField({
   label: 'App Client ID',
@@ -151,6 +148,34 @@
   instructions: 'The App Client Secret from your Apple app.',
   name: 'appleClientSecret',
   value: settings.appleClientSecret,
+  placeholder: 'xxxxxxxxxx',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+<hr/>
+<h3>Web</h3>
+
+{{ forms.field({
+  instructions: 'Use the `appleOauthUrl` query to get the authorization URL, then use the `appleSignIn` mutation to authenticate a user, after filling in the all fields below.',
+  first: true,
+}, null) }}
+
+{{ forms.autosuggestField({
+  label: 'Service ID',
+  instructions: 'The Service ID from your Apple app.',
+  name: 'appleServiceId',
+  value: settings.appleServiceId,
+  placeholder: 'com.yourapp.id.web',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+  label: 'Service Client Secret',
+  instructions: 'The Service Client Secret from your Apple app.',
+  name: 'appleServiceSecret',
+  value: settings.appleServiceSecret,
   placeholder: 'xxxxxxxxxx',
   required: false,
   suggestEnvVars: true,

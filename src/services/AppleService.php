@@ -12,6 +12,7 @@ use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use GuzzleHttp\Client;
 use jamesedmonston\graphqlauthentication\gql\Auth;
+use jamesedmonston\graphqlauthentication\gql\Platform;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use Throwable;
 use yii\base\Event;
@@ -48,7 +49,7 @@ class AppleService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
-        if (!$this->_validateSettings()) {
+        if (!$this->_validateWebSettings()) {
             return;
         }
 
@@ -79,8 +80,22 @@ class AppleService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
-        if (!$this->_validateSettings()) {
+        if (!$this->_validateNativeSettings() && !$this->_validateWebSettings()) {
             return;
+        }
+
+        $args = [
+            'code' => Type::nonNull(Type::string()),
+        ];
+
+        if ($this->_validateNativeSettings() && $this->_validateWebSettings()) {
+            $args['platform'] = Platform::getType();
+        }
+
+        $defaultPlatform = 'native';
+
+        if (!$this->_validateNativeSettings() && $this->_validateWebSettings()) {
+            $defaultPlatform = 'web';
         }
 
         switch (GraphqlAuthentication::$settings->permissionType) {
@@ -88,10 +103,8 @@ class AppleService extends Component
                 $event->mutations['appleSignIn'] = [
                     'description' => 'Authenticates a user using an Apple Sign-In token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
-                    'args' => [
-                        'code' => Type::nonNull(Type::string()),
-                    ],
-                    'resolve' => function ($source, array $arguments) {
+                    'args' => $args,
+                    'resolve' => function ($source, array $arguments) use ($defaultPlatform) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = $settings->schemaId;
 
@@ -100,7 +113,8 @@ class AppleService extends Component
                         }
 
                         $code = $arguments['code'];
-                        $tokenUser = $this->_getUserFromToken($code);
+                        $platform = $arguments['platform'] ?? $defaultPlatform;
+                        $tokenUser = $this->_getUserFromToken($code, $platform);
 
                         $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId);
                         return $user;
@@ -119,10 +133,8 @@ class AppleService extends Component
                     $event->mutations["appleSignIn{$handle}"] = [
                         'description' => "Authenticates a {$userGroup->name} using an Apple Sign-In token. Returns user and token.",
                         'type' => Type::nonNull(Auth::getType()),
-                        'args' => [
-                            'code' => Type::nonNull(Type::string()),
-                        ],
-                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                        'args' => $args,
+                        'resolve' => function ($source, array $arguments) use ($userGroup, $defaultPlatform) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
@@ -131,7 +143,8 @@ class AppleService extends Component
                             }
 
                             $code = $arguments['code'];
-                            $tokenUser = $this->_getUserFromToken($code);
+                            $platform = $arguments['platform'] ?? $defaultPlatform;
+                            $tokenUser = $this->_getUserFromToken($code, $platform);
 
                             $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
@@ -146,38 +159,65 @@ class AppleService extends Component
     // =========================================================================
 
     /**
-     * Ensures settings are set
+     * Ensures native settings are set
      *
      * @return bool
      */
-    protected function _validateSettings(): bool
+    protected function _validateNativeSettings(): bool
     {
         $settings = GraphqlAuthentication::$settings;
-        return (bool) $settings->appleClientId && (bool) $settings->appleClientSecret && (bool) $settings->appleRedirectUrl;
+        return (bool) $settings->appleClientId && (bool) $settings->appleClientSecret;
+    }
+
+    /**
+     * Ensures web settings are set
+     *
+     * @return bool
+     */
+    protected function _validateWebSettings(): bool
+    {
+        $settings = GraphqlAuthentication::$settings;
+        return (bool) $settings->appleServiceId && (bool) $settings->appleServiceSecret && (bool) $settings->appleRedirectUrl;
     }
 
     /**
      * Gets user details from Sign in with Apple token
      *
      * @param string $code
+     * @param string $platform
      * @return array
      * @throws Error
      */
-    protected function _getUserFromToken(string $code): array
+    protected function _getUserFromToken(string $code, string $platform): array
     {
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
         $client = new Client();
 
+        $id = $settings->appleClientId;
+        $secret = $settings->appleClientSecret;
+        $redirect = null;
+
+        if ($platform === 'web') {
+            $id = $settings->appleServiceId;
+            $secret = $settings->appleServiceSecret;
+            $redirect = $settings->appleRedirectUrl;
+        }
+
+        $params = [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($id),
+            'client_secret' => GraphqlAuthentication::getInstance()->getSettingsData($secret),
+        ];
+
+        if ($redirect) {
+            $params['redirect_uri'] = GraphqlAuthentication::getInstance()->getSettingsData($redirect);
+        }
+
         try {
             $response = json_decode($client->request('POST', 'https://appleid.apple.com/auth/token', [
-                'form_params' => [
-                    'grant_type' => 'authorization_code',
-                    'code' => $code,
-                    'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleClientId),
-                    'client_secret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleClientSecret),
-                    'redirect_uri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->appleRedirectUrl),
-                ],
+                'form_params' => $params,
             ])->getBody()->getContents());
         } catch (Throwable $e) {
             $errorService->throw($settings->invalidOauthToken, 'INVALID');
