@@ -4,12 +4,12 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
-use craft\controllers\GraphqlController;
 use craft\elements\User;
+use craft\events\ExecuteGqlQueryEvent;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
-use craft\models\GqlToken;
+use craft\models\GqlSchema;
 use craft\records\GqlToken as RecordsGqlToken;
 use craft\services\Elements;
 use craft\services\Gql;
@@ -26,10 +26,10 @@ use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use yii\base\Event;
-use yii\base\InvalidArgumentException;
 
 class TokenService extends Component
 {
@@ -93,15 +93,15 @@ class TokenService extends Component
         parent::init();
 
         Event::on(
-            GraphqlController::class,
-            GraphqlController::EVENT_BEFORE_ACTION,
-            [$this, 'rewriteJwtHeader']
+            Gql::class,
+            Gql::EVENT_REGISTER_GQL_MUTATIONS,
+            [$this, 'registerGqlMutations']
         );
 
         Event::on(
             Gql::class,
-            Gql::EVENT_REGISTER_GQL_MUTATIONS,
-            [$this, 'registerGqlMutations']
+            Gql::EVENT_BEFORE_EXECUTE_GQL_QUERY,
+            [$this, 'setActiveSchema']
         );
     }
 
@@ -162,10 +162,10 @@ class TokenService extends Component
     /**
      * Grabs the token from the `Authorization` header
      *
-     * @return GqlToken
+     * @return Token
      * @throws Error
      */
-    public function getHeaderToken(): ?GqlToken
+    public function getHeaderToken(): ?Token
     {
         $requestHeaders = Craft::$app->getRequest()->getHeaders();
         $authHeaders = $requestHeaders->get('authorization', [], false);
@@ -177,27 +177,12 @@ class TokenService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Gql */
-        $gqlService = Craft::$app->getGql();
+        $token = null;
 
         foreach ($authHeaders as $authHeader) {
             $authValues = array_map('trim', explode(',', $authHeader));
 
             foreach ($authValues as $authValue) {
-                if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
-                    try {
-                        $token = $gqlService->getTokenByAccessToken($matches[1]);
-                    } catch (InvalidArgumentException $e) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
-                    if (!$token) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
-                    break 2;
-                }
-
                 if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
                     if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
                         $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
@@ -236,23 +221,13 @@ class TokenService extends Component
                         $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
                     }
 
-                    try {
-                        $accessToken = $jwt->claims()->get('accessToken');
-                        $token = $gqlService->getTokenByAccessToken($accessToken);
-                    } catch (InvalidArgumentException $e) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
-                    if (!$token) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
+                    $token = $jwt;
                     break 2;
                 }
             }
         }
 
-        if (!isset($token)) {
+        if (!$token) {
             return null;
         }
 
@@ -261,18 +236,74 @@ class TokenService extends Component
     }
 
     /**
-     * Rewrites the access token from the decoded JWT into the headers
+     * Sets the active schema to the one encoded into the JWT
      */
-    public function rewriteJwtHeader()
+    public function setActiveSchema(ExecuteGqlQueryEvent $event)
     {
-        if (!GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
+        if (!$token = $this->getHeaderToken()) {
             return;
         }
 
-        if ($token = $this->getHeaderToken()) {
-            $requestHeaders = Craft::$app->getRequest()->getHeaders();
-            $requestHeaders->set('authorization', "Bearer {$token->accessToken}");
+        $session = Craft::$app->getSession();
+
+        if ((bool) $session->get('activatedSchema', false)) {
+            return;
         }
+
+        /** @var Gql */
+        $gqlService = Craft::$app->getGql();
+        $schema = $this->getSchemaFromToken();
+
+        $session->set('activatedSchema', true);
+
+        // Insert user-specific cache key
+        $event->variables['gql_cacheKey'] = 'user-' . $token->claims()->get('sub');
+
+        $event->result = $gqlService->executeQuery(
+            $schema,
+            $event->query,
+            $event->variables,
+            $event->operationName,
+            YII_DEBUG
+        );
+
+        $session->remove('activatedSchema');
+    }
+
+    /**
+     * Returns the schema linked to a token
+     *
+     * @return int
+     */
+    public function getSchemaFromToken(): GqlSchema
+    {
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
+
+        if (!$token = $this->getHeaderToken()) {
+            $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+        }
+
+        /** @var Gql */
+        $gqlService = Craft::$app->getGql();
+        $schemaId = $token->claims()->get('schemaId') ?? null;
+
+        // Temporary – remove this once users have had chance to update
+        if (!$schemaId) {
+            $schemaId = array_values(array_filter($gqlService->getSchemas(), function (GqlSchema $schema) use ($token) {
+                return $schema->name === $token->claims()->get('schema');
+            }))[0]->id ?? null;
+        }
+
+        if (!$schemaId) {
+            $errorService->throw($settings->invalidHeader, 'INVALID');
+        }
+
+        if (!$schema = $gqlService->getSchemaById($schemaId)) {
+            $errorService->throw($settings->invalidHeader, 'INVALID');
+        }
+
+        return $schema;
     }
 
     /**
@@ -286,7 +317,7 @@ class TokenService extends Component
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'FORBIDDEN');
         }
 
-        $id = $this->getUserIdFromToken($token);
+        $id = $token->claims()->get('sub');
 
         /** @var Users */
         $usersService = Craft::$app->getUsers();
@@ -294,61 +325,29 @@ class TokenService extends Component
     }
 
     /**
-     * Returns the user ID from the token name
-     *
-     * @param GqlToken $token
-     * @return User
-     */
-    public function getUserIdFromToken(GqlToken $token): string
-    {
-        $userId = explode('-', $token->name)[1];
-        return $userId;
-    }
-
-    /**
-     * Creates a Craft access token, and encodes it into a JWT
+     * Creates a JWT and refresh token. Sends refresh token as a cookie in response
      *
      * @param User $user
      * @param Int $schemaId
      * @return array
      * @throws Error
      */
-    public function create(User $user, Int $schemaId)
+    public function create(User $user, int $schemaId)
     {
-        $this->_clearExpiredTokens();
-
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        if (!$settings->jwtSecretKey) {
+        if (!$jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey)) {
             $errorService->throw($settings->invalidJwtSecretKey, 'INVALID');
         }
-
-        $accessToken = Craft::$app->getSecurity()->generateRandomString(32);
-        $time = microtime(true);
-
-        $token = new GqlToken([
-            'name' => "user-{$user->id}-{$time}",
-            'accessToken' => $accessToken,
-            'enabled' => true,
-            'schemaId' => $schemaId,
-            'expiryDate' => (new DateTime())->modify("+ {$settings->jwtExpiration}"),
-        ]);
-
-        /** @var Gql */
-        $gqlService = Craft::$app->getGql();
-
-        if (!$gqlService->saveToken($token)) {
-            $errorService->throw(json_encode($token->getErrors()), 'FORBIDDEN');
-        }
-
-        $jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey);
 
         $jwtConfig = Configuration::forSymmetricSigner(
             new Sha256(),
             InMemory::plainText($jwtSecretKey)
         );
 
+        /** @var Gql */
+        $gqlService = Craft::$app->getGql();
         $now = new DateTimeImmutable();
 
         $builder = $jwtConfig->builder()
@@ -359,9 +358,9 @@ class TokenService extends Component
             ->withClaim('fullName', $user->fullName)
             ->withClaim('email', $user->email)
             ->withClaim('groups', array_column($user->getGroups(), 'name'))
-            ->withClaim('schema', $token->getSchema()->name)
-            ->withClaim('admin', $user->admin)
-            ->withClaim('accessToken', $accessToken);
+            ->withClaim('schema', $gqlService->getSchemaById($schemaId)->name)
+            ->withClaim('schemaId', $schemaId)
+            ->withClaim('admin', $user->admin);
 
         $event = new JwtCreateEvent([
             'builder' => $builder,
@@ -403,7 +402,7 @@ class TokenService extends Component
     // =========================================================================
 
     /**
-     * Sets a cookie with a response
+     * Sends a cookie with a response
      *
      * @param string $name
      * @param string $token
@@ -436,16 +435,15 @@ class TokenService extends Component
     /**
      * Validates token expiry date
      *
-     * @param GqlToken $token
+     * @param Token $token
      * @throws Error
      */
-    protected function _validateExpiry(GqlToken $token)
+    protected function _validateExpiry(Token $token)
     {
-        if (!$token->expiryDate) {
-            return;
-        }
+        /** @var DateTimeImmutable */
+        $expiry = $token->claims()->get('exp');
 
-        if (!DateTimeHelper::isInThePast($token->expiryDate)) {
+        if (!DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
             return;
         }
 

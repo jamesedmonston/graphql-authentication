@@ -13,7 +13,6 @@ use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
-use craft\helpers\StringHelper;
 use craft\services\Assets;
 use craft\services\Elements;
 use craft\services\Gql;
@@ -291,11 +290,7 @@ class RestrictionService extends Component
      */
     public function shouldRestrictRequests(): bool
     {
-        if ($token = GraphqlAuthentication::$tokenService->getHeaderToken()) {
-            return StringHelper::contains($token->name, 'user-');
-        }
-
-        return false;
+        return (bool) GraphqlAuthentication::$tokenService->getHeaderToken();
     }
 
     // Protected Methods
@@ -369,13 +364,14 @@ class RestrictionService extends Component
             return true;
         }
 
-        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
+        $tokenService = GraphqlAuthentication::$tokenService;
+        $user = $tokenService->getUserFromToken();
 
         if ((string) $entry->authorId === (string) $user->id) {
             return true;
         }
 
-        $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
+        $scope = $tokenService->getSchemaFromToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
@@ -425,13 +421,14 @@ class RestrictionService extends Component
             return true;
         }
 
-        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
+        $tokenService = GraphqlAuthentication::$tokenService;
+        $user = $tokenService->getUserFromToken();
 
         if ((string) $asset->uploaderId === (string) $user->id) {
             return true;
         }
 
-        $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
+        $scope = $tokenService->getSchemaFromToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');

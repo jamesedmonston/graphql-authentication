@@ -19,7 +19,6 @@ use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\models\Settings;
 use jamesedmonston\graphqlauthentication\services\AppleService;
-use jamesedmonston\graphqlauthentication\services\CacheService;
 use jamesedmonston\graphqlauthentication\services\ErrorService;
 use jamesedmonston\graphqlauthentication\services\FacebookService;
 use jamesedmonston\graphqlauthentication\services\GoogleService;
@@ -95,11 +94,6 @@ class GraphqlAuthentication extends Plugin
     public static $errorService;
 
     /**
-     * @var CacheService
-     */
-    public static $cacheService;
-
-    /**
      * @var Settings
      */
     public static $settings;
@@ -142,7 +136,6 @@ class GraphqlAuthentication extends Plugin
             'twitter' => TwitterService::class,
             'apple' => AppleService::class,
             'error' => ErrorService::class,
-            'cache' => CacheService::class,
         ]);
 
         $this->token->init();
@@ -154,7 +147,6 @@ class GraphqlAuthentication extends Plugin
         $this->twitter->init();
         $this->apple->init();
         $this->error->init();
-        $this->cache->init();
 
         self::$plugin = $this;
         self::$tokenService = $this->token;
@@ -166,7 +158,6 @@ class GraphqlAuthentication extends Plugin
         self::$twitterService = $this->twitter;
         self::$appleService = $this->apple;
         self::$errorService = $this->error;
-        self::$cacheService = $this->cache;
         self::$settings = $this->getSettings();
 
         if (Craft::$app->getUser()->getIsAdmin()) {
