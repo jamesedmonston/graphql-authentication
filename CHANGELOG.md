@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Changed
 
-- The plugin no longer creates Craft GraphQL tokens – schemas encoded into JWTs are are now directly passed into Craft's GraphQL controller! ([#29](https://github.com/jamesedmonston/graphql-authentication/issues/29) via [@approached](https://github.com/approached))
+- The plugin no longer creates Craft GraphQL tokens – schemas encoded into JWTs are now directly passed into Craft's GraphQL controller! ([#29](https://github.com/jamesedmonston/graphql-authentication/issues/29) via [@approached](https://github.com/approached))
 - Lots of under-the-hood improvements to improve performance by reducing the number of database calls
 - Removed unused `JWT` GraphQL type
 
