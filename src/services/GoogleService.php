@@ -127,7 +127,7 @@ class GoogleService extends Component
     protected function _getUserFromToken(string $idToken): array
     {
         $settings = GraphqlAuthentication::$settings;
-        $errorService = $settings = GraphqlAuthentication::$errorService;
+        $errorService = GraphqlAuthentication::$errorService;
 
         $client = new Google_Client([
             'client_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->googleClientId),
