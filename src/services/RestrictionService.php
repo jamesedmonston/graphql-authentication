@@ -354,6 +354,7 @@ class RestrictionService extends Component
      */
     protected function _ensureValidEntry(int $id): bool
     {
+        $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
         /** @var Elements */
@@ -374,7 +375,6 @@ class RestrictionService extends Component
             return true;
         }
 
-        $settings = GraphqlAuthentication::$settings;
         $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
@@ -410,6 +410,7 @@ class RestrictionService extends Component
      */
     protected function _ensureValidAsset(int $id): bool
     {
+        $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
         /** @var Assets */
@@ -430,7 +431,6 @@ class RestrictionService extends Component
             return true;
         }
 
-        $settings = GraphqlAuthentication::$settings;
         $scope = GraphqlAuthentication::$tokenService->getHeaderToken()->getScope();
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
