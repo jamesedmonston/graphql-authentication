@@ -253,7 +253,7 @@ class TokenService extends Component
         }
 
         if (!isset($token)) {
-            $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+            return null;
         }
 
         $this->_validateExpiry($token);
