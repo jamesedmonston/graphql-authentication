@@ -7,6 +7,7 @@ use craft\base\Component;
 use craft\controllers\GraphqlController;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlToken;
 use craft\records\GqlToken as RecordsGqlToken;
@@ -444,7 +445,7 @@ class TokenService extends Component
             return;
         }
 
-        if (strtotime(date('Y-m-d H:i:s')) < strtotime($token->expiryDate->format('Y-m-d H:i:s'))) {
+        if (!DateTimeHelper::isInThePast($token->expiryDate)) {
             return;
         }
 
