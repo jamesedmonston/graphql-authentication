@@ -45,6 +45,11 @@ class GraphqlAuthentication extends Plugin
     // =========================================================================
 
     /**
+     * @var GraphqlAuthentication
+     */
+    public static $plugin;
+
+    /**
      * @var TokenService
      */
     public static $tokenService;
@@ -151,6 +156,7 @@ class GraphqlAuthentication extends Plugin
         $this->error->init();
         $this->cache->init();
 
+        self::$plugin = $this;
         self::$tokenService = $this->token;
         self::$userService = $this->user;
         self::$restrictionService = $this->restriction;
