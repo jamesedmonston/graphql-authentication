@@ -203,37 +203,15 @@ class RestrictionService extends Component
      * Ensures user isn't trying to mutate a private entry
      *
      * @param ModelEvent $event
-     * @return bool
      * @throws Error
      */
-    public function ensureEntryMutationAllowed(ModelEvent $event): bool
+    public function ensureEntryMutationAllowed(ModelEvent $event)
     {
         if (!$this->shouldRestrictRequests()) {
-            return true;
+            return;
         }
 
-        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
-
-        if ($event->isNew) {
-            $event->sender->authorId = $user->id;
-            return true;
-        }
-
-        $authorOnlySections = $this->_getAuthorOnlySections($user);
-
-        /** @var Sections */
-        $sectionsService = Craft::$app->getSections();
-        $entrySection = $sectionsService->getSectionById($event->sender->sectionId)->handle;
-
-        if (!in_array($entrySection, array_keys($authorOnlySections))) {
-            return true;
-        }
-
-        if ((string) $event->sender->authorId !== (string) $user->id) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
-        }
-
-        return true;
+        $this->_ensureValidEntry($event->sender);
     }
 
     /**
@@ -241,36 +219,14 @@ class RestrictionService extends Component
      *
      * @param ModelEvent $event
      * @return bool
-     * @throws Error
      */
-    public function ensureAssetMutationAllowed(ModelEvent $event): bool
+    public function ensureAssetMutationAllowed(ModelEvent $event)
     {
         if (!$this->shouldRestrictRequests()) {
-            return true;
+            return;
         }
 
-        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
-
-        if ($event->isNew) {
-            $event->sender->uploaderId = $user->id;
-            return true;
-        }
-
-        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
-
-        /** @var Volumes */
-        $volumesService = Craft::$app->getVolumes();
-        $assetVolume = $volumesService->getVolumeById($event->sender->volumeId)->handle;
-
-        if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
-            return true;
-        }
-
-        if ((string) $event->sender->uploaderId !== (string) $user->id) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
-        }
-
-        return true;
+        $this->_ensureValidAsset($event->sender);
     }
 
     /**
@@ -285,50 +241,6 @@ class RestrictionService extends Component
 
     // Protected Methods
     // =========================================================================
-
-    /**
-     * Gets author-only sections from plugin settings
-     *
-     * @param User $user
-     * @return array
-     */
-    protected function _getAuthorOnlySections($user): array
-    {
-        $settings = GraphqlAuthentication::$settings;
-        $authorOnlySections = $settings->entryMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
-            }
-        }
-
-        return $authorOnlySections;
-    }
-
-    /**
-     * Gets author-only volumes from plugin settings
-     *
-     * @param User $user
-     * @return array
-     */
-    protected function _getAuthorOnlyVolumes($user): array
-    {
-        $settings = GraphqlAuthentication::$settings;
-        $authorOnlySections = $settings->assetMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
-            }
-        }
-
-        return $authorOnlySections;
-    }
 
     /**
      * Ensures entry being accessed isn't private
@@ -367,20 +279,21 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlySections = $this->_getAuthorOnlySections($user);
+        $authorOnlySections = $settings->entryMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
+        $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
-        foreach ($authorOnlySections as $section => $value) {
-            if (!(bool) $value) {
-                continue;
-            }
-
-            if ($entry->sectionId !== $sectionsService->getSectionByHandle($section)->id) {
-                continue;
-            }
-
+        if (in_array($entrySection, array_keys($authorOnlySections))) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
@@ -424,20 +337,21 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
+        $authorOnlyVolumes = $settings->assetMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
+            }
+        }
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
+        $assetVolume = $volumesService->getVolumeById($event->sender->volumeId)->handle;
 
-        foreach ($authorOnlyVolumes as $volume => $value) {
-            if (!(bool) $value) {
-                continue;
-            }
-
-            if ($asset->volumeId !== $volumesService->getVolumeByHandle($volume)->id) {
-                continue;
-            }
-
+        if (in_array($assetVolume, array_keys($authorOnlyVolumes))) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
