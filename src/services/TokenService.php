@@ -238,6 +238,8 @@ class TokenService extends Component
 
     /**
      * Sets the active schema to the one encoded into the JWT
+     *
+     * @param ExecuteGqlQueryEvent $event
      */
     public function setActiveSchema(ExecuteGqlQueryEvent $event)
     {
