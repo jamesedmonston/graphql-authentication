@@ -206,17 +206,17 @@ class RestrictionService extends Component
      * @return bool
      * @throws Error
      */
-    public function ensureEntryMutationAllowed(ModelEvent $event)
+    public function ensureEntryMutationAllowed(ModelEvent $event): bool
     {
         if (!$this->shouldRestrictRequests()) {
-            return;
+            return true;
         }
 
         $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
         if ($event->isNew) {
             $event->sender->authorId = $user->id;
-            return;
+            return true;
         }
 
         $authorOnlySections = $this->_getAuthorOnlySections($user);
@@ -226,18 +226,14 @@ class RestrictionService extends Component
         $entrySection = $sectionsService->getSectionById($event->sender->sectionId)->handle;
 
         if (!in_array($entrySection, array_keys($authorOnlySections))) {
-            return;
+            return true;
         }
 
-        foreach ($authorOnlySections as $section => $value) {
-            if (!(bool) $value || $section !== $entrySection) {
-                continue;
-            }
-
-            if ((string) $event->sender->authorId !== (string) $user->id) {
-                GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
-            }
+        if ((string) $event->sender->authorId !== (string) $user->id) {
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
         }
+
+        return true;
     }
 
     /**
@@ -270,14 +266,8 @@ class RestrictionService extends Component
             return true;
         }
 
-        foreach ($authorOnlyVolumes as $volume => $value) {
-            if (!(bool) $value || $volume !== $assetVolume) {
-                continue;
-            }
-
-            if ((string) $event->sender->uploaderId !== (string) $user->id) {
-                GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
-            }
+        if ((string) $event->sender->uploaderId !== (string) $user->id) {
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
         }
 
         return true;
