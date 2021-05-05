@@ -402,7 +402,7 @@ class TokenService extends Component
     }
 
     /**
-     * Deletes refresh token specific
+     * Deletes specific refresh token
      *
      * @param string $refreshToken
      */
