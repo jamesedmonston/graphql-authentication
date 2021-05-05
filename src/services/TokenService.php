@@ -251,11 +251,11 @@ class TokenService extends Component
             return;
         }
 
+        $session->set('activatedSchema', true);
+
         /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schema = $this->getSchemaFromToken();
-
-        $session->set('activatedSchema', true);
 
         // Insert user-specific cache key
         $event->variables['gql_cacheKey'] = 'user-' . $token->claims()->get('sub');
@@ -274,7 +274,7 @@ class TokenService extends Component
     /**
      * Returns the schema linked to a token
      *
-     * @return int
+     * @return GqlSchema
      */
     public function getSchemaFromToken(): GqlSchema
     {
