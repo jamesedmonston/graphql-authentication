@@ -9,6 +9,7 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
+use craft\gql\types\input\File;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
@@ -373,6 +374,7 @@ class UserService extends Component
                     'firstName' => Type::string(),
                     'lastName' => Type::string(),
                     'preferredLanguage' => Type::string(),
+                    'photo' => File::getType(),
                 ],
                 UserArguments::getContentArguments()
             ),
@@ -383,12 +385,13 @@ class UserService extends Component
                     $errorService->throw($settings->invalidUserUpdate, 'INVALID');
                 }
 
-                $email = $arguments['email'];
-                $firstName = $arguments['firstName'];
-                $lastName = $arguments['lastName'];
-                $preferredLanguage = $arguments['preferredLanguage'];
+                $email = $arguments['email'] ?? null;
+                $username = $arguments['username'] ?? null;
+                $firstName = $arguments['firstName'] ?? null;
+                $lastName = $arguments['lastName'] ?? null;
+                $preferredLanguage = $arguments['preferredLanguage'] ?? null;
 
-                if (isset($email)) {
+                if ($email) {
                     if ($user->username === $user->email) {
                         $user->username = $email;
                     }
@@ -396,19 +399,19 @@ class UserService extends Component
                     $user->email = $email;
                 }
 
-                if (isset($username)) {
+                if ($username) {
                     $user->username = $username;
                 }
 
-                if (isset($firstName)) {
+                if ($firstName) {
                     $user->firstName = $firstName;
                 }
 
-                if (isset($lastName)) {
+                if ($lastName) {
                     $user->lastName = $lastName;
                 }
 
-                if (isset($preferredLanguage)) {
+                if ($preferredLanguage) {
                     $usersService->saveUserPreferences($user, ['language' => $preferredLanguage]);
                 }
 
