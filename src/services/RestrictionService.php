@@ -6,7 +6,6 @@ use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
 use craft\elements\Entry;
-use craft\elements\User;
 use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
