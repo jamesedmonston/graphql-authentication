@@ -401,6 +401,37 @@ class TokenService extends Component
         ];
     }
 
+    /**
+     * Deletes refresh token specific
+     *
+     * @param string $refreshToken
+     */
+    public function deleteRefreshToken(string $refreshToken)
+    {
+        $refreshToken = RefreshToken::find()->where('[[token]] = ' . $refreshToken)->one();
+
+        /** @var Elements */
+        $elementsService = Craft::$app->getElements();
+        $elementsService->deleteElementById($refreshToken->id);
+    }
+
+    /**
+     * Deletes refresh token(s) linked to user
+     *
+     * @param User $user
+     */
+    public function deleteRefreshTokens(User $user)
+    {
+        $refreshTokens = RefreshToken::find()->where('[[userId]] = ' . $user->id)->all();
+
+        /** @var Elements */
+        $elementsService = Craft::$app->getElements();
+
+        foreach ($refreshTokens as $refreshToken) {
+            $elementsService->deleteElementById($refreshToken->id);
+        }
+    }
+
     // Protected Methods
     // =========================================================================
 
