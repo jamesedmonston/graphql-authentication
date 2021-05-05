@@ -211,7 +211,7 @@ class RestrictionService extends Component
             return;
         }
 
-        $this->_ensureValidEntry($event->sender);
+        $this->_ensureValidEntry($event->sender->id);
     }
 
     /**
@@ -226,7 +226,7 @@ class RestrictionService extends Component
             return;
         }
 
-        $this->_ensureValidAsset($event->sender);
+        $this->_ensureValidAsset($event->sender->id);
     }
 
     /**
@@ -349,7 +349,7 @@ class RestrictionService extends Component
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
-        $assetVolume = $volumesService->getVolumeById($event->sender->volumeId)->handle;
+        $assetVolume = $volumesService->getVolumeById($asset->volumeId)->handle;
 
         if (in_array($assetVolume, array_keys($authorOnlyVolumes))) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
