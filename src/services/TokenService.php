@@ -130,7 +130,7 @@ class TokenService extends Component
                 }
 
                 $this->_clearExpiredTokens();
-                $refreshTokenElement = RefreshToken::find()->where(['token' => $refreshToken])->one();
+                $refreshTokenElement = RefreshToken::find()->where('[[token]] = ' . $refreshToken)->one();
 
                 if (!$refreshTokenElement) {
                     $errorService->throw($settings->invalidRefreshToken, 'INVALID');
