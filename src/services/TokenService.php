@@ -416,7 +416,7 @@ class TokenService extends Component
     }
 
     /**
-     * Deletes refresh token(s) linked to user
+     * Deletes refresh tokens linked to user
      *
      * @param User $user
      */
