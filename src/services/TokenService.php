@@ -184,47 +184,49 @@ class TokenService extends Component
             $authValues = array_map('trim', explode(',', $authHeader));
 
             foreach ($authValues as $authValue) {
-                if (preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
-                    if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
-                    $jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey);
-
-                    $jwtConfig = Configuration::forSymmetricSigner(
-                        new Sha256(),
-                        InMemory::plainText($jwtSecretKey)
-                    );
-
-                    $validator = new SignedWith(
-                        new Sha256(),
-                        InMemory::plainText($jwtSecretKey)
-                    );
-
-                    $jwtConfig->setValidationConstraints($validator);
-                    $constraints = $jwtConfig->validationConstraints();
-
-                    try {
-                        $jwt = $jwtConfig->parser()->parse($matches[1]);
-                    } catch (InvalidArgumentException $e) {
-                        $errorService->throw($e->getMessage(), 'FORBIDDEN');
-                    }
-
-                    $event = new JwtValidateEvent([
-                        'config' => $jwtConfig,
-                    ]);
-
-                    $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
-
-                    try {
-                        $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
-                    } catch (RequiredConstraintsViolated $e) {
-                        $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
-                    }
-
-                    $token = $jwt;
-                    break 2;
+                if (!preg_match('/^JWT\s+(.+)$/i', $authValue, $matches)) {
+                    continue;
                 }
+
+                if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
+                    $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                }
+
+                $jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey);
+
+                $jwtConfig = Configuration::forSymmetricSigner(
+                    new Sha256(),
+                    InMemory::plainText($jwtSecretKey)
+                );
+
+                $validator = new SignedWith(
+                    new Sha256(),
+                    InMemory::plainText($jwtSecretKey)
+                );
+
+                $jwtConfig->setValidationConstraints($validator);
+                $constraints = $jwtConfig->validationConstraints();
+
+                try {
+                    $jwt = $jwtConfig->parser()->parse($matches[1]);
+                } catch (InvalidArgumentException $e) {
+                    $errorService->throw($e->getMessage(), 'FORBIDDEN');
+                }
+
+                $event = new JwtValidateEvent([
+                    'config' => $jwtConfig,
+                ]);
+
+                $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
+
+                try {
+                    $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
+                } catch (RequiredConstraintsViolated $e) {
+                    $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                }
+
+                $token = $jwt;
+                break 2;
             }
         }
 
@@ -269,8 +271,6 @@ class TokenService extends Component
             $event->operationName,
             YII_DEBUG
         );
-
-        $session->remove('activatedSchema');
     }
 
     /**
