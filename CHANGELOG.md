@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.1 - 2021-05-06
+
+### Changed
+
+- Further improvements to performance by reducing the number of database calls and loops
+
+### Fixed
+
+- Fixed `updateViewer` mutation error ([#54](https://github.com/jamesedmonston/graphql-authentication/issues/54))
+- Fixed mutations firing twice ([#55](https://github.com/jamesedmonston/graphql-authentication/issues/55) via [@tam](https://github.com/tam))
+- Fixed plugin causing an error with console requests
+
 ## 1.9.0 - 2021-05-04
 
 ### Added
