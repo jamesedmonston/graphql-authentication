@@ -9,6 +9,8 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
+use craft\gql\resolvers\mutations\Asset;
+use craft\gql\types\input\File;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
@@ -19,7 +21,9 @@ use craft\services\ProjectConfig;
 use craft\services\UserGroups;
 use craft\services\UserPermissions;
 use craft\services\Users;
+use craft\services\Volumes;
 use GraphQL\Error\Error;
+use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -90,6 +94,12 @@ class UserService extends Component
 
         /** @var UserPermissions */
         $permissionsService = Craft::$app->getUserPermissions();
+
+        /** @var Volumes */
+        $volumesService = Craft::$app->getVolumes();
+
+        /** @var ProjectConfig */
+        $projectConfigService = Craft::$app->getProjectConfig();
 
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
@@ -362,10 +372,11 @@ class UserService extends Component
                     'firstName' => Type::string(),
                     'lastName' => Type::string(),
                     'preferredLanguage' => Type::string(),
+                    'photo' => File::getType(),
                 ],
                 UserArguments::getContentArguments()
             ),
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService) {
+            'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
                 if (!$user = $tokenService->getUserFromToken()) {
                     $errorService->throw($settings->invalidUserUpdate, 'INVALID');
                 }
@@ -398,6 +409,35 @@ class UserService extends Component
 
                 if ($preferredLanguage) {
                     $usersService->saveUserPreferences($user, ['language' => $preferredLanguage]);
+                }
+
+                if (array_key_exists('photo', $arguments)) {
+                    $photo = $arguments['photo'];
+
+                    if ($photo === null) {
+                        $user->setPhoto(null);
+                    } else {
+                        $volumeUid = $projectConfigService->get('users.photoVolumeUid');
+
+                        if (empty($volumeUid)) {
+                            $errorService->throw($settings->volumeNotFound, 'INVALID');
+                        }
+
+                        $volume = $volumesService->getVolumeByUid($volumeUid);
+
+                        $resolver = new Asset([
+                            'volume' => $volumesService->getVolumeByHandle($volume->handle),
+                        ]);
+
+                        $newPhoto = $resolver->saveAsset(
+                            $source,
+                            ['_file' => $photo],
+                            $context,
+                            $resolveInfo
+                        );
+
+                        $user->setPhoto($newPhoto);
+                    }
                 }
 
                 $customFields = UserArguments::getContentArguments();
