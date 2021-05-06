@@ -202,15 +202,37 @@ class RestrictionService extends Component
      * Ensures user isn't trying to mutate a private entry
      *
      * @param ModelEvent $event
+     * @return bool
      * @throws Error
      */
-    public function ensureEntryMutationAllowed(ModelEvent $event)
+    public function ensureEntryMutationAllowed(ModelEvent $event): bool
     {
         if (!$this->shouldRestrictRequests()) {
-            return;
+            return true;
         }
 
-        $this->_ensureValidEntry($event->sender->id);
+        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
+
+        if ($event->isNew) {
+            $event->sender->authorId = $user->id;
+            return true;
+        }
+
+        $authorOnlySections = $this->_getAuthorOnlySections($user);
+
+        /** @var Sections */
+        $sectionsService = Craft::$app->getSections();
+        $entrySection = $sectionsService->getSectionById($event->sender->sectionId)->handle;
+
+        if (!in_array($entrySection, array_keys($authorOnlySections))) {
+            return true;
+        }
+
+        if ((string) $event->sender->authorId === (string) $user->id) {
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
+        }
+
+        return true;
     }
 
     /**
@@ -218,14 +240,36 @@ class RestrictionService extends Component
      *
      * @param ModelEvent $event
      * @return bool
+     * @throws Error
      */
-    public function ensureAssetMutationAllowed(ModelEvent $event)
+    public function ensureAssetMutationAllowed(ModelEvent $event): bool
     {
         if (!$this->shouldRestrictRequests()) {
-            return;
+            return true;
         }
 
-        $this->_ensureValidAsset($event->sender->id);
+        $user = GraphqlAuthentication::$tokenService->getUserFromToken();
+
+        if ($event->isNew) {
+            $event->sender->uploaderId = $user->id;
+            return true;
+        }
+
+        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
+
+        /** @var Volumes */
+        $volumesService = Craft::$app->getVolumes();
+        $assetVolume = $volumesService->getVolumeById($event->sender->volumeId)->handle;
+
+        if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
+            return true;
+        }
+
+        if ((string) $event->sender->uploaderId !== (string) $user->id) {
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
+        }
+
+        return true;
     }
 
     /**
