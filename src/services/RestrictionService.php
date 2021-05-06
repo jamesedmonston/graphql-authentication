@@ -235,6 +235,10 @@ class RestrictionService extends Component
      */
     public function shouldRestrictRequests(): bool
     {
+        if (Craft::$app->getRequest()->isConsoleRequest) {
+            return false;
+        }
+
         return (bool) GraphqlAuthentication::$tokenService->getHeaderToken();
     }
 
