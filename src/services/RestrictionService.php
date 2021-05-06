@@ -228,7 +228,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        if ((string) $event->sender->authorId === (string) $user->id) {
+        if ((string) $event->sender->authorId !== (string) $user->id) {
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
         }
 
@@ -288,6 +288,50 @@ class RestrictionService extends Component
 
     // Protected Methods
     // =========================================================================
+
+    /**
+     * Gets author-only sections from plugin settings
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function _getAuthorOnlySections($user): array
+    {
+        $settings = GraphqlAuthentication::$settings;
+        $authorOnlySections = $settings->entryMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
+
+        return $authorOnlySections;
+    }
+
+    /**
+     * Gets author-only volumes from plugin settings
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function _getAuthorOnlyVolumes($user): array
+    {
+        $settings = GraphqlAuthentication::$settings;
+        $authorOnlySections = $settings->assetMutations ?? [];
+
+        if ($settings->permissionType === 'multiple') {
+            $userGroup = $user->getGroups()[0] ?? null;
+
+            if ($userGroup) {
+                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+            }
+        }
+
+        return $authorOnlySections;
+    }
 
     /**
      * Ensures entry being accessed isn't private
