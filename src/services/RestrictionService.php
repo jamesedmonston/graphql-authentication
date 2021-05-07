@@ -159,25 +159,34 @@ class RestrictionService extends Component
             return;
         }
 
+        $settings = GraphqlAuthentication::$settings;
+        $fieldRestrictions = $settings->fieldRestrictions ?? [];
+
+        if (!count($fieldRestrictions)) {
+            return;
+        }
+
         $definitions = Parser::parse($event->query)->definitions ?? [];
 
         if (!count($definitions)) {
             return;
         }
 
+        $queries = [];
+        $introspectionQueries = [];
+
         foreach ($definitions as $definition) {
             /** @var FieldNode */
             foreach ($definition->selectionSet->selections as $selectionSet) {
-                if (StringHelper::containsAny($selectionSet->name->value, ['__schema', '__type'])) {
-                    return;
+                $queries[] = $selectionSet;
+
+                if (StringHelper::containsAny($selectionSet->name->value ?? '', ['__schema', '__type'])) {
+                    $introspectionQueries[] = $selectionSet;
                 }
             }
         }
 
-        $settings = GraphqlAuthentication::$settings;
-        $fieldRestrictions = $settings->fieldRestrictions ?? [];
-
-        if (!count($fieldRestrictions)) {
+        if (count($introspectionQueries) === count($queries)) {
             return;
         }
 
@@ -204,6 +213,10 @@ class RestrictionService extends Component
         $queryFields = array_keys(array_filter($fieldPermissions, function ($permission) {
             return $permission === 'query';
         }));
+
+        if (!count($queryFields)) {
+            return;
+        }
 
         /** @var OperationDefinitionNode */
         foreach ($definitions as $definition) {
