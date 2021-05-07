@@ -289,6 +289,11 @@ class TokenService extends Component
 
         $session = Craft::$app->getSession();
 
+        if ($event->result) {
+            $session->remove('activatedSchema');
+            return;
+        }
+
         if ((bool) $session->get('activatedSchema', false)) {
             return;
         }
