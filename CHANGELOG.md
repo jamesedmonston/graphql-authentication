@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.10.0 - Unreleased
+## 1.10.0 - 2021-05-07
 
 ### Added
 
+- Added support for granular (per schema) field permissions – it's now possible to disable fields from being updated via mutations; or being completely private to both mutations _and_ queries. See new `Fields` section in settings
 - Added user avatar support
 
 ## 1.9.1 - 2021-05-06
