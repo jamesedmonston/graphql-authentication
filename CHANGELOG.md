@@ -13,9 +13,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## 1.9.1 - 2021-05-06
 
+> {warning} **BREAKING**: This release migrates `deleteCurrentToken` and `deleteAllTokens` mutations to `deleteRefreshToken` and `deleteRefreshTokens`, respectively
+
 ### Changed
 
 - Further improvements to performance by reducing the number of database calls and loops
+- `deleteCurrentToken` and `deleteAllTokens` mutations have been migrated to `deleteRefreshToken` and `deleteRefreshTokens` – due to no longer storing Craft GraphQL tokens, there's no longer a need for a way of deleting them
 
 ### Fixed
 
