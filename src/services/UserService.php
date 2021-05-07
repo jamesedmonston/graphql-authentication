@@ -450,44 +450,6 @@ class UserService extends Component
                 return $user;
             },
         ];
-
-        $event->mutations['deleteRefreshToken'] = [
-            'description' => 'Deletes authenticated user refresh token. Useful for logging out of current device. Returns boolean.',
-            'type' => Type::nonNull(Type::boolean()),
-            'args' => [
-                'refreshToken' => Type::string(),
-            ],
-            'resolve' => function () use ($settings, $tokenService, $errorService) {
-                if (!$tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->tokenNotFound, 'INVALID');
-                }
-
-                $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
-
-                if (!$refreshToken) {
-                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
-                }
-
-                GraphqlAuthentication::$tokenService->deleteRefreshToken($refreshToken);
-
-                return true;
-            },
-        ];
-
-        $event->mutations['deleteRefreshTokens'] = [
-            'description' => 'Deletes all refresh tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
-            'type' => Type::nonNull(Type::boolean()),
-            'args' => [],
-            'resolve' => function () use ($settings, $tokenService, $errorService) {
-                if (!$user = $tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->tokenNotFound, 'INVALID');
-                }
-
-                GraphqlAuthentication::$tokenService->deleteRefreshTokens($user);
-
-                return true;
-            },
-        ];
     }
 
     /**

@@ -113,16 +113,16 @@ class TokenService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
+
         $event->mutations['refreshToken'] = [
             'description' => "Refreshes a user's JWT. Checks for the occurrence of the `gql_refreshToken` cookie, and falls back to `refreshToken` argument.",
             'type' => Type::nonNull(Auth::getType()),
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) {
-                $settings = GraphqlAuthentication::$settings;
-                $errorService = GraphqlAuthentication::$errorService;
-
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
@@ -130,7 +130,7 @@ class TokenService extends Component
                 }
 
                 $this->_clearExpiredTokens();
-                $refreshTokenElement = RefreshToken::find()->where('[[token]] = ' . $refreshToken)->one();
+                $refreshTokenElement = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
                     $errorService->throw($settings->invalidRefreshToken, 'INVALID');
@@ -156,6 +156,44 @@ class TokenService extends Component
                 $token = $this->create($user, $schemaId);
 
                 return GraphqlAuthentication::$userService->getResponseFields($user, $schemaId, $token);
+            },
+        ];
+
+        $event->mutations['deleteRefreshToken'] = [
+            'description' => 'Deletes authenticated user refresh token. Useful for logging out of current device. Returns boolean.',
+            'type' => Type::nonNull(Type::boolean()),
+            'args' => [
+                'refreshToken' => Type::string(),
+            ],
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+                if (!$this->getUserFromToken()) {
+                    $errorService->throw($settings->tokenNotFound, 'INVALID');
+                }
+
+                $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
+
+                if (!$refreshToken) {
+                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
+                }
+
+                GraphqlAuthentication::$tokenService->deleteRefreshToken($refreshToken);
+
+                return true;
+            },
+        ];
+
+        $event->mutations['deleteRefreshTokens'] = [
+            'description' => 'Deletes all refresh tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
+            'type' => Type::nonNull(Type::boolean()),
+            'args' => [],
+            'resolve' => function () use ($settings, $errorService) {
+                if (!$user = $this->getUserFromToken()) {
+                    $errorService->throw($settings->tokenNotFound, 'INVALID');
+                }
+
+                GraphqlAuthentication::$tokenService->deleteRefreshTokens($user);
+
+                return true;
             },
         ];
     }
@@ -408,7 +446,11 @@ class TokenService extends Component
      */
     public function deleteRefreshToken(string $refreshToken)
     {
-        $refreshToken = RefreshToken::find()->where('[[token]] = ' . $refreshToken)->one();
+        $refreshToken = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
+
+        if (!$refreshToken) {
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidRefreshToken, 'INVALID');
+        }
 
         /** @var Elements */
         $elementsService = Craft::$app->getElements();
@@ -422,7 +464,7 @@ class TokenService extends Component
      */
     public function deleteRefreshTokens(User $user)
     {
-        $refreshTokens = RefreshToken::find()->where('[[userId]] = ' . $user->id)->all();
+        $refreshTokens = RefreshToken::find()->where(['[[userId]]' => $user->id])->all();
 
         /** @var Elements */
         $elementsService = Craft::$app->getElements();
