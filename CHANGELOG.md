@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.1 – 2021-05-07
+
+### Changed
+
+- Improved field restriction logic and fallbacks
+
+### Fixed
+
+- Fixed issue with `refreshToken` mutation throwing an error ([#56](https://github.com/jamesedmonston/graphql-authentication/issues/56) via [@GMConsultant](https://github.com/GMConsultant))
+
 ## 1.10.0 - 2021-05-07
 
 ### Added
