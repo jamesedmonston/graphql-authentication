@@ -192,6 +192,7 @@ class RestrictionService extends Component
 
         $errorService = GraphqlAuthentication::$errorService;
 
+        // To-do: traverse through DocumentNode to find Arguments and Tokens, instead looking at query string
         $privateFields = array_keys(array_filter($fieldPermissions, function ($permission) {
             return $permission === 'private';
         }));
