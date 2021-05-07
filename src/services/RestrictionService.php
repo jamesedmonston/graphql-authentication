@@ -470,7 +470,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        $scope = $tokenService->getSchemaFromToken()->getScope();
+        $scope = $tokenService->getSchemaFromToken()->scope;
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
@@ -520,7 +520,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        $scope = $tokenService->getSchemaFromToken()->getScope();
+        $scope = $tokenService->getSchemaFromToken()->scope;
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
