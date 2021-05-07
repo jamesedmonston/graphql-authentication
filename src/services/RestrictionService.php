@@ -177,7 +177,7 @@ class RestrictionService extends Component
 
         foreach ($definitions as $definition) {
             /** @var FieldNode */
-            foreach ($definition->selectionSet->selections as $selectionSet) {
+            foreach ($definition->selectionSet->selections ?? [] as $selectionSet) {
                 $queries[] = $selectionSet;
 
                 if (StringHelper::containsAny($selectionSet->name->value ?? '', ['__schema', '__type'])) {
@@ -220,14 +220,14 @@ class RestrictionService extends Component
 
         /** @var OperationDefinitionNode */
         foreach ($definitions as $definition) {
-            if ($definition->operation !== 'mutation') {
+            if (isset($definition->operation) && $definition->operation !== 'mutation') {
                 continue;
             }
 
             /** @var FieldNode */
-            foreach ($definition->selectionSet->selections as $selectionSet) {
-                foreach ($selectionSet->arguments as $argument) {
-                    if (in_array($argument->name->value, $queryFields)) {
+            foreach ($definition->selectionSet->selections ?? [] as $selectionSet) {
+                foreach ($selectionSet->arguments ?? [] as $argument) {
+                    if (in_array($argument->name->value ?? '', $queryFields)) {
                         $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
                     }
                 }
