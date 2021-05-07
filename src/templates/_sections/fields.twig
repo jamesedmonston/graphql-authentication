@@ -1,0 +1,59 @@
+{% import '_includes/forms' as forms %}
+
+<h1>Fields</h1>
+
+{{ forms.field({
+  instructions: "Choose which fields are forbidden from being accessed through queries and mutations – per schema. Any attempts to access a restricted field will cause the request to throw.",
+  first: true,
+}, null) }}
+
+<hr style='border-color:transparent' />
+
+<div class="tablepane">
+  <table class='data fullwidth'>
+    <thead>
+      <tr>
+        <th>
+          Field
+        </th>
+
+        {% for schema in schemaOptions %}
+          <th>{{ schema.label == '-' ? 'Public' : schema.label }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for field in fields %}
+        {% set first = loop.first %}
+
+        <tr>
+          <td style='vertical-align:top;padding-top:20px'>
+            {{ forms.field({
+              label: field.name,
+              instructions: "(" ~ field.handle ~ ")",
+              name: '',
+            }) }}
+          </td>
+
+          {% for schema in schemaOptions %}
+            {% set schemaKey = 'schema-' ~ (schema.value != '' ? schema.value : '1') %}
+
+            <td style='vertical-align:top;padding-top:20px'>
+              {{ forms.selectField({
+                name: 'fieldRestrictions[' ~ schemaKey ~ '][' ~ field.handle ~ ']',
+                value: settings.fieldRestrictions[schemaKey][field.handle] ?? 'queryMutate',
+                options: [
+                  { value: 'queryMutate', label: 'Query & Mutate' },
+                  { value: 'query', label: 'Query' },
+                  { value: 'private', label: 'Private' },
+                ],
+              }) }}
+              </div>
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

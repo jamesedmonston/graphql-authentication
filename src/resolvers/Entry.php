@@ -40,35 +40,18 @@ class Entry extends ElementResolver
             return $query;
         }
 
-        if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
+        $restrictionService = GraphqlAuthentication::$restrictionService;
+
+        if ($restrictionService->shouldRestrictRequests()) {
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                $settings = GraphqlAuthentication::$settings;
-                $authorOnlySections = $settings->entryQueries ?? [];
-                $siteId = $settings->siteId ?? null;
-
-                if ($settings->permissionType === 'multiple') {
-                    $userGroup = $user->getGroups()[0] ?? null;
-
-                    if ($userGroup) {
-                        $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryQueries'] ?? [];
-                        $siteId = $settings->granularSchemas["group-{$userGroup->id}"]['siteId'] ?? null;
-                    }
-                }
-
-                if ($siteId) {
-                    $arguments['siteId'] = $siteId;
-                }
+                $authorOnlySections = $restrictionService->getAuthorOnlySections($user);
 
                 /** @var Sections */
                 $sectionsService = Craft::$app->getSections();
 
-                foreach ($authorOnlySections as $section => $value) {
-                    if (!(bool) $value) {
-                        continue;
-                    }
-
+                foreach ($authorOnlySections as $section) {
                     if (isset($arguments['section']) && trim($arguments['section'][0]) !== $section) {
                         continue;
                     }
@@ -78,6 +61,13 @@ class Entry extends ElementResolver
                     }
 
                     $arguments['authorId'] = $user->id;
+                }
+
+                $settings = GraphqlAuthentication::$settings;
+                $siteId = $settings->siteId ?? null;
+
+                if ($siteId) {
+                    $arguments['siteId'] = $siteId;
                 }
             } else {
                 $arguments['authorId'] = $user->id;

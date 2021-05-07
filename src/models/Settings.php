@@ -28,6 +28,9 @@ class Settings extends Model
     public $jwtSecretKey = null;
     public $sameSitePolicy = 'strict';
 
+    // Field Restrictions
+    public $fieldRestrictions = [];
+
     // Social
     public $googleClientId = null;
     public $allowedGoogleDomains = null;
@@ -76,6 +79,7 @@ class Settings extends Model
     public $emailNotInScope = 'No email in scope';
 
     public $forbiddenMutation = "User doesn't have permission to perform this mutation";
+    public $forbiddenField = "User doesn't have permission to access requested field(s)";
 
     public $googleTokenIdInvalid = 'Invalid Google Token ID';
     public $googleEmailMismatch = "Email address doesn't match allowed Google domains";
@@ -103,6 +107,7 @@ class Settings extends Model
                     'volumeNotFound',
                     'emailNotInScope',
                     'forbiddenMutation',
+                    'forbiddenField',
                     'googleTokenIdInvalid',
                     'googleEmailMismatch',
                     'facebookEmailMismatch',
@@ -123,6 +128,7 @@ class Settings extends Model
                     'jwtExpiration',
                     'jwtRefreshExpiration',
                     'jwtSecretKey',
+                    'fieldRestrictions',
                     'sameSitePolicy',
                     'googleClientId',
                     'allowedGoogleDomains',

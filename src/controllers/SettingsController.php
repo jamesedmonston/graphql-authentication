@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\controllers;
 use Craft;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
+use craft\services\Fields;
 use craft\services\Gql;
 use craft\services\Sections;
 use craft\services\Sites;
@@ -45,6 +46,11 @@ class SettingsController extends Controller
             [
                 'label' => 'Tokens',
                 'url' => "#settings-tokens",
+                'class' => null,
+            ],
+            [
+                'label' => 'Fields',
+                'url' => "#settings-fields",
                 'class' => null,
             ],
             [
@@ -157,6 +163,10 @@ class SettingsController extends Controller
             $settings->jwtSecretKey = Craft::$app->getSecurity()->generateRandomString(32);
         }
 
+        /** @var Fields */
+        $fieldsServices = Craft::$app->getFields();
+        $fields = $fieldsServices->getAllFields();
+
         $this->renderTemplate('graphql-authentication/settings', compact(
             'settings',
             'namespace',
@@ -170,7 +180,8 @@ class SettingsController extends Controller
             'entryQueries',
             'entryMutations',
             'assetQueries',
-            'assetMutations'
+            'assetMutations',
+            'fields'
         ));
     }
 

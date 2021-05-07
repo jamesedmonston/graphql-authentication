@@ -40,29 +40,18 @@ class Asset extends ElementResolver
             return $query;
         }
 
-        if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
+        $restrictionService = GraphqlAuthentication::$restrictionService;
+
+        if ($restrictionService->shouldRestrictRequests()) {
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                $settings = GraphqlAuthentication::$settings;
-                $authorOnlyVolumes = $settings->assetQueries ?? [];
-
-                if ($settings->permissionType === 'multiple') {
-                    $userGroup = $user->getGroups()[0] ?? null;
-
-                    if ($userGroup) {
-                        $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetQueries'] ?? [];
-                    }
-                }
+                $authorOnlyVolumes = $restrictionService->getAuthorOnlyVolumes($user);
 
                 /** @var Volumes */
                 $volumesService = Craft::$app->getVolumes();
 
-                foreach ($authorOnlyVolumes as $volume => $value) {
-                    if (!(bool) $value) {
-                        continue;
-                    }
-
+                foreach ($authorOnlyVolumes as $volume) {
                     if (isset($arguments['volume']) && trim($arguments['volume'][0]) !== $volume) {
                         continue;
                     }

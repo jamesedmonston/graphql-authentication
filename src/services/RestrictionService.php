@@ -6,18 +6,23 @@ use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
 use craft\elements\Entry;
+use craft\events\ExecuteGqlQueryEvent;
 use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
+use craft\helpers\StringHelper;
 use craft\services\Assets;
 use craft\services\Elements;
 use craft\services\Gql;
 use craft\services\Sections;
 use craft\services\Volumes;
 use GraphQL\Error\Error;
+use GraphQL\Language\AST\FieldNode;
+use GraphQL\Language\AST\OperationDefinitionNode;
+use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
@@ -40,6 +45,12 @@ class RestrictionService extends Component
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
             [$this, 'registerGqlQueries']
+        );
+
+        Event::on(
+            Gql::class,
+            Gql::EVENT_BEFORE_EXECUTE_GQL_QUERY,
+            [$this, 'restrictForbiddenFields']
         );
 
         Event::on(
@@ -121,6 +132,93 @@ class RestrictionService extends Component
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolveCount',
         ];
+    }
+
+    /**
+     * Ensures plugin should be adding user/schema restrictions
+     *
+     * @return bool
+     */
+    public function shouldRestrictRequests(): bool
+    {
+        if (Craft::$app->getRequest()->isConsoleRequest) {
+            return false;
+        }
+
+        return (bool) GraphqlAuthentication::$tokenService->getHeaderToken();
+    }
+
+    /**
+     * Restricts private fields from being accessed, based on the schema grabbed from the auth token
+     *
+     * @param ExecuteGqlQueryEvent $event
+     */
+    public function restrictForbiddenFields(ExecuteGqlQueryEvent $event)
+    {
+        if (!$this->shouldRestrictRequests()) {
+            return;
+        }
+
+        $definitions = Parser::parse($event->query)->definitions ?? [];
+
+        if (!count($definitions)) {
+            return;
+        }
+
+        foreach ($definitions as $definition) {
+            /** @var FieldNode */
+            foreach ($definition->selectionSet->selections as $selectionSet) {
+                if (StringHelper::containsAny($selectionSet->name->value, ['__schema', '__type'])) {
+                    return;
+                }
+            }
+        }
+
+        $settings = GraphqlAuthentication::$settings;
+        $fieldRestrictions = $settings->fieldRestrictions ?? [];
+
+        if (!count($fieldRestrictions)) {
+            return;
+        }
+
+        $tokenService = GraphqlAuthentication::$tokenService;
+        $schema = $tokenService->getSchemaFromToken();
+
+        $fieldPermissions = $fieldRestrictions['schema-' . $schema->id] ?? [];
+
+        if (!count($fieldPermissions)) {
+            return;
+        }
+
+        $errorService = GraphqlAuthentication::$errorService;
+
+        $privateFields = array_keys(array_filter($fieldPermissions, function ($permission) {
+            return $permission === 'private';
+        }));
+
+        if (StringHelper::containsAny($event->query, $privateFields)) {
+            $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
+        }
+
+        $queryFields = array_keys(array_filter($fieldPermissions, function ($permission) {
+            return $permission === 'query';
+        }));
+
+        /** @var OperationDefinitionNode */
+        foreach ($definitions as $definition) {
+            if ($definition->operation !== 'mutation') {
+                continue;
+            }
+
+            /** @var FieldNode */
+            foreach ($definition->selectionSet->selections as $selectionSet) {
+                foreach ($selectionSet->arguments as $argument) {
+                    if (in_array($argument->name->value, $queryFields)) {
+                        $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -218,13 +316,13 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlySections = $this->_getAuthorOnlySections($user);
+        $authorOnlySections = $this->getAuthorOnlySections($user);
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($event->sender->sectionId)->handle;
 
-        if (!in_array($entrySection, array_keys($authorOnlySections))) {
+        if (!in_array($entrySection, $authorOnlySections)) {
             return true;
         }
 
@@ -255,13 +353,13 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlyVolumes = $this->_getAuthorOnlyVolumes($user);
+        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user);
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $assetVolume = $volumesService->getVolumeById($event->sender->volumeId)->handle;
 
-        if (!in_array($assetVolume, array_keys($authorOnlyVolumes))) {
+        if (!in_array($assetVolume, $authorOnlyVolumes)) {
             return true;
         }
 
@@ -273,29 +371,12 @@ class RestrictionService extends Component
     }
 
     /**
-     * Ensures plugin should be adding user/schema restrictions
-     *
-     * @return bool
-     */
-    public function shouldRestrictRequests(): bool
-    {
-        if (Craft::$app->getRequest()->isConsoleRequest) {
-            return false;
-        }
-
-        return (bool) GraphqlAuthentication::$tokenService->getHeaderToken();
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    /**
      * Gets author-only sections from plugin settings
      *
      * @param User $user
      * @return array
      */
-    protected function _getAuthorOnlySections($user): array
+    public function getAuthorOnlySections($user): array
     {
         $settings = GraphqlAuthentication::$settings;
         $authorOnlySections = $settings->entryMutations ?? [];
@@ -308,6 +389,10 @@ class RestrictionService extends Component
             }
         }
 
+        $authorOnlySections = array_keys(array_filter($authorOnlySections, function ($section) {
+            return (bool) $section;
+        }));
+
         return $authorOnlySections;
     }
 
@@ -317,21 +402,28 @@ class RestrictionService extends Component
      * @param User $user
      * @return array
      */
-    protected function _getAuthorOnlyVolumes($user): array
+    public function getAuthorOnlyVolumes($user): array
     {
         $settings = GraphqlAuthentication::$settings;
-        $authorOnlySections = $settings->assetMutations ?? [];
+        $authorOnlyVolumes = $settings->assetMutations ?? [];
 
         if ($settings->permissionType === 'multiple') {
             $userGroup = $user->getGroups()[0] ?? null;
 
             if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
             }
         }
 
-        return $authorOnlySections;
+        $authorOnlyVolumes = array_keys(array_filter($authorOnlyVolumes, function ($section) {
+            return (bool) $section;
+        }));
+
+        return $authorOnlyVolumes;
     }
+
+    // Protected Methods
+    // =========================================================================
 
     /**
      * Ensures entry being accessed isn't private
@@ -370,21 +462,13 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlySections = $settings->entryMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
-            }
-        }
+        $authorOnlySections = $this->getAuthorOnlySections($user);
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
-        if (in_array($entrySection, array_keys($authorOnlySections))) {
+        if (in_array($entrySection, $authorOnlySections)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
@@ -428,21 +512,13 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlyVolumes = $settings->assetMutations ?? [];
-
-        if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
-
-            if ($userGroup) {
-                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
-            }
-        }
+        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user);
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $assetVolume = $volumesService->getVolumeById($asset->volumeId)->handle;
 
-        if (in_array($assetVolume, array_keys($authorOnlyVolumes))) {
+        if (in_array($assetVolume, $authorOnlyVolumes)) {
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
