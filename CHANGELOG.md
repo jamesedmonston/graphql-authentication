@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Added
 
 - Added support for granular (per schema) field permissions – it's now possible to disable fields from being updated via mutations; or being completely private to both mutations _and_ queries. See new `Fields` section in settings
-- Added user avatar support
+- Added user avatar support – see new `photo` field on `updateViewer`, sending this argument as `null` will remove the avatar
 
 ## 1.9.1 - 2021-05-06
 
