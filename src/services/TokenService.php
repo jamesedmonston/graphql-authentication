@@ -260,7 +260,7 @@ class TokenService extends Component
                 try {
                     $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
                 } catch (RequiredConstraintsViolated $e) {
-                    $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    $errorService->throw($settings->invalidHeader, 'INVALID');
                 }
 
                 $token = $jwt;
@@ -327,7 +327,7 @@ class TokenService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         if (!$token = $this->getHeaderToken()) {
-            $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+            $errorService->throw($settings->invalidHeader, 'INVALID');
         }
 
         /** @var Gql */
@@ -360,7 +360,7 @@ class TokenService extends Component
     public function getUserFromToken(): User
     {
         if (!$token = $this->getHeaderToken()) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'FORBIDDEN');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'INVALID');
         }
 
         $id = $token->claims()->get('sub');
@@ -528,7 +528,7 @@ class TokenService extends Component
             return;
         }
 
-        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'FORBIDDEN');
+        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'INVALID');
     }
 
     /**

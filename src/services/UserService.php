@@ -117,7 +117,7 @@ class UserService extends Component
                 }
 
                 if ($user->status !== 'active') {
-                    $errorService->throw($settings->userNotActivated, 'INVALID');
+                    $errorService->throw($settings->userNotActivated, 'FORBIDDEN');
                 }
 
                 $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
