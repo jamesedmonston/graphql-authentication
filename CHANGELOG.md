@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - Expired refresh tokens are now hard deleted
 
-### Fixed
+### Fixed
 
 - Fixed issue with schema scope not being retrieved from JWT correctly when restricting mutation arguments
 - Ensured error codes are consistent when throwing invalid auth header errors
