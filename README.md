@@ -10,6 +10,7 @@ GraphQL Authentication adds a JWT authentication layer to your Craft CMS GraphQL
 - Checks mutation fields against schema permissions, and prevents fields being saved if user is trying to access private entries/assets
 - Adds ability to assign unique schemas for each user group
 - Adds ability to restrict user queries and mutations to Craft multi-site sites
+- Adds ability to mark fields as private – stopping users from querying/mutating fields on entries
 - Adds a unique, per-user query cache
 
 ## Documentation
