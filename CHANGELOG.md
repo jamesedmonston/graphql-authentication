@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.3 - 2021-05-08
+
+### Fixed
+
+- Fixed issue with schema scope not being retrieved from JWT correctly when restricting mutation arguments
+- Ensured error codes are consistent when throwing invalid auth header errors
+
 ## 1.10.2 - 2021-05-07
 
 ### Fixed
