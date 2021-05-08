@@ -536,6 +536,7 @@ class TokenService extends Component
      */
     protected function _clearExpiredTokens()
     {
+        // Temporary – remove this once users have had chance to update
         $gqlTokens = RecordsGqlToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->andWhere("name LIKE '%user-%'")->all();
 
         /** @var Gql */
@@ -551,7 +552,7 @@ class TokenService extends Component
         $elementsService = Craft::$app->getElements();
 
         foreach ($refreshTokens as $refreshToken) {
-            $elementsService->deleteElementById($refreshToken->id);
+            $elementsService->deleteElementById($refreshToken->id, null, null, true);
         }
     }
 }
