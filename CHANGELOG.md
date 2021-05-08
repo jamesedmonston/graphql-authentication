@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## 1.10.3 - 2021-05-08
 
+### Changed
+
+- Expired refresh tokens are now hard deleted
+
 ### Fixed
 
 - Fixed issue with schema scope not being retrieved from JWT correctly when restricting mutation arguments
