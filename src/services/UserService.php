@@ -4,6 +4,7 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\Field;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
@@ -101,6 +102,17 @@ class UserService extends Component
         /** @var ProjectConfig */
         $projectConfigService = Craft::$app->getProjectConfig();
 
+        /** @var Fields */
+        $fieldsService = Craft::$app->getFields();
+
+        $userFields = $fieldsService->getLayoutByType(User::class)->getFields();
+        $userArguments = [];
+
+        foreach ($userFields as $userField) {
+            $type = $userField->getContentGqlMutationArgumentType();
+            $userArguments[$userField->handle] = is_array($type) ? $type : Type::listOf($type);
+        }
+
         $event->mutations['authenticate'] = [
             'description' => 'Logs a user in. Returns user and token.',
             'type' => Type::nonNull(Auth::getType()),
@@ -167,7 +179,7 @@ class UserService extends Component
                         'lastName' => Type::string(),
                         'preferredLanguage' => Type::string(),
                     ],
-                    UserArguments::getContentArguments()
+                    $userArguments
                 ),
                 'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     if (!$schemaId = $settings->schemaId ?? null) {
@@ -205,7 +217,7 @@ class UserService extends Component
                             'lastName' => Type::string(),
                             'preferredLanguage' => Type::string(),
                         ],
-                        UserArguments::getContentArguments()
+                        $userArguments
                     ),
                     'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         if (!$schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null) {
@@ -375,7 +387,7 @@ class UserService extends Component
                     'preferredLanguage' => Type::string(),
                     'photo' => File::getType(),
                 ],
-                UserArguments::getContentArguments()
+                $userArguments
             ),
             'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
                 if (!$user = $tokenService->getUserFromToken()) {
@@ -441,8 +453,7 @@ class UserService extends Component
                     }
                 }
 
-                $customFields = UserArguments::getContentArguments();
-                $this->_saveCustomFields($arguments, $customFields, $user);
+                $this->_saveCustomFields($arguments, $user);
 
                 if (!$elementsService->saveElement($user)) {
                     $errorService->throw(json_encode($user->getErrors()), 'INVALID');
@@ -489,8 +500,7 @@ class UserService extends Component
             $user->newPassword = $password;
         }
 
-        $customFields = UserArguments::getContentArguments();
-        $this->_saveCustomFields($arguments, $customFields, $user);
+        $this->_saveCustomFields($arguments, $user);
 
         /** @var ProjectConfig */
         $projectConfigService = Craft::$app->getProjectConfig();
@@ -558,11 +568,12 @@ class UserService extends Component
      * Saves mutation custom fields to user
      *
      * @param array $arguments
-     * @param array $customFields
-     * @param user $user
+     * @param User $user
      */
-    protected function _saveCustomFields(array $arguments, array $customFields, User $user)
+    protected function _saveCustomFields(array $arguments, User $user)
     {
+        $customFields = UserArguments::getContentArguments();
+
         /** @var Fields */
         $fieldsService = Craft::$app->getFields();
 
@@ -579,7 +590,7 @@ class UserService extends Component
             $type = get_class($field);
             $value = $arguments[$key];
 
-            if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets'])) {
+            if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets', 'Table'])) {
                 $value = $value[0];
             }
 
