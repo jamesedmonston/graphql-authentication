@@ -4,10 +4,10 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
-use craft\base\Field;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
+use craft\fields\Table;
 use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
@@ -109,7 +109,13 @@ class UserService extends Component
 
         foreach ($userFields as $userField) {
             $type = $userField->getContentGqlMutationArgumentType();
-            $userArguments[$userField->handle] = is_array($type) ? $type : Type::listOf($type);
+            $fieldType = $type;
+
+            if ($userField instanceof Table) {
+                $fieldType = Type::listOf($type);
+            }
+
+            $userArguments[$userField->handle] = $fieldType;
         }
 
         $event->mutations['authenticate'] = [
