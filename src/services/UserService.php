@@ -13,7 +13,6 @@ use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
 use craft\helpers\DateTimeHelper;
-use craft\helpers\StringHelper;
 use craft\records\User as UserRecord;
 use craft\services\Elements;
 use craft\services\Fields;
@@ -574,24 +573,19 @@ class UserService extends Component
     {
         $customFields = UserArguments::getContentArguments();
 
-        /** @var Fields */
-        $fieldsService = Craft::$app->getFields();
-
         foreach ($customFields as &$key) {
             if (is_array($key) && isset($key['name'])) {
                 $key = $key['name'];
             }
 
-            if (!isset($arguments[$key]) || !count($arguments[$key])) {
+            $value = $arguments[$key] ?? null;
+
+            if (!isset($value) || !$value) {
                 continue;
             }
 
-            $field = $fieldsService->getFieldByHandle($key);
-            $type = get_class($field);
-            $value = $arguments[$key];
-
-            if (!StringHelper::containsAny($type, ['Entries', 'Categories', 'Assets', 'Table'])) {
-                $value = $value[0];
+            if (is_array($value) && !count($value)) {
+                continue;
             }
 
             $user->setFieldValue($key, $value);
