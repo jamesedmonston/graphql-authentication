@@ -326,7 +326,9 @@ class RestrictionService extends Component
         $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
         if ($event->isNew) {
-            $event->sender->authorId = $user->id;
+            if (!isset($event->sender->authorId)) {
+              $event->sender->authorId = $user->id;
+            }
             return true;
         }
 
