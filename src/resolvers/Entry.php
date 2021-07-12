@@ -64,7 +64,17 @@ class Entry extends ElementResolver
                 }
 
                 $settings = GraphqlAuthentication::$settings;
-                $siteId = $settings->siteId ?? null;
+                $siteId = null;
+
+                if ($settings->permissionType === 'single') {
+                    $siteId = $settings->siteId ?? null;
+                } else {
+                    $userGroup = $user->getGroups()[0]->id ?? null;
+
+                    if ($userGroup) {
+                        $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'];
+                    }
+                }
 
                 if ($siteId) {
                     $arguments['siteId'] = $siteId;
