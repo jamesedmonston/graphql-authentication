@@ -11,8 +11,10 @@ use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\gql\arguments\elements\Asset as AssetArguments;
 use craft\gql\arguments\elements\Entry as EntryArguments;
+use craft\gql\arguments\elements\GlobalSet as GlobalSetArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
+use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
 use craft\helpers\StringHelper;
 use craft\services\Assets;
 use craft\services\Elements;
@@ -27,6 +29,7 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
 use jamesedmonston\graphqlauthentication\resolvers\Entry as EntryResolver;
+use jamesedmonston\graphqlauthentication\resolvers\GlobalSet as GlobalSetResolver;
 use yii\base\Event;
 
 class RestrictionService extends Component
@@ -131,6 +134,20 @@ class RestrictionService extends Component
             'type' => Type::nonNull(Type::int()),
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolveCount',
+        ];
+
+        $event->queries['globalSets'] = [
+            'description' => 'This query is used to query for global sets.',
+            'type' => Type::listOf(GlobalSetInterface::getType()),
+            'args' => GlobalSetArguments::getArguments(),
+            'resolve' => GlobalSetResolver::class . '::resolve',
+        ];
+
+        $event->queries['globalSet'] = [
+            'description' => 'This query is used to query for a single global set.',
+            'type' => GlobalSetInterface::getType(),
+            'args' => GlobalSetArguments::getArguments(),
+            'resolve' => GlobalSetResolver::class . '::resolveOne',
         ];
     }
 
