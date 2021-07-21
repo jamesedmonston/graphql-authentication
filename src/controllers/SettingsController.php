@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\controllers;
 use Craft;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
+use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Fields;
 use craft\services\Gql;
 use craft\services\Sections;
@@ -120,7 +121,7 @@ class SettingsController extends Controller
 
             $schemaOptions[] = [
                 'label' => $schema->name,
-                'value' => $schema->id,
+                'value' => $schema->name,
             ];
         }
 
@@ -131,8 +132,9 @@ class SettingsController extends Controller
         $assetQueries = null;
         $assetMutations = null;
 
-        if ($settings->permissionType === 'single' && $settings->schemaId) {
-            $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($settings->schemaId));
+        if ($settings->permissionType === 'single' && $settings->schemaName) {
+            $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
+            $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($schemaId));
             $entryQueries = $schemaPermissions['entryQueries'];
             $entryMutations = $schemaPermissions['entryMutations'];
             $assetQueries = $schemaPermissions['assetQueries'];
@@ -141,7 +143,8 @@ class SettingsController extends Controller
 
         if ($settings->permissionType === 'multiple') {
             foreach ($userGroups as $userGroup) {
-                $schemaId = $settings->granularSchemas['group-' . $userGroup->id]['schemaId'] ?? null;
+                $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
+                $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
 
                 if (!$schemaId) {
                     continue;

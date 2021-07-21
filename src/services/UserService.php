@@ -13,6 +13,7 @@ use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
 use craft\helpers\DateTimeHelper;
+use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\records\User as UserRecord;
 use craft\services\Elements;
 use craft\services\Fields;
@@ -150,13 +151,14 @@ class UserService extends Component
 
                 $permissionsService->saveUserPermissions($user->id, $userPermissions);
 
-                $schemaId = $settings->schemaId ?? null;
+                $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                 if ($settings->permissionType === 'multiple') {
                     $userGroup = $user->getGroups()[0] ?? null;
 
                     if ($userGroup) {
-                        $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
+                        $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
+                        $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
                     }
                 }
 
@@ -187,7 +189,9 @@ class UserService extends Component
                     $userArguments
                 ),
                 'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
-                    if (!$schemaId = $settings->schemaId ?? null) {
+                    $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
+
+                    if (!$schemaId) {
                         $errorService->throw($settings->invalidSchema);
                     }
 
@@ -226,7 +230,10 @@ class UserService extends Component
                         $userArguments
                     ),
                     'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
-                        if (!$schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null) {
+                        $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
+                        $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
+
+                        if (!$schemaId) {
                             $errorService->throw($settings->invalidSchema);
                         }
 
@@ -550,7 +557,7 @@ class UserService extends Component
      *
      * @param User $user
      * @param int $schemaId
-     * @param array $schemaId
+     * @param array $token
      * @return array
      */
     public function getResponseFields(User $user, int $schemaId, array $token): array

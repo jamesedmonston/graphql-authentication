@@ -19,8 +19,8 @@
   <hr/>
 
   {% set schemaInput = schemaOptions ? forms.selectField({
-      name: 'schemaId',
-      value: settings.schemaId,
+      name: 'schemaName',
+      value: settings.schemaName,
       options: schemaOptions,
     }) : tag('p', {
       class: ['warning', 'with-icon'],
@@ -31,7 +31,7 @@
   {{ forms.field({
     label: 'GraphQL Schema',
     instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
-    name: 'schemaId',
+    name: 'schemaName',
     required: true,
   }, schemaInput) }}
 
@@ -63,7 +63,7 @@
     }) }}
   {% endif %}
 
-  {% if not settings.schemaId %}
+  {% if not settings.schemaName %}
     {{ forms.field({
       label: 'User Permissions',
       instructions: 'Select your desired schema and save to modify user permissions.',
@@ -178,8 +178,8 @@
       {% set groupKey = 'group-' ~ userGroup.value %}
 
       {% set schemaInput = schemaOptions ? forms.selectField({
-          name: 'granularSchemas[' ~ groupKey ~ '][schemaId]',
-          value: settings.granularSchemas[groupKey].schemaId ?? null,
+          name: 'granularSchemas[' ~ groupKey ~ '][schemaName]',
+          value: settings.granularSchemas[groupKey].schemaName ?? null,
           options: schemaOptions,
         }) : tag('p', {
           class: ['warning', 'with-icon'],
@@ -190,7 +190,7 @@
       {{ forms.field({
         label: 'GraphQL Schema',
         instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
-        name: 'schemaId',
+        name: 'schemaName',
       }, schemaInput) }}
 
       {{ forms.field({
@@ -212,7 +212,7 @@
         }) }}
       {% endif %}
 
-      {% if not settings.granularSchemas[groupKey].schemaId ?? null %}
+      {% if not settings.granularSchemas[groupKey].schemaName ?? null %}
         {{ forms.field({
           label: 'User Permissions',
           instructions: 'Select your desired schema and save to modify user permissions.',
