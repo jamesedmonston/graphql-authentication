@@ -10,7 +10,7 @@ class Settings extends Model
     public $permissionType = 'single';
 
     // Singular Schema
-    public $schemaId = null;
+    public $schemaName = null;
     public $allowRegistration = true;
     public $userGroup = null;
     public $siteId = null;
@@ -117,7 +117,7 @@ class Settings extends Model
             ],
             [
                 [
-                    'schemaId',
+                    'schemaName',
                     'allowRegistration',
                     'userGroup',
                     'entryQueries',
