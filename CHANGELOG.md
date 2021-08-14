@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - `preferredLanguage` field wasn't available on per user group `register` mutations
-- `username` field wasn't available on per-user group `register` mutations
+- `username` field wasn't available on per user group `register` mutations
 - Fixed error when trying to save a `table` field on user mutations
 - Fixed issue with site permissions not being enforced correctly per user group
 
