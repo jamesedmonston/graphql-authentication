@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.11.0 - 2021-08-14
+
+### Added
+
+- Added PHP 8 support (the required minimum PHP version is now 7.4)
+
+### Changed
+
+- User mutation fields are now typed correctly, allowing improved TypeScript codegen
+
+### Fixed
+
+- `preferredLanguage` field wasn't available on per user group `register` mutations
+- `username` field wasn't available on per-user group `register` mutations
+- Fixed error when trying to save a `table` field on user mutations
+- Fixed issue with site permissions not being enforced correctly per user group
+
 ## 1.10.3 - 2021-05-08
 
 ### Changed
