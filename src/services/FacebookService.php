@@ -8,11 +8,11 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\services\Gql;
 use craft\services\UserGroups;
-use Facebook\Facebook;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
+use League\OAuth2\Client\Provider\Facebook;
 use yii\base\Event;
 
 class FacebookService extends Component
@@ -59,14 +59,15 @@ class FacebookService extends Component
                 $settings = GraphqlAuthentication::$settings;
 
                 $client = new Facebook([
-                    'app_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
-                    'app_secret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
+                    'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
+                    'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
+                    'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
+                    'graphApiVersion' => 'v2.10',
                 ]);
 
-                $url = $client->getRedirectLoginHelper()->getLoginUrl(
-                    GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
-                    ['email']
-                );
+                $url = $client->getAuthorizationUrl([
+                    'scope' => ['email'],
+                ]);
 
                 return $url;
             },
@@ -170,19 +171,22 @@ class FacebookService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         $client = new Facebook([
-            'app_id' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
-            'app_secret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
+            'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
+            'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
+            'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
+            'graphApiVersion' => 'v2.10',
         ]);
 
-        $redirectUrl = GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl);
-        $accessToken = $client->getOAuth2Client()->getAccessTokenFromCode($code, $redirectUrl);
+        $accessToken = $client->getAccessToken('authorization_code', [
+            'code' => $code,
+        ]);
 
         if (!$accessToken) {
             $errorService->throw($settings->invalidOauthToken, 'INVALID');
         }
 
-        $user = $client->get('/me?fields=id,name,email', $accessToken->getValue())->getGraphUser();
-        $email = $user['email'];
+        $user = $client->getResourceOwner($accessToken);
+        $email = $user->getEmail();
 
         if (!$email || !isset($email)) {
             $errorService->throw($settings->emailNotInScope, 'INVALID');
@@ -196,7 +200,7 @@ class FacebookService extends Component
             );
         }
 
-        $name = explode(' ', $user['name'] ?? '', 1);
+        $name = explode(' ', $user->getName() ?? '', 1);
         $firstName = $name[0] ?? '';
         $lastName = $name[1] ?? '';
 

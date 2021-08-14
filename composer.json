@@ -24,11 +24,11 @@
     }
   ],
   "require": {
-    "abraham/twitteroauth": "^1.0",
+    "abraham/twitteroauth": "^3.1",
     "craftcms/cms": "^3.5.0",
-    "facebook/graph-sdk": "^5.7",
-    "google/apiclient": "^2.8",
-    "lcobucci/jwt": "^3.4"
+    "google/apiclient": "^2.10",
+    "lcobucci/jwt": "^4.1",
+    "league/oauth2-facebook": "^2.0"
   },
   "autoload": {
     "psr-4": {
