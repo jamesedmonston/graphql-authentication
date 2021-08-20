@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.11.1 - 2021-08-20
+
+### Fixed
+
+- Fixed issue with author-only restrictions sometimes not applying correctly
+
 ## 1.11.0 - 2021-08-14
 
 ### Added
