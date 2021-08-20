@@ -287,18 +287,9 @@ class TokenService extends Component
             return;
         }
 
-        $session = Craft::$app->getSession();
-
-        if ($event->result) {
-            $session->remove('activatedSchema');
+        if (isset($event->variables['gql_cacheKey'])) {
             return;
         }
-
-        if ((bool) $session->get('activatedSchema', false)) {
-            return;
-        }
-
-        $session->set('activatedSchema', true);
 
         /** @var Gql */
         $gqlService = Craft::$app->getGql();
