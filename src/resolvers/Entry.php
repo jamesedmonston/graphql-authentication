@@ -46,7 +46,7 @@ class Entry extends ElementResolver
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                $authorOnlySections = $restrictionService->getAuthorOnlySections($user);
+                $authorOnlySections = $restrictionService->getAuthorOnlySections($user, 'query');
 
                 /** @var Sections */
                 $sectionsService = Craft::$app->getSections();

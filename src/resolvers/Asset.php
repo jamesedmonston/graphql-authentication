@@ -46,7 +46,7 @@ class Asset extends ElementResolver
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
-                $authorOnlyVolumes = $restrictionService->getAuthorOnlyVolumes($user);
+                $authorOnlyVolumes = $restrictionService->getAuthorOnlyVolumes($user, 'query');
 
                 /** @var Volumes */
                 $volumesService = Craft::$app->getVolumes();

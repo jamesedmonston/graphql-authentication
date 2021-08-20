@@ -347,7 +347,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlySections = $this->getAuthorOnlySections($user);
+        $authorOnlySections = $this->getAuthorOnlySections($user, 'mutation');
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
@@ -384,7 +384,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user);
+        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
@@ -405,18 +405,31 @@ class RestrictionService extends Component
      * Gets author-only sections from plugin settings
      *
      * @param User $user
+     * @param string $type
      * @return array
      */
-    public function getAuthorOnlySections($user): array
+    public function getAuthorOnlySections($user, $type): array
     {
         $settings = GraphqlAuthentication::$settings;
-        $authorOnlySections = $settings->entryMutations ?? [];
+        $authorOnlySections = [];
+
+        if ($type === 'query') {
+            $authorOnlySections = $settings->entryQueries ?? [];
+        } else {
+            $authorOnlySections = $settings->entryMutations ?? [];
+        }
 
         if ($settings->permissionType === 'multiple') {
             $userGroup = $user->getGroups()[0] ?? null;
 
             if ($userGroup) {
-                $authorOnlySections = $settings->granularSchemas["group-{$userGroup->id}"]['entryMutations'] ?? [];
+                $permissions = $settings->granularSchemas["group-{$userGroup->id}"];
+
+                if ($type === 'query') {
+                    $authorOnlySections = $permissions['entryQueries'] ?? [];
+                } else {
+                    $authorOnlySections = $permissions['entryMutations'] ?? [];
+                }
             }
         }
 
@@ -431,18 +444,31 @@ class RestrictionService extends Component
      * Gets author-only volumes from plugin settings
      *
      * @param User $user
+     * @param string $type
      * @return array
      */
-    public function getAuthorOnlyVolumes($user): array
+    public function getAuthorOnlyVolumes($user, $type): array
     {
         $settings = GraphqlAuthentication::$settings;
-        $authorOnlyVolumes = $settings->assetMutations ?? [];
+        $authorOnlyVolumes = [];
+
+        if ($type === 'query') {
+            $authorOnlyVolumes = $settings->assetQueries ?? [];
+        } else {
+            $authorOnlyVolumes = $settings->assetMutations ?? [];
+        }
 
         if ($settings->permissionType === 'multiple') {
             $userGroup = $user->getGroups()[0] ?? null;
 
             if ($userGroup) {
-                $authorOnlyVolumes = $settings->granularSchemas["group-{$userGroup->id}"]['assetMutations'] ?? [];
+                $permissions = $settings->granularSchemas["group-{$userGroup->id}"];
+
+                if ($type === 'query') {
+                    $authorOnlyVolumes = $permissions['assetQueries'] ?? [];
+                } else {
+                    $authorOnlyVolumes = $permissions['assetMutations'] ?? [];
+                }
             }
         }
 
@@ -493,7 +519,7 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlySections = $this->getAuthorOnlySections($user);
+        $authorOnlySections = $this->getAuthorOnlySections($user, 'mutation');
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
@@ -543,7 +569,7 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
         }
 
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user);
+        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
