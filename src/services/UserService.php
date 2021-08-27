@@ -580,14 +580,14 @@ class UserService extends Component
     {
         $customFields = UserArguments::getContentArguments();
 
-        foreach ($customFields as &$key) {
+        foreach ($customFields as $key => $field) {
             if (is_array($key) && isset($key['name'])) {
                 $key = $key['name'];
             }
 
             $value = $arguments[$key] ?? null;
 
-            if (!isset($value) || !$value) {
+            if (!isset($value) || (!$value && gettype($value) !== 'boolean')) {
                 continue;
             }
 
