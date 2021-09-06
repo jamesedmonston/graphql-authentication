@@ -36,6 +36,15 @@ use yii\base\Event;
  * @package   GraphqlAuthentication
  * @since     1.0.0
  *
+ * @property TokenService $token
+ * @property UserService $user
+ * @property RestrictionService $restriction
+ * @property SocialService $social
+ * @property GoogleService $google
+ * @property FacebookService $facebook
+ * @property TwitterService $twitter
+ * @property AppleService $apple
+ * @property ErrorService $error
  */
 
 class GraphqlAuthentication extends Plugin
