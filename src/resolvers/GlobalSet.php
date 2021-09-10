@@ -35,7 +35,7 @@ class GlobalSet extends ElementResolver
                 $userGroup = $user->getGroups()[0]->id ?? null;
 
                 if ($userGroup) {
-                    $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'];
+                    $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'] ?? null;
                 }
             }
 
