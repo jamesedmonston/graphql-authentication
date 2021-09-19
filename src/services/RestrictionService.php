@@ -24,6 +24,7 @@ use craft\services\Volumes;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
+use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -218,36 +219,39 @@ class RestrictionService extends Component
 
         $errorService = GraphqlAuthentication::$errorService;
 
-        $privateFields = array_keys(array_filter($fieldPermissions, function ($permission) {
-            return $permission === 'private';
-        }));
-
-        // To-do: traverse through DocumentNode to find Arguments and Tokens, instead looking at query string
-        if (StringHelper::containsAny($event->query, $privateFields)) {
-            $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
-        }
-
         $queryFields = array_keys(array_filter($fieldPermissions, function ($permission) {
             return $permission === 'query';
         }));
 
-        if (!count($queryFields)) {
-            return;
-        }
+        $privateFields = array_keys(array_filter($fieldPermissions, function ($permission) {
+            return $permission === 'private';
+        }));
 
         /** @var OperationDefinitionNode */
         foreach ($definitions as $definition) {
-            if (isset($definition->operation) && $definition->operation !== 'mutation') {
+            if (!isset($definition->operation)) {
                 continue;
             }
 
-            /** @var FieldNode */
+            $forbiddenArguments = [];
+
+            if ($definition->operation === 'query') {
+                $forbiddenArguments = $privateFields;
+            } else {
+                $forbiddenArguments = array_merge($queryFields, $privateFields);
+            }
+
+            /** @var SelectionSetNode */
             foreach ($definition->selectionSet->selections ?? [] as $selectionSet) {
+                // loop through arguments
                 foreach ($selectionSet->arguments ?? [] as $argument) {
-                    if (in_array($argument->name->value ?? '', $queryFields)) {
+                    if (in_array($argument->name->value ?? '', $forbiddenArguments)) {
                         $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
                     }
                 }
+
+                // loop through field selections
+                $this->_ensureValidFields($selectionSet, $privateFields);
             }
         }
     }
@@ -481,6 +485,30 @@ class RestrictionService extends Component
 
     // Protected Methods
     // =========================================================================
+
+    /**
+     * Recurses through query and mutation field selections, ensuring they're queryable
+     *
+     * @param $selectionSet
+     * @param array $fields
+     * @throws Error
+     */
+    private function _ensureValidFields($selectionSet, array $fields)
+    {
+        $errorService = GraphqlAuthentication::$errorService;
+        $settings = GraphqlAuthentication::$settings;
+
+        /** @var FieldNode */
+        foreach ($selectionSet->selectionSet->selections ?? [] as $field) {
+            if (in_array($field->name->value ?? '', $fields)) {
+                $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
+            }
+
+            if (count($field->selectionSet->selections ?? [])) {
+                $this->_ensureValidFields($field, $fields);
+            }
+        }
+    }
 
     /**
      * Ensures entry being accessed isn't private
