@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.11.4 - 2021-09-23
+
+### Fixed
+
+- Fixed issue `restrictForbiddenFields` throwing errors too eagerly ([#71](https://github.com/jamesedmonston/graphql-authentication/issues/71))
+- Fixed issue `globalSet` queries sometimes throwing an error ([#68](https://github.com/jamesedmonston/graphql-authentication/issues/68))
+
 ## 1.11.3 - 2021-08-27
 
 ### Fixed
