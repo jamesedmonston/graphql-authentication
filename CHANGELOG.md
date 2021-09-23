@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- Fixed issue `restrictForbiddenFields` throwing errors too eagerly ([#71](https://github.com/jamesedmonston/graphql-authentication/issues/71))
-- Fixed issue `globalSet` queries sometimes throwing an error ([#68](https://github.com/jamesedmonston/graphql-authentication/issues/68))
+- Fixed issue with `restrictForbiddenFields` throwing errors too eagerly ([#71](https://github.com/jamesedmonston/graphql-authentication/issues/71))
+- Fixed issue with `globalSet` queries sometimes throwing an error ([#68](https://github.com/jamesedmonston/graphql-authentication/issues/68))
 
 ## 1.11.3 - 2021-08-27
 
