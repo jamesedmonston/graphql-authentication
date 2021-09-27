@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- Fixed issue errors being thrown as `Something went wrong when processing the GraphQL query.` instead of contextual errors. E.g. requests with an expired token will now throw `Invalid Authorization Header`
+- Fixed issue with errors being thrown as `Something went wrong when processing the GraphQL query.` instead of contextual errors. E.g. requests with an expired token will now throw `Invalid Authorization Header`
 
 ## 1.11.4 - 2021-09-23
 
