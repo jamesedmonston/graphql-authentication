@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.11.5 - 2021-09-27
+
+### Fixed
+
+- Fixed issue errors being thrown as `Something went wrong when processing the GraphQL query.` instead of contextual errors. E.g. requests with an expired token will now throw `Invalid Authorization Header`
+
 ## 1.11.4 - 2021-09-23
 
 ### Fixed
