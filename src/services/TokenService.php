@@ -126,14 +126,14 @@ class TokenService extends Component
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
-                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
+                    $errorService->throw($settings->invalidRefreshToken);
                 }
 
                 $this->_clearExpiredTokens();
                 $refreshTokenElement = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
-                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
+                    $errorService->throw($settings->invalidRefreshToken);
                 }
 
                 /** @var Users */
@@ -141,13 +141,13 @@ class TokenService extends Component
                 $user = $usersService->getUserById($refreshTokenElement->userId);
 
                 if (!$user) {
-                    $errorService->throw($settings->userNotFound, 'INVALID');
+                    $errorService->throw($settings->userNotFound);
                 }
 
                 $schemaId = $refreshTokenElement->schemaId;
 
                 if (!$schemaId) {
-                    $errorService->throw($settings->invalidSchema, 'INVALID');
+                    $errorService->throw($settings->invalidSchema);
                 }
 
                 /** @var Elements */
@@ -167,13 +167,13 @@ class TokenService extends Component
             ],
             'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
                 if (!$this->getUserFromToken()) {
-                    $errorService->throw($settings->tokenNotFound, 'INVALID');
+                    $errorService->throw($settings->tokenNotFound);
                 }
 
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
-                    $errorService->throw($settings->invalidRefreshToken, 'INVALID');
+                    $errorService->throw($settings->invalidRefreshToken);
                 }
 
                 GraphqlAuthentication::$tokenService->deleteRefreshToken($refreshToken);
@@ -188,7 +188,7 @@ class TokenService extends Component
             'args' => [],
             'resolve' => function () use ($settings, $errorService) {
                 if (!$user = $this->getUserFromToken()) {
-                    $errorService->throw($settings->tokenNotFound, 'INVALID');
+                    $errorService->throw($settings->tokenNotFound);
                 }
 
                 GraphqlAuthentication::$tokenService->deleteRefreshTokens($user);
@@ -227,7 +227,7 @@ class TokenService extends Component
                 }
 
                 if (!preg_match("/^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/", $matches[1])) {
-                    $errorService->throw($settings->invalidHeader, 'FORBIDDEN');
+                    $errorService->throw($settings->invalidHeader);
                 }
 
                 $jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey);
@@ -248,7 +248,7 @@ class TokenService extends Component
                 try {
                     $jwt = $jwtConfig->parser()->parse($matches[1]);
                 } catch (InvalidArgumentException $e) {
-                    $errorService->throw($e->getMessage(), 'FORBIDDEN');
+                    $errorService->throw($e->getMessage());
                 }
 
                 $event = new JwtValidateEvent([
@@ -260,7 +260,7 @@ class TokenService extends Component
                 try {
                     $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
                 } catch (RequiredConstraintsViolated $e) {
-                    $errorService->throw($settings->invalidHeader, 'INVALID');
+                    $errorService->throw($settings->invalidHeader);
                 }
 
                 $token = $jwt;
@@ -318,7 +318,7 @@ class TokenService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         if (!$token = $this->getHeaderToken()) {
-            $errorService->throw($settings->invalidHeader, 'INVALID');
+            $errorService->throw($settings->invalidHeader);
         }
 
         /** @var Gql */
@@ -333,11 +333,11 @@ class TokenService extends Component
         }
 
         if (!$schemaId) {
-            $errorService->throw($settings->invalidHeader, 'INVALID');
+            $errorService->throw($settings->invalidHeader);
         }
 
         if (!$schema = $gqlService->getSchemaById($schemaId)) {
-            $errorService->throw($settings->invalidHeader, 'INVALID');
+            $errorService->throw($settings->invalidHeader);
         }
 
         return $schema;
@@ -351,7 +351,7 @@ class TokenService extends Component
     public function getUserFromToken(): User
     {
         if (!$token = $this->getHeaderToken()) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'INVALID');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
         }
 
         $id = $token->claims()->get('sub');
@@ -375,7 +375,7 @@ class TokenService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         if (!$jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey)) {
-            $errorService->throw($settings->invalidJwtSecretKey, 'INVALID');
+            $errorService->throw($settings->invalidJwtSecretKey);
         }
 
         $jwtConfig = Configuration::forSymmetricSigner(
@@ -422,7 +422,7 @@ class TokenService extends Component
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($refreshTokenElement)) {
-            $errorService->throw(json_encode($refreshTokenElement->getErrors()), 'INVALID');
+            $errorService->throw(json_encode($refreshTokenElement->getErrors()));
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);
@@ -445,7 +445,7 @@ class TokenService extends Component
         $refreshToken = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
 
         if (!$refreshToken) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidRefreshToken, 'INVALID');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidRefreshToken);
         }
 
         /** @var Elements */
@@ -519,7 +519,7 @@ class TokenService extends Component
             return;
         }
 
-        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, 'INVALID');
+        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
     }
 
     /**

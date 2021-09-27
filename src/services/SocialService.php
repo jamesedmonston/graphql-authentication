@@ -28,14 +28,14 @@ class SocialService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         if (!StringHelper::contains($email, '@')) {
-            $errorService->throw(GraphqlAuthentication::$settings->invalidEmailAddress, 'INVALID');
+            $errorService->throw(GraphqlAuthentication::$settings->invalidEmailAddress);
         }
 
         $domain = explode('@', $email)[1];
         $domains = explode(',', str_replace(['http://', 'https://', 'www.', ' ', '/'], '', $domains));
 
         if (!in_array($domain, $domains)) {
-            $errorService->throw($error, 'INVALID');
+            $errorService->throw($error);
         }
 
         return true;
@@ -62,11 +62,11 @@ class SocialService extends Component
 
         if (!$user) {
             if (!$userGroupId && !$settings->allowRegistration) {
-                $errorService->throw($settings->userNotFound, 'INVALID');
+                $errorService->throw($settings->userNotFound);
             }
 
             if ($userGroupId && !($settings->granularSchemas["group-{$userGroupId}"]['allowRegistration'] ?? false)) {
-                $errorService->throw($settings->userNotFound, 'INVALID');
+                $errorService->throw($settings->userNotFound);
             }
 
             $user = $userService->create([
@@ -81,7 +81,7 @@ class SocialService extends Component
             $assignedGroups = array_column($user->groups, 'id');
 
             if (!in_array($userGroupId, $assignedGroups)) {
-                $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+                $errorService->throw($settings->forbiddenMutation);
             }
         }
 

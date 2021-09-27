@@ -3,7 +3,7 @@
 namespace jamesedmonston\graphqlauthentication\services;
 
 use craft\base\Component;
-use GraphQL\Error\Error;
+use yii\base\InvalidValueException;
 
 class ErrorService extends Component
 {
@@ -15,9 +15,9 @@ class ErrorService extends Component
      *
      * @param string $message
      * @param string $code
-     * @throws Error
+     * @throws InvalidValueException
      */
-    function throw (string $message, string $code): Error {
-        throw new Error($message, null, null, [], null, null, ['code' => $code]);
+    function throw (string $message): InvalidValueException {
+        throw new InvalidValueException($message);
     }
 }

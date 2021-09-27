@@ -109,7 +109,7 @@ class AppleService extends Component
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                         }
 
                         $code = $arguments['code'];
@@ -139,7 +139,7 @@ class AppleService extends Component
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                             }
 
                             $code = $arguments['code'];
@@ -220,7 +220,7 @@ class AppleService extends Component
                 'form_params' => $params,
             ])->getBody()->getContents());
         } catch (Throwable $e) {
-            $errorService->throw($settings->invalidOauthToken, 'INVALID');
+            $errorService->throw($settings->invalidOauthToken);
         }
 
         $claims = explode('.', $response->id_token)[1];
@@ -229,7 +229,7 @@ class AppleService extends Component
         $email = $claims->email;
 
         if (!$email || !isset($email)) {
-            $errorService->throw($settings->emailNotInScope, 'INVALID');
+            $errorService->throw($settings->emailNotInScope);
         }
 
         $name = explode(' ', $claims->name ?? '', 1);

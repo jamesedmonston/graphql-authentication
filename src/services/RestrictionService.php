@@ -246,7 +246,7 @@ class RestrictionService extends Component
                 // loop through arguments
                 foreach ($selectionSet->arguments ?? [] as $argument) {
                     if (in_array($argument->name->value ?? '', $forbiddenArguments)) {
-                        $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
+                        $errorService->throw($settings->forbiddenField);
                     }
                 }
 
@@ -362,7 +362,7 @@ class RestrictionService extends Component
         }
 
         if ((string) $event->sender->authorId !== (string) $user->id) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation);
         }
 
         return true;
@@ -399,7 +399,7 @@ class RestrictionService extends Component
         }
 
         if ((string) $event->sender->uploaderId !== (string) $user->id) {
-            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation, 'FORBIDDEN');
+            GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation);
         }
 
         return true;
@@ -501,7 +501,7 @@ class RestrictionService extends Component
         /** @var FieldNode */
         foreach ($selectionSet->selectionSet->selections ?? [] as $field) {
             if (in_array($field->name->value ?? '', $fields)) {
-                $errorService->throw($settings->forbiddenField, 'FORBIDDEN');
+                $errorService->throw($settings->forbiddenField);
             }
 
             if (count($field->selectionSet->selections ?? [])) {
@@ -527,7 +527,7 @@ class RestrictionService extends Component
         $entry = $elementsService->getElementById($id);
 
         if (!$entry) {
-            $errorService->throw($settings->entryNotFound, 'INVALID');
+            $errorService->throw($settings->entryNotFound);
         }
 
         if (!$entry->authorId) {
@@ -544,7 +544,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getSchemaFromToken()->scope;
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
-            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+            $errorService->throw($settings->forbiddenMutation);
         }
 
         $authorOnlySections = $this->getAuthorOnlySections($user, 'mutation');
@@ -554,7 +554,7 @@ class RestrictionService extends Component
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
         if (in_array($entrySection, $authorOnlySections)) {
-            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+            $errorService->throw($settings->forbiddenMutation);
         }
 
         return true;
@@ -577,7 +577,7 @@ class RestrictionService extends Component
         $asset = $assetsService->getAssetById($id);
 
         if (!$asset) {
-            $errorService->throw($settings->assetNotFound, 'INVALID');
+            $errorService->throw($settings->assetNotFound);
         }
 
         if (!$asset->uploaderId) {
@@ -594,7 +594,7 @@ class RestrictionService extends Component
         $scope = $tokenService->getSchemaFromToken()->scope;
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
-            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+            $errorService->throw($settings->forbiddenMutation);
         }
 
         $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
@@ -604,7 +604,7 @@ class RestrictionService extends Component
         $assetVolume = $volumesService->getVolumeById($asset->volumeId)->handle;
 
         if (in_array($assetVolume, $authorOnlyVolumes)) {
-            $errorService->throw($settings->forbiddenMutation, 'FORBIDDEN');
+            $errorService->throw($settings->forbiddenMutation);
         }
 
         return true;

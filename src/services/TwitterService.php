@@ -109,7 +109,7 @@ class TwitterService extends Component
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                         }
 
                         $oauthToken = $arguments['oauthToken'];
@@ -142,7 +142,7 @@ class TwitterService extends Component
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                             }
 
                             $oauthToken = $arguments['oauthToken'];
@@ -190,7 +190,7 @@ class TwitterService extends Component
         $sessionOauthTokenSecret = $sessionService->get('oauthTokenSecret');
 
         if ($oauthToken !== $sessionOauthToken) {
-            $errorService->throw($settings->invalidOauthToken, 'INVALID');
+            $errorService->throw($settings->invalidOauthToken);
         }
 
         $client = new TwitterOAuth(
@@ -213,7 +213,7 @@ class TwitterService extends Component
         $email = $user->email;
 
         if (!$email || !isset($email)) {
-            $errorService->throw($settings->emailNotInScope, 'INVALID');
+            $errorService->throw($settings->emailNotInScope);
         }
 
         if ($settings->allowedTwitterDomains) {

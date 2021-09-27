@@ -98,7 +98,7 @@ class FacebookService extends Component
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                         }
 
                         $code = $arguments['code'];
@@ -129,7 +129,7 @@ class FacebookService extends Component
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                             }
 
                             $code = $arguments['code'];
@@ -182,14 +182,14 @@ class FacebookService extends Component
         ]);
 
         if (!$accessToken) {
-            $errorService->throw($settings->invalidOauthToken, 'INVALID');
+            $errorService->throw($settings->invalidOauthToken);
         }
 
         $user = $client->getResourceOwner($accessToken);
         $email = $user->getEmail();
 
         if (!$email || !isset($email)) {
-            $errorService->throw($settings->emailNotInScope, 'INVALID');
+            $errorService->throw($settings->emailNotInScope);
         }
 
         if ($settings->allowedFacebookDomains) {

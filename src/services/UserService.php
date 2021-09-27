@@ -67,7 +67,7 @@ class UserService extends Component
             'args' => [],
             'resolve' => function () {
                 if (!$user = GraphqlAuthentication::$tokenService->getUserFromToken()) {
-                    GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->userNotFound, 'INVALID');
+                    GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->userNotFound);
                 }
 
                 return $user;
@@ -130,11 +130,11 @@ class UserService extends Component
                 $password = $arguments['password'];
 
                 if (!$user = $usersService->getUserByUsernameOrEmail($email)) {
-                    $errorService->throw($settings->invalidLogin, 'INVALID');
+                    $errorService->throw($settings->invalidLogin);
                 }
 
                 if ($user->status !== 'active') {
-                    $errorService->throw($settings->userNotActivated, 'FORBIDDEN');
+                    $errorService->throw($settings->userNotActivated);
                 }
 
                 $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
@@ -145,7 +145,7 @@ class UserService extends Component
 
                 if (!$user->authenticate($password)) {
                     $permissionsService->saveUserPermissions($user->id, $userPermissions);
-                    $errorService->throw($settings->invalidLogin, 'INVALID');
+                    $errorService->throw($settings->invalidLogin);
                 }
 
                 $permissionsService->saveUserPermissions($user->id, $userPermissions);
@@ -161,7 +161,7 @@ class UserService extends Component
                 }
 
                 if (!$schemaId) {
-                    $errorService->throw($settings->invalidSchema, 'INVALID');
+                    $errorService->throw($settings->invalidSchema);
                 }
 
                 $this->_updateLastLogin($user);
@@ -188,7 +188,7 @@ class UserService extends Component
                 ),
                 'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     if (!$schemaId = $settings->schemaId ?? null) {
-                        $errorService->throw($settings->invalidSchema, 'INVALID');
+                        $errorService->throw($settings->invalidSchema);
                     }
 
                     $user = $this->create($arguments, $settings->userGroup);
@@ -227,7 +227,7 @@ class UserService extends Component
                     ),
                     'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         if (!$schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null) {
-                            $errorService->throw($settings->invalidSchema, 'INVALID');
+                            $errorService->throw($settings->invalidSchema);
                         }
 
                         $user = $this->create($arguments, $userGroup->id);
@@ -253,7 +253,7 @@ class UserService extends Component
                 $user = $usersService->getUserByUid($id);
 
                 if (!$user || !$usersService->isVerificationCodeValidForUser($user, $code)) {
-                    $errorService->throw($settings->invalidRequest, 'INVALID');
+                    $errorService->throw($settings->invalidRequest);
                 }
 
                 $usersService->activateUser($user);
@@ -320,13 +320,13 @@ class UserService extends Component
                 $user = $usersService->getUserByUid($id);
 
                 if (!$user || !$usersService->isVerificationCodeValidForUser($user, $code)) {
-                    $errorService->throw($settings->invalidRequest, 'INVALID');
+                    $errorService->throw($settings->invalidRequest);
                 }
 
                 $user->newPassword = $password;
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()), 'INVALID');
+                    $errorService->throw(json_encode($user->getErrors()));
                 }
 
                 $usersService->activateUser($user);
@@ -345,7 +345,7 @@ class UserService extends Component
             ],
             'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
                 if (!$user = $tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->invalidPasswordUpdate, 'INVALID');
+                    $errorService->throw($settings->invalidPasswordUpdate);
                 }
 
                 $currentPassword = $arguments['currentPassword'];
@@ -353,7 +353,7 @@ class UserService extends Component
                 $confirmPassword = $arguments['confirmPassword'];
 
                 if ($newPassword !== $confirmPassword) {
-                    $errorService->throw($settings->invalidPasswordMatch, 'INVALID');
+                    $errorService->throw($settings->invalidPasswordMatch);
                 }
 
                 $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
@@ -366,7 +366,7 @@ class UserService extends Component
 
                 if (!$user->authenticate($currentPassword)) {
                     $permissionsService->saveUserPermissions($user->id, $userPermissions);
-                    $errorService->throw($settings->invalidPasswordUpdate, 'INVALID');
+                    $errorService->throw($settings->invalidPasswordUpdate);
                 }
 
                 $permissionsService->saveUserPermissions($user->id, $userPermissions);
@@ -374,7 +374,7 @@ class UserService extends Component
                 $user->newPassword = $newPassword;
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()), 'INVALID');
+                    $errorService->throw(json_encode($user->getErrors()));
                 }
 
                 return $settings->passwordUpdated;
@@ -397,7 +397,7 @@ class UserService extends Component
             ),
             'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
                 if (!$user = $tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->invalidUserUpdate, 'INVALID');
+                    $errorService->throw($settings->invalidUserUpdate);
                 }
 
                 $email = $arguments['email'] ?? null;
@@ -439,7 +439,7 @@ class UserService extends Component
                         $volumeUid = $projectConfigService->get('users.photoVolumeUid');
 
                         if (empty($volumeUid)) {
-                            $errorService->throw($settings->volumeNotFound, 'INVALID');
+                            $errorService->throw($settings->volumeNotFound);
                         }
 
                         $volume = $volumesService->getVolumeByUid($volumeUid);
@@ -462,7 +462,7 @@ class UserService extends Component
                 $this->_saveCustomFields($arguments, $user);
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()), 'INVALID');
+                    $errorService->throw(json_encode($user->getErrors()));
                 }
 
                 return $user;
@@ -520,7 +520,7 @@ class UserService extends Component
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($user)) {
-            GraphqlAuthentication::$errorService->throw(json_encode($user->getErrors()), 'INVALID');
+            GraphqlAuthentication::$errorService->throw(json_encode($user->getErrors()));
         }
 
         /** @var Users */

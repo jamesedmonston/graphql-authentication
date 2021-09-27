@@ -57,7 +57,7 @@ class GoogleService extends Component
                         $schemaId = $settings->schemaId;
 
                         if (!$schemaId) {
-                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                            GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                         }
 
                         $idToken = $arguments['idToken'];
@@ -88,7 +88,7 @@ class GoogleService extends Component
                             $schemaId = $settings->granularSchemas["group-{$userGroup->id}"]['schemaId'] ?? null;
 
                             if (!$schemaId) {
-                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema, 'INVALID');
+                                GraphqlAuthentication::$errorService->throw($settings->invalidSchema);
                             }
 
                             $idToken = $arguments['idToken'];
@@ -136,13 +136,13 @@ class GoogleService extends Component
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            $errorService->throw($settings->googleTokenIdInvalid, 'INVALID');
+            $errorService->throw($settings->googleTokenIdInvalid);
         }
 
         $email = $payload['email'];
 
         if (!$email || !isset($email)) {
-            $errorService->throw($settings->emailNotInScope, 'INVALID');
+            $errorService->throw($settings->emailNotInScope);
         }
 
         if ($settings->allowedGoogleDomains) {
