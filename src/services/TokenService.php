@@ -230,40 +230,7 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidHeader);
                 }
 
-                $jwtSecretKey = GraphqlAuthentication::getInstance()->getSettingsData($settings->jwtSecretKey);
-
-                $jwtConfig = Configuration::forSymmetricSigner(
-                    new Sha256(),
-                    InMemory::plainText($jwtSecretKey)
-                );
-
-                $validator = new SignedWith(
-                    new Sha256(),
-                    InMemory::plainText($jwtSecretKey)
-                );
-
-                $jwtConfig->setValidationConstraints($validator);
-                $constraints = $jwtConfig->validationConstraints();
-
-                try {
-                    $jwt = $jwtConfig->parser()->parse($matches[1]);
-                } catch (InvalidArgumentException $e) {
-                    $errorService->throw($e->getMessage());
-                }
-
-                $event = new JwtValidateEvent([
-                    'config' => $jwtConfig,
-                ]);
-
-                $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
-
-                try {
-                    $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
-                } catch (RequiredConstraintsViolated $e) {
-                    $errorService->throw($settings->invalidHeader);
-                }
-
-                $token = $jwt;
+                $token = $this->parseToken($matches[1]);
                 break 2;
             }
         }
@@ -346,11 +313,17 @@ class TokenService extends Component
     /**
      * Returns the user entity linked to a token
      *
-     * @return User
+     * @param Token|null $token
+     * @return ?User
+     * @throws Error
      */
-    public function getUserFromToken(): User
+    public function getUserFromToken(?Token $token = null): ?User
     {
-        if (!$token = $this->getHeaderToken()) {
+        if (!$token) {
+            $token = $this->getHeaderToken();
+        }
+
+        if (!$token) {
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
         }
 
@@ -468,6 +441,55 @@ class TokenService extends Component
         foreach ($refreshTokens as $refreshToken) {
             $elementsService->deleteElementById($refreshToken->id);
         }
+    }
+
+    /**
+     * @param string $token
+     * @return Token
+     */
+    public function parseToken(string $token): Token
+    {
+        /** @var GraphqlAuthentication $plugin Suppress NPE warning as this cannot happen here */
+        $plugin = GraphqlAuthentication::getInstance();
+
+        $settings = GraphqlAuthentication::$settings;
+
+        $jwtSecretKey = $plugin->getSettingsData($settings->jwtSecretKey);
+
+        $jwtConfig = Configuration::forSymmetricSigner(
+            new Sha256(),
+            InMemory::plainText($jwtSecretKey)
+        );
+
+        $validator = new SignedWith(
+            new Sha256(),
+            InMemory::plainText($jwtSecretKey)
+        );
+
+        $jwtConfig->setValidationConstraints($validator);
+        $constraints = $jwtConfig->validationConstraints();
+
+        $errorService = GraphqlAuthentication::$errorService;
+
+        try {
+            $jwt = $jwtConfig->parser()->parse($token);
+        } catch (InvalidArgumentException $e) {
+            $errorService->throw($e->getMessage());
+        }
+
+        $event = new JwtValidateEvent([
+            'config' => $jwtConfig,
+        ]);
+
+        $this->trigger(self::EVENT_BEFORE_VALIDATE_JWT, $event);
+
+        try {
+            $jwtConfig->validator()->assert($jwt, ...$constraints, ...$event->config->validationConstraints());
+        } catch (RequiredConstraintsViolated $e) {
+            $errorService->throw($settings->invalidHeader);
+        }
+
+        return $jwt;
     }
 
     // Protected Methods
