@@ -511,8 +511,9 @@ class UserService extends Component
         /** @var ProjectConfig */
         $projectConfigService = Craft::$app->getProjectConfig();
         $requiresVerification = $projectConfigService->get('users.requireEmailVerification');
+        $suspendByDefault = $projectConfigService->get('users.suspendByDefault');
 
-        if ($requiresVerification) {
+        if ($requiresVerification || $suspendByDefault) {
             $user->pending = true;
         }
 
