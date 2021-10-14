@@ -11,6 +11,8 @@ class Settings extends Model
 
     // Singular Schema
     public $schemaName = null;
+    /** @deprecated */
+    public $schemaId = null;
     public $allowRegistration = true;
     public $userGroup = null;
     public $siteId = null;
