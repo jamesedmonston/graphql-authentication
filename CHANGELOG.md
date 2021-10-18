@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Added
+
+- A `TokenService::parseToken(string $jwt):Token` method that allows parsing a JWT from anywhere, not just the `Authorization` HTTP header
+- The ability to pass the token as a string to the `TokenService::getUserFromToken()` method instead of always getting the token from the `Authorization` HTTP header
+
 ## 1.11.5 - 2021-09-27
 
 ### Fixed
