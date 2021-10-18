@@ -591,17 +591,11 @@ class UserService extends Component
                 $key = $key['name'];
             }
 
-            $value = $arguments[$key] ?? null;
-
-            if (!isset($value) || (!$value && gettype($value) !== 'boolean')) {
+            if (!array_key_exists($key, $arguments)) {
                 continue;
             }
 
-            if (is_array($value) && !count($value)) {
-                continue;
-            }
-
-            $user->setFieldValue($key, $value);
+            $user->setFieldValue($key, $arguments[$key]);
         }
     }
 
