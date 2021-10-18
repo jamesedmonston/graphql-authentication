@@ -54,7 +54,7 @@ class RefreshToken extends Element
             'id' => Craft::t('graphql-authentication', 'ID'),
             'token' => Craft::t('graphql-authentication', 'Token'),
             'userId' => Craft::t('graphql-authentication', 'User'),
-            'schemaId' => Craft::t('graphql-authentication', 'Schema'),
+            'schemaName' => Craft::t('graphql-authentication', 'Schema'),
             'dateCreated' => Craft::t('graphql-authentication', 'Date Created'),
             'expiryDate' => Craft::t('graphql-authentication', 'Expiry Date'),
         ];
@@ -72,7 +72,7 @@ class RefreshToken extends Element
                 $user = $usersService->getUserById($this->userId);
                 return $user ? Craft::$app->getView()->renderTemplate('_elements/element', ['element' => $user]) : '';
 
-            case 'schemaId':
+            case 'schemaName':
                 /** @var Gql */
                 $gqlService = Craft::$app->getGql();
                 $schema = $gqlService->getSchemaById($this->schemaId);
