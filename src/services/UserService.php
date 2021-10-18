@@ -12,8 +12,6 @@ use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
-use craft\helpers\DateTimeHelper;
-use craft\records\User as UserRecord;
 use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Gql;
@@ -607,9 +605,8 @@ class UserService extends Component
      */
     protected function _updateLastLogin(User $user)
     {
-        $now = DateTimeHelper::currentUTCDateTime();
-        $userRecord = UserRecord::findOne($user->id);
-        $userRecord->lastLoginDate = $now;
-        $userRecord->save();
+        /** @var Users */
+        $usersService = Craft::$app->getUsers();
+        $usersService->handleValidLogin($user);
     }
 }
