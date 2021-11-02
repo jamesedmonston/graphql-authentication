@@ -331,7 +331,8 @@ class UserService extends Component
                 $user->newPassword = $password;
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()));
+                    $errors = $user->getErrors();
+                    $errorService->throw($errors[key($errors)][0], true);
                 }
 
                 $usersService->activateUser($user);
@@ -379,7 +380,8 @@ class UserService extends Component
                 $user->newPassword = $newPassword;
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()));
+                    $errors = $user->getErrors();
+                    $errorService->throw($errors[key($errors)][0], true);
                 }
 
                 return $settings->passwordUpdated;
@@ -467,7 +469,8 @@ class UserService extends Component
                 $this->_saveCustomFields($arguments, $user);
 
                 if (!$elementsService->saveElement($user)) {
-                    $errorService->throw(json_encode($user->getErrors()));
+                    $errors = $user->getErrors();
+                    $errorService->throw($errors[key($errors)][0], true);
                 }
 
                 return $user;
@@ -526,7 +529,8 @@ class UserService extends Component
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($user)) {
-            GraphqlAuthentication::$errorService->throw(json_encode($user->getErrors()));
+            $errors = $user->getErrors();
+            GraphqlAuthentication::$errorService->throw($errors[key($errors)][0], true);
         }
 
         /** @var Users */

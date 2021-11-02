@@ -395,7 +395,8 @@ class TokenService extends Component
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($refreshTokenElement)) {
-            $errorService->throw(json_encode($refreshTokenElement->getErrors()));
+            $errors = $refreshTokenElement->getErrors();
+            $errorService->throw($errors[key($errors)][0], true);
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);
