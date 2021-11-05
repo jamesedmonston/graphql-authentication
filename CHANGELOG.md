@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Changed
 
 - Tokens now store schema references via `schemaName` instead of `schemaId` to improve cross-environment behaviour (thanks [@SayChi](https://github.com/SayChi)!)
+- Creating new entries via a mutation no longer forces the author to be the current user, if an `authorId` argument is supplied (note: it still respects the `Restricted Entry Mutations` plugin settings!) ([#63](https://github.com/jamesedmonston/graphql-authentication/issues/63))
 
 ### Fixed
 
