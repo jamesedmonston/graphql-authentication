@@ -5,6 +5,7 @@ namespace jamesedmonston\graphqlauthentication\migrations;
 use Craft;
 use craft\db\Migration;
 use craft\records\GqlSchema as GqlSchemaRecord;
+use craft\services\Plugins;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -23,27 +24,36 @@ class m211014_234909_schema_id_to_schema_name extends Migration
         $schemaVersion = $projectConfig->get('plugins.graphql-authentication.schemaVersion', true);
 
         if (version_compare($schemaVersion, '1.2.0', '<')) {
+            /** @var Plugins */
+            $plugins = Craft::$app->getPlugins();
             $settings = GraphqlAuthentication::$settings;
 
-            if ($settings['schemaId']) {
+            if ($settings->schemaId) {
                 $schemaName = GqlSchemaRecord::find()->select(['name'])->where(['id' => $settings->schemaId])->scalar();
-                $projectConfig->set('plugins.graphql-authentication.settings.schemaName', $schemaName);
-                $projectConfig->remove('plugins.graphql-authentication.settings.schemaId');
+
+                $plugins->savePluginSettings(GraphqlAuthentication::$plugin, [
+                    'schemaId' => null,
+                    'schemaName' => $schemaName,
+                ]);
+            }
+
+            if (count($settings->granularSchemas)) {
+                $granularSchemas = $settings->granularSchemas;
+
+                foreach ($granularSchemas as $schema) {
+                    if (array_key_exists('schemaId', $schema)) {
+                        $schemaName = GqlSchemaRecord::find()->select(['name'])->where(['id' => $schema['schemaId']])->scalar();
+                        unset($schema['schemaId']);
+                        $schema['schemaName'] = $schemaName;
+                    }
+                }
+
+                $plugins->savePluginSettings(GraphqlAuthentication::$plugin, ['granularSchemas' => $granularSchemas]);
             }
         }
 
         return true;
     }
 
-    public function safeDown()
-    {
-        $settings = GraphqlAuthentication::$settings;
-
-        if ($settings['schemaName']) {
-            $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
-            Craft::$app->getPlugins()->savePluginSettings(GraphqlAuthentication::$plugin, ['schemaId' => $schemaId]);
-        }
-
-        return true;
-    }
+    public function safeDown() {}
 }
