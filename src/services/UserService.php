@@ -590,16 +590,20 @@ class UserService extends Component
     {
         $customFields = UserArguments::getContentArguments();
 
-        foreach ($customFields as &$key) {
-            if (is_array($key) && isset($key['name'])) {
-                $key = $key['name'];
-            }
+        foreach ($customFields as $argument) {
+            $name = $argument['name'];
 
-            if (!array_key_exists($key, $arguments)) {
+            if (!array_key_exists($name, $arguments)) {
                 continue;
             }
 
-            $user->setFieldValue($key, $arguments[$key]);
+            $value = $arguments[$name];
+
+            if ((string) $argument['type'] === '[QueryArgument]' && $value === null) {
+                $value = [];
+            }
+
+            $user->setFieldValue($name, $value);
         }
     }
 
