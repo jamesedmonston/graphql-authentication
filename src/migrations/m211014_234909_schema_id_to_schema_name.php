@@ -40,7 +40,7 @@ class m211014_234909_schema_id_to_schema_name extends Migration
             if (count($settings->granularSchemas)) {
                 $granularSchemas = $settings->granularSchemas;
 
-                foreach ($granularSchemas as $schema) {
+                foreach ($granularSchemas as &$schema) {
                     if (array_key_exists('schemaId', $schema)) {
                         $schemaName = GqlSchemaRecord::find()->select(['name'])->where(['id' => $schema['schemaId']])->scalar();
                         unset($schema['schemaId']);
