@@ -4,11 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 1.12.0 - Unreleased
+
 ### Added
 
-- A `TokenService::parseToken(string $jwt):Token` method that allows parsing a JWT from anywhere, not just the `Authorization` HTTP header
-- The ability to pass the token as a string to the `TokenService::getUserFromToken()` method instead of always getting the token from the `Authorization` HTTP header
+- A `TokenService::parseToken(string $jwt):Token` method that allows parsing a JWT from anywhere, not just the `Authorization` HTTP header (thanks [@nstCactus](https://github.com/nstCactus)!)
+- The ability to pass the token as a string to the `TokenService::getUserFromToken()` method instead of always getting the token from the `Authorization` HTTP header (thanks [@nstCactus](https://github.com/nstCactus)!)
+
+### Changed
+
+- Tokens now store schema references via `schemaName` instead of `schemaId` to improve cross-environment behaviour (thanks [@SayChi](https://github.com/SayChi)!)
+
+### Fixed
+
+- Fixed issue with user mutation fields not clearing value if sent as `null` (thanks [@hendrik-agprop](https://github.com/hendrik-agprop)!)
+- Fixed issue with users not being created as `pending` if 'suspend users by default' was enabled (thanks [@Zsavajji](https://github.com/Zsavajji)!)
+- Fixed issue with authentication mutations returning `Internal server error` instead of contextual errors ([#74](https://github.com/jamesedmonston/graphql-authentication/issues/74))
 
 ## 1.11.5 - 2021-09-27
 
