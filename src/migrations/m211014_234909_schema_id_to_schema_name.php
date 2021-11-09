@@ -37,7 +37,7 @@ class m211014_234909_schema_id_to_schema_name extends Migration
                 ]);
             }
 
-            if (count($settings->granularSchemas)) {
+            if (count($settings->granularSchemas ?? [])) {
                 $granularSchemas = $settings->granularSchemas;
 
                 foreach ($granularSchemas as &$schema) {
@@ -55,5 +55,7 @@ class m211014_234909_schema_id_to_schema_name extends Migration
         return true;
     }
 
-    public function safeDown() {}
+    public function safeDown()
+    {
+    }
 }
