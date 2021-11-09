@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.12.1 - 2021-11-09
+
+### Fixed
+
+- Fixed migration issue that occurred when not using multiple schemas ([#78](https://github.com/jamesedmonston/graphql-authentication/pull/78))
+
 ## 1.12.0 - 2021-11-05
 
 ### Added
