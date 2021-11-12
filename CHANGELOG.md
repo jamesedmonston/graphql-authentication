@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Fixed
+
+- Fixed migration issue that occurred when setting a password for users with an unverified email (created in the control panel)
+
 ## 1.12.1 - 2021-11-09
 
 ### Fixed
