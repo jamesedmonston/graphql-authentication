@@ -329,6 +329,7 @@ class UserService extends Component
                 }
 
                 $user->newPassword = $password;
+                $user->setScenario(User::SCENARIO_PASSWORD);
 
                 if (!$elementsService->saveElement($user)) {
                     $errors = $user->getErrors();
