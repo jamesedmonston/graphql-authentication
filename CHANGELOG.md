@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## Unreleased
 
+### Added
+
+- The password reset required flag is now honorred. When a user having this flag set tries to authenticate, an password reset email is sent and an according error message is returned
+
 ### Fixed
 
 - Fixed migration issue that occurred when setting a password for users with an unverified email (created in the control panel)
