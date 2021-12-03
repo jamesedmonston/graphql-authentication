@@ -5,7 +5,7 @@
 {{ forms.field({
   instructions: "Choose which fields are forbidden from being accessed through queries and mutations – per schema. Any attempts to access a restricted field will cause the request to throw.",
   first: true,
-}, null) }}
+}, '') }}
 
 <hr style='border-color:transparent' />
 
@@ -32,8 +32,7 @@
             {{ forms.field({
               label: field.name,
               instructions: "(" ~ field.handle ~ ")",
-              name: '',
-            }) }}
+            }, '') }}
           </td>
 
           {% for schema in schemaOptions %}

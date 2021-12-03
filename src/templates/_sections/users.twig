@@ -67,7 +67,7 @@
     {{ forms.field({
       label: 'User Permissions',
       instructions: 'Select your desired schema and save to modify user permissions.',
-    }, null) }}
+    }, '') }}
   {% else %}
     {% if entryQueries %}
       <div class="field">
@@ -216,7 +216,7 @@
         {{ forms.field({
           label: 'User Permissions',
           instructions: 'Select your desired schema and save to modify user permissions.',
-        }, null) }}
+        }, '') }}
       {% else %}
         {% if entryQueries[groupKey] is defined %}
           <div class="field">

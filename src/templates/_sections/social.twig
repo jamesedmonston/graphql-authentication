@@ -5,7 +5,7 @@
 {{ forms.field({
   instructions: "Separate mutations for each service will be available once you've filled in the appropriate details.",
   first: true,
-}, null) }}
+}, '') }}
 
 <hr/>
 <h2>Google</h2>
@@ -13,7 +13,7 @@
 {{ forms.field({
   instructions: 'Use the `googleSignIn` mutation after filling in the `Client ID` field.',
   first: true,
-}, null) }}
+}, '') }}
 
 {{ forms.autosuggestField({
   label: 'Client ID',
@@ -40,7 +40,7 @@
 {{ forms.field({
   instructions: 'Use the `facebookOauthUrl` query to get the authorization URL, then use the `facebookSignIn` mutation to authenticate a user, after filling in the all fields below.',
   first: true,
-}, null) }}
+}, '') }}
 
 {{ forms.autosuggestField({
   label: 'App ID',
@@ -87,7 +87,7 @@
 {{ forms.field({
   instructions: 'Use the `twitterOauthUrl` query to get the authorization URL, then use the `twitterSignIn` mutation to authenticate a user, after filling in the all fields below.',
   first: true,
-}, null) }}
+}, '') }}
 
 {{ forms.autosuggestField({
   label: 'API Key',
@@ -159,7 +159,7 @@
 {{ forms.field({
   instructions: 'Use the `appleOauthUrl` query to get the authorization URL, then use the `appleSignIn` mutation to authenticate a user, after filling in the all fields below.',
   first: true,
-}, null) }}
+}, '') }}
 
 {{ forms.autosuggestField({
   label: 'Service ID',
