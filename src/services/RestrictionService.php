@@ -211,7 +211,7 @@ class RestrictionService extends Component
         $tokenService = GraphqlAuthentication::$tokenService;
         $schema = $tokenService->getSchemaFromToken();
 
-        $fieldPermissions = $fieldRestrictions['schema-' . $schema->id] ?? [];
+        $fieldPermissions = $fieldRestrictions['schema-' . $schema->name] ?? [];
 
         if (!count($fieldPermissions)) {
             return;
