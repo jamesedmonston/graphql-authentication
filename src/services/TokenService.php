@@ -396,7 +396,7 @@ class TokenService extends Component
 
         if (!$elementsService->saveElement($refreshTokenElement)) {
             $errors = $refreshTokenElement->getErrors();
-            $errorService->throw($errors[key($errors)][0], true);
+            $errorService->throw($errors[key($errors)][0]);
         }
 
         $this->_setCookie('gql_refreshToken', $refreshToken, $settings->jwtRefreshExpiration);

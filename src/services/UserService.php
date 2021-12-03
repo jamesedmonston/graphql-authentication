@@ -334,7 +334,7 @@ class UserService extends Component
 
                 if (!$elementsService->saveElement($user)) {
                     $errors = $user->getErrors();
-                    $errorService->throw($errors[key($errors)][0], true);
+                    $errorService->throw($errors[key($errors)][0]);
                 }
 
                 $usersService->activateUser($user);
@@ -381,7 +381,7 @@ class UserService extends Component
 
                 if (!$elementsService->saveElement($user)) {
                     $errors = $user->getErrors();
-                    $errorService->throw($errors[key($errors)][0], true);
+                    $errorService->throw($errors[key($errors)][0]);
                 }
 
                 return $settings->passwordUpdated;
@@ -468,7 +468,7 @@ class UserService extends Component
 
                 if (!$elementsService->saveElement($user)) {
                     $errors = $user->getErrors();
-                    $errorService->throw($errors[key($errors)][0], true);
+                    $errorService->throw($errors[key($errors)][0]);
                 }
 
                 return $user;
@@ -528,7 +528,7 @@ class UserService extends Component
 
         if (!$elementsService->saveElement($user)) {
             $errors = $user->getErrors();
-            GraphqlAuthentication::$errorService->throw($errors[key($errors)][0], true);
+            GraphqlAuthentication::$errorService->throw($errors[key($errors)][0]);
         }
 
         /** @var Users */
