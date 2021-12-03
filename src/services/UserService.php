@@ -65,11 +65,7 @@ class UserService extends Component
             'type' => ElementsUser::getType(),
             'args' => [],
             'resolve' => function () {
-                if (!$user = GraphqlAuthentication::$tokenService->getUserFromToken()) {
-                    GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->userNotFound);
-                }
-
-                return $user;
+                return GraphqlAuthentication::$tokenService->getUserFromToken();
             },
         ];
     }
@@ -356,9 +352,7 @@ class UserService extends Component
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
             'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
-                if (!$user = $tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->invalidPasswordUpdate);
-                }
+                $user = $tokenService->getUserFromToken();
 
                 $currentPassword = $arguments['currentPassword'];
                 $newPassword = $arguments['newPassword'];
@@ -409,9 +403,7 @@ class UserService extends Component
                 $userArguments
             ),
             'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
-                if (!$user = $tokenService->getUserFromToken()) {
-                    $errorService->throw($settings->invalidUserUpdate);
-                }
+                $user = $tokenService->getUserFromToken();
 
                 $email = $arguments['email'] ?? null;
                 $username = $arguments['username'] ?? null;

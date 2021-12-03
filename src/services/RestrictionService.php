@@ -246,7 +246,7 @@ class RestrictionService extends Component
                 // loop through arguments
                 foreach ($selectionSet->arguments ?? [] as $argument) {
                     if (in_array($argument->name->value ?? '', $forbiddenArguments)) {
-                        $errorService->throw($settings->forbiddenField);
+                        $errorService->throw($settings->forbiddenField, true);
                     }
                 }
 
@@ -500,7 +500,7 @@ class RestrictionService extends Component
         /** @var FieldNode */
         foreach ($selectionSet->selectionSet->selections ?? [] as $field) {
             if (in_array($field->name->value ?? '', $fields)) {
-                $errorService->throw($settings->forbiddenField);
+                $errorService->throw($settings->forbiddenField, true);
             }
 
             if (count($field->selectionSet->selections ?? [])) {

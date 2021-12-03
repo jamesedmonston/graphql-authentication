@@ -542,7 +542,7 @@ class TokenService extends Component
             return;
         }
 
-        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
+        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, true);
     }
 
     /**

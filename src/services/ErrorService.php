@@ -21,9 +21,9 @@ class ErrorService extends Component
      */
     function throw (string $message, bool $invalid = false) {
         if ($invalid) {
-            throw new Error($message, null, null, [], null, null, ['code' => 'INVALID']);
+            throw new InvalidValueException($message);
         }
 
-        throw new InvalidValueException($message);
+        throw new Error($message, null, null, [], null, null, ['code' => 'INVALID']);
     }
 }
