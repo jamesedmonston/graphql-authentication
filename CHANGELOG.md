@@ -4,21 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 1.12.2
 
-### Added
+### Changed
 
-- The password reset required flag is now honorred. When a user having this flag set tries to authenticate, an password reset email is sent and an according error message is returned
+- The password reset required flag is now respected. When a user with this flag set tries to authenticate, a password reset email is sent and an error message is returned ([#81](https://github.com/jamesedmonston/graphql-authentication/pull/81), thanks [@nstCactus](https://github.com/nstCactus)!)
 
 ### Fixed
 
-- Fixed migration issue that occurred when setting a password for users with an unverified email (created in the control panel)
+- Fixed migration issue that occurred when setting a password for users with an unverified email (created in the control panel) ([#79](https://github.com/jamesedmonston/graphql-authentication/pull/79), thanks [@nstCactus](https://github.com/nstCactus)!)
+- Fixed compatibility issue with Craft 3.7.24 ([#85](https://github.com/jamesedmonston/graphql-authentication/issues/85))
+- Fixed issue with contextual error messages not being returned ([#74](https://github.com/jamesedmonston/graphql-authentication/issues/74))
+- Fixed issue with field permissions not always being applied properly
 
 ## 1.12.1 - 2021-11-09
 
 ### Fixed
 
-- Fixed migration issue that occurred when not using multiple schemas ([#78](https://github.com/jamesedmonston/graphql-authentication/pull/78))
+- Fixed migration issue that occurred when not using multiple schemas ([#78](https://github.com/jamesedmonston/graphql-authentication/issues/78))
 
 ## 1.12.0 - 2021-11-05
 
