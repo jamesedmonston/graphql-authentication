@@ -588,8 +588,8 @@ class UserService extends Component
     {
         $customFields = UserArguments::getContentArguments();
 
-        foreach ($customFields as $argument) {
-            $name = $argument['name'];
+        foreach ($customFields as $key => $argument) {
+            $name = $key ?? ((array) $argument)['name'];
 
             if (!array_key_exists($name, $arguments)) {
                 continue;
