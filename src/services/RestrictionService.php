@@ -514,6 +514,7 @@ class RestrictionService extends Component
      * Ensures entry being accessed isn't private
      *
      * @param int $id
+     * @param int $siteId
      * @return bool
      * @throws Error
      */
