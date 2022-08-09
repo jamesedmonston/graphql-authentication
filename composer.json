@@ -44,5 +44,11 @@
     "documentationUrl": "https://github.com/jamesedmonston/graphql-authentication/blob/master/README.md",
     "changelogUrl": "https://raw.githubusercontent.com/jamesedmonston/graphql-authentication/master/CHANGELOG.md",
     "class": "jamesedmonston\\graphqlauthentication\\GraphqlAuthentication"
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
   }
 }
