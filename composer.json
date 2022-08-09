@@ -23,6 +23,8 @@
       "homepage": "https://jamesedmonston.co.uk"
     }
   ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "php": "^7.4 || ^8.0",
     "abraham/twitteroauth": "^3.1",

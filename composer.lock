@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "534ade5882b2b4717d373995f944bdca",
+    "content-hash": "6a07a488e8014654964d4aedc23209e8",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -6847,12 +6847,12 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "craftcms/ecs": 20,
         "craftcms/phpstan": 20
     },
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^7.4 || ^8.0"
