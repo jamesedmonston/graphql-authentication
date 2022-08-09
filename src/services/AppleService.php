@@ -58,7 +58,7 @@ class AppleService extends Component
             'description' => 'Generates the Apple OAuth URL for allowing users to authenticate.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function() {
                 $settings = GraphqlAuthentication::$settings;
 
                 $url = 'https://appleid.apple.com/auth/authorize?' . http_build_query([
@@ -105,7 +105,7 @@ class AppleService extends Component
                     'description' => 'Authenticates a user using an Apple Sign-In token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => $args,
-                    'resolve' => function ($source, array $arguments) use ($defaultPlatform) {
+                    'resolve' => function($source, array $arguments) use ($defaultPlatform) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -135,7 +135,7 @@ class AppleService extends Component
                         'description' => "Authenticates a {$userGroup->name} using an Apple Sign-In token. Returns user and token.",
                         'type' => Type::nonNull(Auth::getType()),
                         'args' => $args,
-                        'resolve' => function ($source, array $arguments) use ($userGroup, $defaultPlatform) {
+                        'resolve' => function($source, array $arguments) use ($userGroup, $defaultPlatform) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();

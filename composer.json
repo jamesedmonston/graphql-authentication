@@ -31,6 +31,9 @@
     "lcobucci/jwt": "^4.1",
     "league/oauth2-facebook": "^2.0"
   },
+  "require-dev": {
+    "craftcms/ecs": "dev-main"
+  },
   "autoload": {
     "psr-4": {
       "jamesedmonston\\graphqlauthentication\\": "src/"
@@ -44,6 +47,10 @@
     "documentationUrl": "https://github.com/jamesedmonston/graphql-authentication/blob/master/README.md",
     "changelogUrl": "https://raw.githubusercontent.com/jamesedmonston/graphql-authentication/master/CHANGELOG.md",
     "class": "jamesedmonston\\graphqlauthentication\\GraphqlAuthentication"
+  },
+  "scripts": {
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix"
   },
   "config": {
     "allow-plugins": {

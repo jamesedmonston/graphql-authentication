@@ -19,7 +19,8 @@ class ErrorService extends Component
      * @throws InvalidValueException
      * @throws Error
      */
-    function throw (string $message, bool $invalid = false) {
+    public function throw(string $message, bool $invalid = false)
+    {
         if ($invalid) {
             throw new InvalidValueException($message);
         }

@@ -53,7 +53,7 @@ class GoogleService extends Component
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) {
+                    'resolve' => function($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -84,7 +84,7 @@ class GoogleService extends Component
                         'args' => [
                             'idToken' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                        'resolve' => function($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();

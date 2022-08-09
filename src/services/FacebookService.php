@@ -56,7 +56,7 @@ class FacebookService extends Component
             'description' => 'Generates the Facebook OAuth URL for allowing users to authenticate.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function() {
                 $settings = GraphqlAuthentication::$settings;
 
                 $client = new Facebook([
@@ -94,7 +94,7 @@ class FacebookService extends Component
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) {
+                    'resolve' => function($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -125,7 +125,7 @@ class FacebookService extends Component
                         'args' => [
                             'code' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                        'resolve' => function($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();

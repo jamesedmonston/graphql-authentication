@@ -122,7 +122,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
@@ -165,7 +165,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 if (!$this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -186,7 +186,7 @@ class TokenService extends Component
             'description' => 'Deletes all refresh tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($settings, $errorService) {
+            'resolve' => function() use ($settings, $errorService) {
                 if (!$user = $this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -294,7 +294,7 @@ class TokenService extends Component
 
         // Temporary – remove this once users have had chance to update
         if (!$schemaId) {
-            $schemaId = array_values(array_filter($gqlService->getSchemas(), function (GqlSchema $schema) use ($token) {
+            $schemaId = array_values(array_filter($gqlService->getSchemas(), function(GqlSchema $schema) use ($token) {
                 return $schema->name === $token->claims()->get('schema');
             }))[0]->id ?? null;
         }
