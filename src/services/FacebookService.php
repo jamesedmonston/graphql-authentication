@@ -183,14 +183,10 @@ class FacebookService extends Component
             'code' => $code,
         ]);
 
-        if (!$accessToken) {
-            $errorService->throw($settings->invalidOauthToken);
-        }
-
         $user = $client->getResourceOwner($accessToken);
         $email = $user->getEmail();
 
-        if (!$email || !isset($email)) {
+        if (!$email) {
             $errorService->throw($settings->emailNotInScope);
         }
 

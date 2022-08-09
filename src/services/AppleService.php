@@ -230,7 +230,7 @@ class AppleService extends Component
 
         $email = $claims->email;
 
-        if (!$email || !isset($email)) {
+        if (!$email) {
             $errorService->throw($settings->emailNotInScope);
         }
 

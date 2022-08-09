@@ -212,6 +212,7 @@ class TwitterService extends Component
         );
 
         $user = $client->get('account/verify_credentials', ['include_email' => true, 'entities' => false, 'skip_status' => true]);
+        /** @phpstan-ignore-next-line */
         $email = $user->email;
 
         if (!$email || !isset($email)) {

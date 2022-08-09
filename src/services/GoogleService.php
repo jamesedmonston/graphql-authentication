@@ -143,7 +143,7 @@ class GoogleService extends Component
 
         $email = $payload['email'];
 
-        if (!$email || !isset($email)) {
+        if (!$email) {
             $errorService->throw($settings->emailNotInScope);
         }
 

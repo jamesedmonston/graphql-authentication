@@ -117,7 +117,7 @@ class m201129_224453_create_refresh_tokens extends Migration
     {
         // gql_refresh_tokens table
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%gql_refresh_tokens}}', 'id'),
+            null,
             '{{%gql_refresh_tokens}}',
             'id',
             '{{%elements}}',
@@ -127,7 +127,7 @@ class m201129_224453_create_refresh_tokens extends Migration
         );
 
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%gql_refresh_tokens}}', 'userId'),
+            null,
             '{{%gql_refresh_tokens}}',
             'userId',
             '{{%elements}}',

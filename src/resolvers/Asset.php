@@ -6,6 +6,7 @@
 namespace jamesedmonston\graphqlauthentication\resolvers;
 
 use Craft;
+use craft\base\Volume;
 use craft\db\Table;
 use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
@@ -56,8 +57,12 @@ class Asset extends ElementResolver
                         continue;
                     }
 
-                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== $volumesService->getVolumeByHandle($volume)->id) {
-                        continue;
+                    if (isset($arguments['volumeId'])) {
+                        /** @var Volume $volume */
+                        $volume = $volumesService->getVolumeByHandle($volume);
+                        if (trim((string) $arguments['volumeId'][0]) != $volume->id) {
+                            continue;
+                        }
                     }
 
                     $arguments['uploader'] = $user->id;

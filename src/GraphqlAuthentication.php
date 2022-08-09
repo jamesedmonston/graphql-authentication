@@ -45,6 +45,7 @@ use yii\base\Event;
  * @property TwitterService $twitter
  * @property AppleService $apple
  * @property ErrorService $error
+ * @method Settings getSettings()
  */
 
 class GraphqlAuthentication extends Plugin

@@ -1,0 +1,10 @@
+includes:
+    - vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: 4
+    paths:
+        - src
+    earlyTerminatingMethodCalls:
+        jamesedmonston\graphqlauthentication\services\ErrorService:
+            - throw
