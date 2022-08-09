@@ -87,7 +87,7 @@ class RefreshToken extends Element
      *
      * @throws \yii\db\Exception
      */
-    public function afterSave(bool $isNew)
+    public function afterSave(bool $isNew): void
     {
         if ($isNew) {
             Craft::$app->db->createCommand()

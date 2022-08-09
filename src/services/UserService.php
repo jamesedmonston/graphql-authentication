@@ -36,7 +36,7 @@ class UserService extends Component
     /**
      * @inheritdoc
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -99,7 +99,7 @@ class UserService extends Component
         /** @var Fields */
         $fieldsService = Craft::$app->getFields();
 
-        $userFields = $fieldsService->getLayoutByType(User::class)->getFields();
+        $userFields = $fieldsService->getLayoutByType(User::class)->getCustomFields();
         $userArguments = [];
 
         foreach ($userFields as $userField) {

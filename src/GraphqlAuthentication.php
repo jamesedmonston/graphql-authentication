@@ -14,6 +14,7 @@ use Craft;
 use craft\base\Plugin;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\helpers\App;
 use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
@@ -114,17 +115,17 @@ class GraphqlAuthentication extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.2.0';
+    public string $schemaVersion = '1.2.0';
 
     /**
      * @var bool
      */
-    public $hasCpSettings = true;
+    public bool $hasCpSettings = true;
 
     /**
      * @var bool
      */
-    public $hasCpSection = false;
+    public bool $hasCpSection = false;
 
     // Public Methods
     // =========================================================================
@@ -194,14 +195,14 @@ class GraphqlAuthentication extends Plugin
     // Settings
     // =========================================================================
 
-    protected function createSettingsModel(): Settings
+    protected function createSettingsModel(): ?\craft\base\Model
     {
         return new Settings();
     }
 
-    public function getSettingsResponse()
+    public function getSettingsResponse(): mixed
     {
-        Craft::$app->controller->redirect(UrlHelper::cpUrl('graphql-authentication/settings'));
+        return Craft::$app->controller->redirect(UrlHelper::cpUrl('graphql-authentication/settings'));
     }
 
     public function onRegisterCPUrlRules(RegisterUrlRulesEvent $event)
@@ -212,7 +213,7 @@ class GraphqlAuthentication extends Plugin
 
     public function getSettingsData(string $setting): string
     {
-        if ($value = Craft::parseEnv($setting)) {
+        if ($value = App::parseEnv($setting)) {
             return $value;
         }
 
