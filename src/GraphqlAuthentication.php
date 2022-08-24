@@ -45,6 +45,7 @@ use yii\base\Event;
  * @property TwitterService $twitter
  * @property AppleService $apple
  * @property ErrorService $error
+ * @method Settings getSettings()
  */
 
 class GraphqlAuthentication extends Plugin
@@ -179,7 +180,7 @@ class GraphqlAuthentication extends Plugin
             Event::on(
                 Cp::class,
                 Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-                function (RegisterCpNavItemsEvent $event) {
+                function(RegisterCpNavItemsEvent $event) {
                     $event->navItems[] = [
                         'url' => 'graphql-authentication/refresh-tokens',
                         'label' => 'JWT Refresh Tokens',

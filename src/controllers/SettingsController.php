@@ -201,14 +201,14 @@ class SettingsController extends Controller
         $entryQueries = [];
         $entryMutations = [];
 
-        $scopes = array_filter($schema->scope, function ($key) {
+        $scopes = array_filter($schema->scope, function($key) {
             return StringHelper::contains($key, 'sections');
         });
 
         foreach ($scopes as $scope) {
             $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-            $section = array_values(array_filter($sections, function ($type) use ($scopeId) {
+            $section = array_values(array_filter($sections, function($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
             }))[0] ?? null;
 
@@ -249,14 +249,14 @@ class SettingsController extends Controller
         $assetQueries = [];
         $assetMutations = [];
 
-        $scopes = array_filter($schema->scope, function ($key) {
+        $scopes = array_filter($schema->scope, function($key) {
             return StringHelper::contains($key, 'volumes');
         });
 
         foreach ($scopes as $scope) {
             $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-            $volume = array_values(array_filter($volumes, function ($type) use ($scopeId) {
+            $volume = array_values(array_filter($volumes, function($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
             }))[0] ?? null;
 

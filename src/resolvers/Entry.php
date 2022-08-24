@@ -30,7 +30,7 @@ class Entry extends ElementResolver
         // If this is the beginning of a resolver chain, start fresh
         if ($source === null) {
             $query = EntryElement::find();
-            // If not, get the prepared element query
+        // If not, get the prepared element query
         } else {
             $query = $source->$fieldName;
         }
@@ -46,7 +46,7 @@ class Entry extends ElementResolver
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
-                $authorOnlySections = $restrictionService->getAuthorOnlySections($user, 'query');
+                $authorOnlySections = $user ? $restrictionService->getAuthorOnlySections($user, 'query') : [];
 
                 /** @var Sections */
                 $sectionsService = Craft::$app->getSections();
@@ -69,7 +69,7 @@ class Entry extends ElementResolver
                 if ($settings->permissionType === 'single') {
                     $siteId = $settings->siteId ?? null;
                 } else {
-                    $userGroup = $user->getGroups()[0]->id ?? null;
+                    $userGroup = $user ? ($user->getGroups()[0]->id ?? null) : null;
 
                     if ($userGroup) {
                         $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'] ?? null;
@@ -79,7 +79,7 @@ class Entry extends ElementResolver
                 if ($siteId) {
                     $arguments['siteId'] = $siteId;
                 }
-            } else {
+            } elseif ($user) {
                 $arguments['authorId'] = $user->id;
             }
         }

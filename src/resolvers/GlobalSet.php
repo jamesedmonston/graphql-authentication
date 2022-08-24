@@ -27,6 +27,7 @@ class GlobalSet extends ElementResolver
 
         if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
             $settings = GraphqlAuthentication::$settings;
+            $siteId = null;
 
             if ($settings->permissionType === 'single') {
                 $siteId = $settings->siteId ?? null;

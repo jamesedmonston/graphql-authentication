@@ -28,6 +28,7 @@ use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use yii\base\Event;
@@ -122,7 +123,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
@@ -130,6 +131,7 @@ class TokenService extends Component
                 }
 
                 $this->_clearExpiredTokens();
+                /** @var RefreshToken|null $refreshTokenElement */
                 $refreshTokenElement = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
@@ -165,7 +167,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 if (!$this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -186,7 +188,7 @@ class TokenService extends Component
             'description' => 'Deletes all refresh tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($settings, $errorService) {
+            'resolve' => function() use ($settings, $errorService) {
                 if (!$user = $this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -250,7 +252,10 @@ class TokenService extends Component
      */
     public function setActiveSchema(ExecuteGqlQueryEvent $event)
     {
-        if (!$token = $this->getHeaderToken()) {
+        /** @var UnencryptedToken|null $token */
+        $token = $this->getHeaderToken();
+
+        if (!$token) {
             return;
         }
 
@@ -284,7 +289,10 @@ class TokenService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        if (!$token = $this->getHeaderToken()) {
+        /** @var UnencryptedToken|null $token */
+        $token = $this->getHeaderToken();
+
+        if (!$token) {
             $errorService->throw($settings->invalidHeader);
         }
 
@@ -294,7 +302,7 @@ class TokenService extends Component
 
         // Temporary – remove this once users have had chance to update
         if (!$schemaId) {
-            $schemaId = array_values(array_filter($gqlService->getSchemas(), function (GqlSchema $schema) use ($token) {
+            $schemaId = array_values(array_filter($gqlService->getSchemas(), function(GqlSchema $schema) use ($token) {
                 return $schema->name === $token->claims()->get('schema');
             }))[0]->id ?? null;
         }
@@ -327,6 +335,7 @@ class TokenService extends Component
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
         }
 
+        /** @var UnencryptedToken $token */
         $id = $token->claims()->get('sub');
 
         /** @var Users */
@@ -535,7 +544,8 @@ class TokenService extends Component
      */
     protected function _validateExpiry(Token $token)
     {
-        /** @var DateTimeImmutable */
+        /** @var UnencryptedToken|null $token */
+        /** @var DateTimeImmutable $expiry */
         $expiry = $token->claims()->get('exp');
 
         if (!DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
@@ -551,6 +561,7 @@ class TokenService extends Component
     protected function _clearExpiredTokens()
     {
         // Temporary – remove this once users have had chance to update
+        /** @var RecordsGqlToken[] $gqlTokens */
         $gqlTokens = RecordsGqlToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->andWhere("name LIKE '%user-%'")->all();
 
         /** @var Gql */
