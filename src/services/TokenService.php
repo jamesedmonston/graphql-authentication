@@ -57,7 +57,7 @@ class TokenService extends Component
      * );
      * ```
      */
-    const EVENT_BEFORE_CREATE_JWT = 'beforeCreateJwt';
+    public const EVENT_BEFORE_CREATE_JWT = 'beforeCreateJwt';
 
     /**
      * @event JwtValidateEvent The event that is triggered before validating a JWT.
@@ -82,7 +82,7 @@ class TokenService extends Component
      * );
      * ```
      */
-    const EVENT_BEFORE_VALIDATE_JWT = 'beforeValidateJwt';
+    public const EVENT_BEFORE_VALIDATE_JWT = 'beforeValidateJwt';
 
     // Public Methods
     // =========================================================================
@@ -90,7 +90,7 @@ class TokenService extends Component
     /**
      * @inheritdoc
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 

@@ -89,7 +89,7 @@ class Settings extends Model
     public $facebookEmailMismatch = "Email address doesn't match allowed Facebook domains";
     public $twitterEmailMismatch = "Email address doesn't match allowed Twitter domains";
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [
