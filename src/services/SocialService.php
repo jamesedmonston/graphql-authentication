@@ -74,7 +74,7 @@ class SocialService extends Component
                 'password' => '',
                 'firstName' => $tokenUser['firstName'],
                 'lastName' => $tokenUser['lastName'],
-            ], $userGroupId ?? $settings->userGroup);
+            ], $userGroupId ?? $settings->userGroup, true);
         }
 
         if ($userGroupId) {

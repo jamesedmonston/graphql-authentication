@@ -12,6 +12,8 @@ use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
+use craft\helpers\Template;
+use craft\mail\Mailer;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Elements;
 use craft\services\Fields;
@@ -507,10 +509,11 @@ class UserService extends Component
      *
      * @param array $arguments
      * @param int $userGroup
+     * @param bool $social
      * @return User
      * @throws Error
      */
-    public function create(array $arguments, int $userGroup): User
+    public function create(array $arguments, int $userGroup, bool $social = false): User
     {
         $email = $arguments['email'];
         $password = $arguments['password'];
@@ -571,7 +574,18 @@ class UserService extends Component
         }
 
         if ($requiresVerification) {
-            $usersService->sendActivationEmail($user);
+            if ($social) {
+                /** @var Mailer */
+                $mailerService = Craft::$app->getMailer();
+                $url = $usersService->getEmailVerifyUrl($user);
+
+                $mailerService
+                    ->composeFromKey('account_activation', ['link' => Template::raw($url)])
+                    ->setTo($user)
+                    ->send();
+            } else {
+                $usersService->sendActivationEmail($user);
+            }
         }
 
         $this->_updateLastLogin($user);
