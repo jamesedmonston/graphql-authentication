@@ -58,7 +58,7 @@ class Settings extends Model
     public $invalidSchema = 'No schema has been set for this user group';
     public $invalidRequest = 'Cannot validate request';
     public $invalidLogin = "We couldn't log you in with the provided details";
-    public $invalidPasswordMatch = 'New passwords do not match';
+    public $invalidPasswordMatch = 'Passwords do not match';
     public $invalidPasswordUpdate = "We couldn't update the password with the provided details";
     public $invalidUserUpdate = "We couldn't update the user with the provided details";
     public $invalidOauthToken = 'Invalid OAuth Token';
@@ -73,6 +73,7 @@ class Settings extends Model
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';
     public $passwordResetRequired = 'Password reset required; please check your email';
+    public $accountDeleted = 'Successfully deleted account';
 
     public $tokenNotFound = "We couldn't find any matching tokens";
     public $userNotFound = "We couldn't find any matching users";
