@@ -62,7 +62,7 @@ class RestrictionService extends Component
         Event::on(
             Entry::class,
             Entry::EVENT_BEFORE_SAVE,
-            function(ModelEvent $event) {
+            function (ModelEvent $event) {
                 $this->restrictMutationFields($event);
                 $this->ensureEntryMutationAllowed($event);
             }
@@ -77,7 +77,7 @@ class RestrictionService extends Component
         Event::on(
             Asset::class,
             Asset::EVENT_BEFORE_SAVE,
-            function(ModelEvent $event) {
+            function (ModelEvent $event) {
                 $this->restrictMutationFields($event);
                 $this->ensureAssetMutationAllowed($event);
             }
@@ -225,11 +225,11 @@ class RestrictionService extends Component
 
         $errorService = GraphqlAuthentication::$errorService;
 
-        $queryFields = array_keys(array_filter($fieldPermissions, function($permission) {
+        $queryFields = array_keys(array_filter($fieldPermissions, function ($permission) {
             return $permission === 'query';
         }));
 
-        $privateFields = array_keys(array_filter($fieldPermissions, function($permission) {
+        $privateFields = array_keys(array_filter($fieldPermissions, function ($permission) {
             return $permission === 'private';
         }));
 
@@ -439,7 +439,7 @@ class RestrictionService extends Component
             }
         }
 
-        $authorOnlySections = array_keys(array_filter($authorOnlySections, function($section) {
+        $authorOnlySections = array_keys(array_filter($authorOnlySections, function ($section) {
             return (bool) $section;
         }));
 
@@ -478,7 +478,7 @@ class RestrictionService extends Component
             }
         }
 
-        $authorOnlyVolumes = array_keys(array_filter($authorOnlyVolumes, function($section) {
+        $authorOnlyVolumes = array_keys(array_filter($authorOnlyVolumes, function ($section) {
             return (bool) $section;
         }));
 

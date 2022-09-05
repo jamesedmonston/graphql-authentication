@@ -64,7 +64,7 @@ class UserService extends Component
             'description' => 'Gets authenticated user.',
             'type' => ElementsUser::getType(),
             'args' => [],
-            'resolve' => function() {
+            'resolve' => function () {
                 return GraphqlAuthentication::$tokenService->getUserFromToken();
             },
         ];
@@ -120,7 +120,7 @@ class UserService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
 
@@ -187,7 +187,7 @@ class UserService extends Component
                     ],
                     $userArguments
                 ),
-                'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService) {
+                'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                     if (!$schemaId) {
@@ -228,7 +228,7 @@ class UserService extends Component
                         ],
                         $userArguments
                     ),
-                    'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
+                    'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
 
@@ -252,7 +252,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $errorService, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $usersService) {
                 $code = $arguments['code'];
                 $id = $arguments['id'];
 
@@ -274,7 +274,7 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->activationEmailSent;
@@ -295,7 +295,7 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->passwordResetSent;
@@ -318,7 +318,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $errorService, $elementsService, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $elementsService, $usersService) {
                 $password = $arguments['password'];
                 $code = $arguments['code'];
                 $id = $arguments['id'];
@@ -351,7 +351,7 @@ class UserService extends Component
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
                 $user = $tokenService->getUserFromToken();
 
                 $currentPassword = $arguments['currentPassword'];
@@ -402,7 +402,7 @@ class UserService extends Component
                 ],
                 $userArguments
             ),
-            'resolve' => function($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
+            'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
                 $user = $tokenService->getUserFromToken();
 
                 $email = $arguments['email'] ?? null;

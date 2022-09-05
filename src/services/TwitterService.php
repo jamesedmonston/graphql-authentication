@@ -56,7 +56,7 @@ class TwitterService extends Component
             'description' => 'Generates the Twitter OAuth URL for allowing users to authenticate.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function() {
+            'resolve' => function () {
                 $settings = GraphqlAuthentication::$settings;
 
                 $client = new TwitterOAuth(
@@ -105,7 +105,7 @@ class TwitterService extends Component
                         'oauthToken' => Type::nonNull(Type::string()),
                         'oauthVerifier' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function($source, array $arguments) {
+                    'resolve' => function ($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -138,7 +138,7 @@ class TwitterService extends Component
                             'oauthToken' => Type::nonNull(Type::string()),
                             'oauthVerifier' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function($source, array $arguments) use ($userGroup) {
+                        'resolve' => function ($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
