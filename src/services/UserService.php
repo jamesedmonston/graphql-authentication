@@ -471,6 +471,10 @@ class UserService extends Component
                     $errorService->throw($errors[key($errors)][0]);
                 }
 
+                if ($email) {
+                    $usersService->sendNewEmailVerifyEmail($user);
+                }
+
                 return $user;
             },
         ];
