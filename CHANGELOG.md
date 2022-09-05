@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0 - 2022-09-05
+
+### Added
+
+- Added Craft 4 support! ([#94](https://github.com/jamesedmonston/graphql-authentication/issues/94)) – huge thanks to Brandon Kelly for the PR!
+- Added `deleteAccount` mutation ([#84](https://github.com/jamesedmonston/graphql-authentication/issues/84))
+
+### Changed
+
+- PHP >8.0 is now required
+- Craft >4.0 is now required
+- The email verification email is now sent out to users when updating their email via the `updateViewer` mutation ([#90](https://github.com/jamesedmonston/graphql-authentication/issues/90))
+- When using the JWT returned from a `register` mutation to authenticate requests, all requests will throw a `Please activate your account` error until the account is activated ([#83](https://github.com/jamesedmonston/graphql-authentication/issues/93))
+
+### Fixed
+
+- When users register through a social mutation, they now receive an appropriate activation email (if enabled), rather than the set password email ([#72](https://github.com/jamesedmonston/graphql-authentication/issues/72))
+
 ## 1.12.3 - 2022-02-25
 
 ### Fixed
