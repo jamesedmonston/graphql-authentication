@@ -497,6 +497,10 @@ class UserService extends Component
                     $errorService->throw($settings->invalidPasswordMatch);
                 }
 
+                if (!$user->authenticate($password)) {
+                    $errorService->throw($settings->invalidLogin);
+                }
+
                 $elementsService->deleteElement($user);
 
                 return $settings->accountDeleted;
