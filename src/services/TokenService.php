@@ -241,7 +241,7 @@ class TokenService extends Component
             return null;
         }
 
-        $this->_validateExpiry($token);
+        $this->_validateToken($token);
         return $token;
     }
 
@@ -537,22 +537,29 @@ class TokenService extends Component
     }
 
     /**
-     * Validates token expiry date
+     * Validates token and user activation state
      *
      * @param Token $token
      * @throws Error
      */
-    protected function _validateExpiry(Token $token)
+    protected function _validateToken(Token $token)
     {
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
+
         /** @var UnencryptedToken|null $token */
         /** @var DateTimeImmutable $expiry */
         $expiry = $token->claims()->get('exp');
 
-        if (!DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
-            return;
+        if (DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
+            $errorService->throw($settings->invalidHeader, true);
         }
 
-        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, true);
+        $user = $this->getUserFromToken($token);
+
+        if ($user->status !== 'active') {
+            $errorService->throw($settings->userNotActivated);
+        }
     }
 
     /**
