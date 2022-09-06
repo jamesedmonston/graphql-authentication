@@ -300,13 +300,6 @@ class TokenService extends Component
         $gqlService = Craft::$app->getGql();
         $schemaId = $token->claims()->get('schemaId') ?? null;
 
-        // Temporary – remove this once users have had chance to update
-        if (!$schemaId) {
-            $schemaId = array_values(array_filter($gqlService->getSchemas(), function (GqlSchema $schema) use ($token) {
-                return $schema->name === $token->claims()->get('schema');
-            }))[0]->id ?? null;
-        }
-
         if (!$schemaId) {
             $errorService->throw($settings->invalidHeader);
         }
@@ -567,17 +560,6 @@ class TokenService extends Component
      */
     protected function _clearExpiredTokens()
     {
-        // Temporary – remove this once users have had chance to update
-        /** @var RecordsGqlToken[] $gqlTokens */
-        $gqlTokens = RecordsGqlToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->andWhere("name LIKE '%user-%'")->all();
-
-        /** @var Gql */
-        $gqlService = Craft::$app->getGql();
-
-        foreach ($gqlTokens as $gqlToken) {
-            $gqlService->deleteTokenById($gqlToken->id);
-        }
-
         $refreshTokens = RefreshToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->all();
 
         /** @var Elements */
