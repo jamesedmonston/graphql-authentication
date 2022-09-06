@@ -514,10 +514,6 @@ class TokenService extends Component
             $expiry = strtotime((new DateTime())->modify("+ {$expiration}")->format('Y-m-d H:i:s'));
         }
 
-        if (PHP_VERSION_ID < 70300) {
-            return setcookie($name, $token, $expiry, "/; samesite={$settings->sameSitePolicy}", '', true, true);
-        }
-
         return setcookie($name, $token, [
             'expires' => $expiry,
             'path' => '/',
