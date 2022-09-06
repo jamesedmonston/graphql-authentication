@@ -10,7 +10,6 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
-use craft\records\GqlToken as RecordsGqlToken;
 use craft\services\Elements;
 use craft\services\Gql;
 use craft\services\Users;
