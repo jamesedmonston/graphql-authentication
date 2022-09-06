@@ -187,7 +187,7 @@ class RestrictionService extends Component
         }
 
         /** @var OperationDefinitionNode[] $definitions */
-//        /** @phpstan-ignore-next-line */
+        /** @phpstan-ignore-next-line */
         $definitions = Parser::parse($event->query)->definitions ?? [];
 
         if (!count($definitions)) {
