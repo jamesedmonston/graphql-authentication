@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.0 - 2022-09-05
+## 2.0.0 - 2022-09-05
 
 ### Added
 
@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - PHP >8.0 is now required
 - Craft >4.0 is now required
 - The email verification email is now sent out to users when updating their email via the `updateViewer` mutation ([#90](https://github.com/jamesedmonston/graphql-authentication/issues/90))
-- When using the JWT returned from a `register` mutation to authenticate requests, all requests will throw a `Please activate your account` error until the account is activated ([#83](https://github.com/jamesedmonston/graphql-authentication/issues/93))
+- When using the JWT returned from a `register` mutation to authenticate requests, all requests will throw a `Please activate your account` error until the account is activated ([#83](https://github.com/jamesedmonston/graphql-authentication/issues/83))
 
 ### Fixed
 
