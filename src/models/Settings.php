@@ -53,6 +53,8 @@ class Settings extends Model
     public $appleServiceSecret = null;
     public $appleRedirectUrl = null;
 
+    public $skipSocialActivation = false;
+
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
     public $invalidSchema = 'No schema has been set for this user group';
@@ -149,6 +151,7 @@ class Settings extends Model
                     'appleServiceId',
                     'appleServiceSecret',
                     'appleRedirectUrl',
+                    'skipSocialActivation',
                 ],
                 'default',
             ],

@@ -552,8 +552,13 @@ class UserService extends Component
         $requiresVerification = $projectConfigService->get('users.requireEmailVerification');
         $suspendByDefault = $projectConfigService->get('users.suspendByDefault');
 
+        $settings = GraphqlAuthentication::$settings;
+        $skipSocialActivation = $settings->skipSocialActivation;
+
         if ($requiresVerification || $suspendByDefault) {
-            $user->pending = true;
+            if (!$social || ($social && !$skipSocialActivation)) {
+                $user->pending = true;
+            }
         }
 
         /** @var Elements */
@@ -579,14 +584,16 @@ class UserService extends Component
 
         if ($requiresVerification) {
             if ($social) {
-                /** @var Mailer */
-                $mailerService = Craft::$app->getMailer();
-                $url = $usersService->getEmailVerifyUrl($user);
+                if (!$skipSocialActivation) {
+                    /** @var Mailer */
+                    $mailerService = Craft::$app->getMailer();
+                    $url = $usersService->getEmailVerifyUrl($user);
 
-                $mailerService
-                    ->composeFromKey('account_activation', ['link' => Template::raw($url)])
-                    ->setTo($user)
-                    ->send();
+                    $mailerService
+                        ->composeFromKey('account_activation', ['link' => Template::raw($url)])
+                        ->setTo($user)
+                        ->send();
+                }
             } else {
                 $usersService->sendActivationEmail($user);
             }
