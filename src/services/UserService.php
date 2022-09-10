@@ -488,8 +488,10 @@ class UserService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $tokenService, $elementsService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $tokenService, $elementsService, $permissionsService, $usersService) {
                 $user = $tokenService->getUserFromToken();
+                $user = $usersService->getUserByUsernameOrEmail($user->email);
+
                 $password = $arguments['password'];
                 $confirmPassword = $arguments['confirmPassword'];
 
@@ -497,7 +499,14 @@ class UserService extends Component
                     $errorService->throw($settings->invalidPasswordMatch);
                 }
 
+                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                if (!in_array('accessCp', $userPermissions)) {
+                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                }
+
                 if (!$user->authenticate($password)) {
+                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
                     $errorService->throw($settings->invalidLogin);
                 }
 
