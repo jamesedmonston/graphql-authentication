@@ -397,8 +397,7 @@ class UserService extends Component
                 [
                     'email' => Type::string(),
                     'username' => Type::string(),
-                    'firstName' => Type::string(),
-                    'lastName' => Type::string(),
+                    'fullName' => Type::string(),
                     'preferredLanguage' => Type::string(),
                     'photo' => File::getType(),
                 ],
@@ -409,8 +408,7 @@ class UserService extends Component
 
                 $email = $arguments['email'] ?? null;
                 $username = $arguments['username'] ?? null;
-                $firstName = $arguments['firstName'] ?? null;
-                $lastName = $arguments['lastName'] ?? null;
+                $fullName = $arguments['fullName'] ?? null;
                 $preferredLanguage = $arguments['preferredLanguage'] ?? null;
 
                 if ($email) {
@@ -425,12 +423,8 @@ class UserService extends Component
                     $user->username = $username;
                 }
 
-                if ($firstName) {
-                    $user->firstName = $firstName;
-                }
-
-                if ($lastName) {
-                    $user->lastName = $lastName;
+                if ($fullName) {
+                    $user->fullName = $fullName;
                 }
 
                 if ($preferredLanguage) {
