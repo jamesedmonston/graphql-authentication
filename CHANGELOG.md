@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Misc
 
-- Ensure Twitter Oauth credentials are removed from session
+- Ensure Twitter OAuth credentials are removed from session
 
 ## 2.1.0 - 2022-09-11
 
