@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.0 - 2022-09-11
+
+### Added
+
+- Added setting to skip user activation when registering through social mutations ([#100](https://github.com/jamesedmonston/graphql-authentication/issues/100))
+
+### Changed
+
+- `firstName` and `lastName` have been migrated to `fullName` across all register and viewer mutations ([#101](https://github.com/jamesedmonston/graphql-authentication/issues/101))
+
+### Fixed
+
+- Fixed `updateViewer` mutation not updating user's name (use `fullName` parameter, as above) ([#101](https://github.com/jamesedmonston/graphql-authentication/issues/101))
+- Fixed `deleteAccount` mutation not deleting user ([#102](https://github.com/jamesedmonston/graphql-authentication/issues/102))
+
 ## 2.0.0 - 2022-09-05
 
 ### Added
