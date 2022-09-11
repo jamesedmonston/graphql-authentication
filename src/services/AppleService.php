@@ -234,14 +234,11 @@ class AppleService extends Component
             $errorService->throw($settings->emailNotInScope);
         }
 
-        $name = explode(' ', $claims->name ?? '', 1);
-        $firstName = $name[0] ?? '';
-        $lastName = $name[1] ?? '';
+        $fullName = $claims->name ?? '';
 
         return compact(
             'email',
-            'firstName',
-            'lastName'
+            'fullName'
         );
     }
 }

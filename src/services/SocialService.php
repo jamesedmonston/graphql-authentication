@@ -72,8 +72,7 @@ class SocialService extends Component
             $user = $userService->create([
                 'email' => $tokenUser['email'],
                 'password' => '',
-                'firstName' => $tokenUser['firstName'],
-                'lastName' => $tokenUser['lastName'],
+                'fullName' => $tokenUser['fullName'],
             ], $userGroupId ?? $settings->userGroup, true);
         }
 

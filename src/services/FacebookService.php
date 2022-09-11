@@ -198,14 +198,11 @@ class FacebookService extends Component
             );
         }
 
-        $name = explode(' ', $user->getName() ?? '', 1);
-        $firstName = $name[0] ?? '';
-        $lastName = $name[1] ?? '';
+        $fullName = $user->getName() ?? '';
 
         return compact(
             'email',
-            'firstName',
-            'lastName'
+            'fullName'
         );
     }
 }

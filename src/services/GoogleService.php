@@ -155,18 +155,11 @@ class GoogleService extends Component
             );
         }
 
-        $name = $payload['name'] ?? '';
-        $firstName = $payload['given_name'] ?? null;
-        $lastName = $payload['family_name'] ?? null;
-
-        $name = explode(' ', $name, 1);
-        $firstName = $firstName ?? $name[0] ?? '';
-        $lastName = $lastName ?? $name[1] ?? '';
+        $fullName = $payload['name'] ?? '';
 
         return compact(
             'email',
-            'firstName',
-            'lastName'
+            'fullName'
         );
     }
 }

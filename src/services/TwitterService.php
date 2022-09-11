@@ -227,17 +227,11 @@ class TwitterService extends Component
             );
         }
 
-        $name = explode(' ', $user->name ?? '', 1);
-        $firstName = $name[0] ?? '';
-        $lastName = $name[1] ?? '';
-
-        $sessionService->remove('oauthToken');
-        $sessionService->remove('oauthTokenSecret');
+        $fullName = $user->name ?? '';
 
         return compact(
             'email',
-            'firstName',
-            'lastName'
+            'fullName'
         );
     }
 }
