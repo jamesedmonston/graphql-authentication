@@ -229,6 +229,9 @@ class TwitterService extends Component
 
         $fullName = $user->name ?? '';
 
+        $sessionService->remove('oauthToken');
+        $sessionService->remove('oauthTokenSecret');
+
         return compact(
             'email',
             'fullName'
