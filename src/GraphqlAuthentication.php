@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Authentication plugin for Craft CMS 3.5
+ * GraphQL Authentication plugin for Craft CMS 4.0
  *
  * GraphQL authentication for your headless Craft CMS applications.
  *

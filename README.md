@@ -1,4 +1,4 @@
-# GraphQL Authentication plugin for Craft CMS 3.5+
+# GraphQL Authentication plugin for Craft CMS 4.0+
 
 GraphQL Authentication adds a JWT authentication layer to your Craft CMS GraphQL endpoint.
 
