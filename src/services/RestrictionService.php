@@ -274,48 +274,43 @@ class RestrictionService extends Component
 
         /** @var Entry|Asset $element */
         $element = $event->sender;
-
         $siteId = $element->site->id;
 
         foreach ($element->getFieldValues() as $fieldValue) {
-            if (!$fieldValue instanceof ElementQuery) {
-                continue;
-            }
-
-            if ($fieldValue instanceof MatrixBlockQuery && !$fieldValue->id) {
+            if (!$fieldValue instanceof ElementQuery && !$fieldValue instanceof MatrixBlockQuery) {
                 continue;
             }
 
             switch ($fieldValue->elementType) {
                 case Entry::class:
-                    foreach ($fieldValue->id as $id) {
-                        $this->_ensureValidEntry($id, $siteId);
+                    foreach ($fieldValue->all() as $entry) {
+                        $this->_ensureValidEntry($entry->id, $siteId);
                     }
                     break;
 
                 case Asset::class:
-                    foreach ($fieldValue->id as $id) {
-                        $this->_ensureValidAsset($id);
+                    foreach ($fieldValue->all() as $asset) {
+                        $this->_ensureValidAsset($asset->id);
                     }
                     break;
 
                 case MatrixBlock::class:
                     foreach ($fieldValue->all() as $block) {
                         foreach ($block->getFieldValues() as $blockFieldValue) {
-                            if (!$blockFieldValue instanceof ElementQuery || !$blockFieldValue->id) {
+                            if (!$blockFieldValue instanceof ElementQuery) {
                                 continue;
                             }
 
                             switch ($blockFieldValue->elementType) {
                                 case Entry::class:
-                                    foreach ($blockFieldValue->id as $id) {
-                                        $this->_ensureValidEntry($id, $siteId);
+                                    foreach ($blockFieldValue->all() as $blockFieldEntry) {
+                                        $this->_ensureValidEntry($blockFieldEntry->id, $siteId);
                                     }
                                     break;
 
                                 case Asset::class:
-                                    foreach ($blockFieldValue->id as $id) {
-                                        $this->_ensureValidAsset($id);
+                                    foreach ($blockFieldValue->all() as $blockFieldAsset) {
+                                        $this->_ensureValidAsset($blockFieldAsset->id);
                                     }
                                     break;
 
