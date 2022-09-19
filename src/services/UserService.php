@@ -552,9 +552,12 @@ class UserService extends Component
         $skipSocialActivation = $settings->skipSocialActivation;
 
         if ($requiresVerification || $suspendByDefault) {
-            if (!$social || ($social && !$skipSocialActivation)) {
-                $user->pending = true;
-            }
+            $user->pending = true;
+        }
+
+        if ($social && $skipSocialActivation) {
+            $user->active = true;
+            $user->pending = false;
         }
 
         /** @var Elements */
