@@ -175,7 +175,7 @@ class RestrictionService extends Component
      */
     public function shouldRestrictFields(): bool
     {
-        if (Craft::$app->getRequest()->isConsoleRequest) {
+        if (Craft::$app->getRequest()->isConsoleRequest || Craft::$app->getRequest()->isCpRequest) {
             return false;
         }
 
