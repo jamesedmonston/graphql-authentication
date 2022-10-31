@@ -528,6 +528,7 @@ class UserService extends Component
         $user = new User();
         $user->username = $email;
         $user->email = $email;
+        $user->active = true;
 
         if ($username) {
             $user->username = $username;
@@ -552,6 +553,7 @@ class UserService extends Component
         $skipSocialActivation = $settings->skipSocialActivation;
 
         if ($requiresVerification || $suspendByDefault) {
+            $user->active = false;
             $user->pending = true;
         }
 
