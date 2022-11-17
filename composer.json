@@ -31,7 +31,8 @@
     "craftcms/cms": "^4.0.0-alpha.1",
     "google/apiclient": "^2.10",
     "lcobucci/jwt": "^4.1",
-    "league/oauth2-facebook": "^2.0"
+    "league/oauth2-facebook": "^2.0",
+    "thenetworg/oauth2-azure": "^2.1"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",

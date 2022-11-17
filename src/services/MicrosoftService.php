@@ -13,10 +13,10 @@ use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
-use League\OAuth2\Client\Provider\Facebook;
+use TheNetworg\OAuth2\Client\Provider\Azure;
 use yii\base\Event;
 
-class FacebookService extends Component
+class MicrosoftService extends Component
 {
     // Public Methods
     // =========================================================================
@@ -42,7 +42,7 @@ class FacebookService extends Component
     }
 
     /**
-     * Registers Facebook Login queries
+     * Registers Login with Microsoft queries
      *
      * @param RegisterGqlQueriesEvent $event
      */
@@ -52,28 +52,35 @@ class FacebookService extends Component
             return;
         }
 
-        $event->queries['facebookOauthUrl'] = [
-            'description' => 'Generates the Facebook OAuth URL for allowing users to authenticate.',
+        $event->queries['microsoftOauthUrl'] = [
+            'description' => 'Generates the Microsoft OAuth URL for allowing users to authenticate.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
             'resolve' => function () {
                 $settings = GraphqlAuthentication::$settings;
 
-                $client = new Facebook([
-                    'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
-                    'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
-                    'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
-                    'graphApiVersion' => 'v2.10',
+                $provider = new Azure([
+                    'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppId),
+                    'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppSecret),
+                    'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftRedirectUrl),
                 ]);
 
-                $url = $client->getAuthorizationUrl(['scope' => ['email']]);
+                $state = Craft::$app->getSecurity()->generateRandomString();
+                $sessionService = Craft::$app->getSession();
+                $sessionService->set('state', $state);
+
+                $url = $provider->getAuthorizationUrl([
+                    'scope' => ['offline_access'],
+                    'state' => $state,
+                ]);
+
                 return $url;
             },
         ];
     }
 
     /**
-     * Registers Facebook Login mutations
+     * Registers Login with Microsoft mutations
      *
      * @param RegisterGqlMutationsEvent $event
      */
@@ -85,11 +92,12 @@ class FacebookService extends Component
 
         switch (GraphqlAuthentication::$settings->permissionType) {
             case 'single':
-                $event->mutations['facebookSignIn'] = [
-                    'description' => 'Authenticates a user using a Facebook Sign-In token. Returns user and token.',
+                $event->mutations['microsoftSignIn'] = [
+                    'description' => 'Authenticates a user using a Login with Microsoft token. Returns user and token.',
                     'type' => Type::nonNull(Auth::getType()),
                     'args' => [
                         'code' => Type::nonNull(Type::string()),
+                        'state' => Type::nonNull(Type::string()),
                     ],
                     'resolve' => function ($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
@@ -100,7 +108,8 @@ class FacebookService extends Component
                         }
 
                         $code = $arguments['code'];
-                        $tokenUser = $this->_getUserFromToken($code);
+                        $state = $arguments['state'];
+                        $tokenUser = $this->_getUserFromToken($code, $state);
 
                         $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId);
                         return $user;
@@ -116,11 +125,12 @@ class FacebookService extends Component
                 foreach ($userGroups as $userGroup) {
                     $handle = ucfirst($userGroup->handle);
 
-                    $event->mutations["facebookSignIn{$handle}"] = [
-                        'description' => "Authenticates a {$userGroup->name} using a Facebook Sign-In token. Returns user and token.",
+                    $event->mutations["microsoftSignIn{$handle}"] = [
+                        'description' => "Authenticates a {$userGroup->name} using a Login with Microsoft token. Returns user and token.",
                         'type' => Type::nonNull(Auth::getType()),
                         'args' => [
                             'code' => Type::nonNull(Type::string()),
+                            'state' => Type::nonNull(Type::string()),
                         ],
                         'resolve' => function ($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
@@ -132,7 +142,8 @@ class FacebookService extends Component
                             }
 
                             $code = $arguments['code'];
-                            $tokenUser = $this->_getUserFromToken($code);
+                            $state = $arguments['state'];
+                            $tokenUser = $this->_getUserFromToken($code, $state);
 
                             $user = GraphqlAuthentication::$socialService->authenticate($tokenUser, $schemaId, $userGroup->id);
                             return $user;
@@ -154,48 +165,57 @@ class FacebookService extends Component
     protected function _validateSettings(): bool
     {
         $settings = GraphqlAuthentication::$settings;
-        return (bool) $settings->facebookAppId && (bool) $settings->facebookAppSecret && (bool) $settings->facebookRedirectUrl;
+        return (bool) $settings->microsoftAppId && (bool) $settings->microsoftAppSecret && (bool) $settings->microsoftRedirectUrl;
     }
 
     /**
-     * Gets user details from Facebook Login token
+     * Gets user details from Login with Microsoft token
      *
      * @param string $code
+     * @param string $state
      * @return array
      * @throws Error
      */
-    protected function _getUserFromToken(string $code): array
+    protected function _getUserFromToken(string $code, string $state): array
     {
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        $client = new Facebook([
-            'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppId),
-            'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookAppSecret),
-            'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->facebookRedirectUrl),
-            'graphApiVersion' => 'v2.10',
+        $sessionService = Craft::$app->getSession();
+        $sessionState = $sessionService->get('state');
+
+        if ($state !== $sessionState) {
+            $errorService->throw($settings->invalidOauthToken);
+        }
+
+        $provider = new Azure([
+            'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppId),
+            'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppSecret),
+            'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftRedirectUrl),
         ]);
 
-        $accessToken = $client->getAccessToken('authorization_code', [
+        $accessToken = $provider->getAccessToken('authorization_code', [
             'code' => $code,
         ]);
 
-        $user = $client->getResourceOwner($accessToken);
-        $email = $user->getEmail();
+        $user = $provider->getResourceOwner($accessToken);
+        $email = $user->claim('email');
 
         if (!$email) {
             $errorService->throw($settings->emailNotInScope);
         }
 
-        if ($settings->allowedFacebookDomains) {
+        if ($settings->allowedMicrosoftDomains) {
             GraphqlAuthentication::$socialService->verifyEmailDomain(
                 $email,
-                $settings->allowedFacebookDomains,
-                $settings->facebookEmailMismatch
+                $settings->allowedMicrosoftDomains,
+                $settings->microsoftEmailMismatch
             );
         }
 
-        $fullName = $user->getName() ?? '';
+        $fullName = "{$user->getFirstName()} {$user->getLastName()}";
+
+        $sessionService->remove('state');
 
         return compact(
             'email',

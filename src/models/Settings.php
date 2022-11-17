@@ -53,6 +53,11 @@ class Settings extends Model
     public $appleServiceSecret = null;
     public $appleRedirectUrl = null;
 
+    public $microsoftAppId = null;
+    public $microsoftAppSecret = null;
+    public $microsoftRedirectUrl = null;
+    public $allowedMicrosoftDomains = null;
+
     public $skipSocialActivation = false;
 
     // Messages
@@ -91,6 +96,7 @@ class Settings extends Model
     public $googleEmailMismatch = "Email address doesn't match allowed Google domains";
     public $facebookEmailMismatch = "Email address doesn't match allowed Facebook domains";
     public $twitterEmailMismatch = "Email address doesn't match allowed Twitter domains";
+    public $microsoftEmailMismatch = "Email address doesn't match allowed Microsoft domains";
 
     public function rules(): array
     {
@@ -118,6 +124,7 @@ class Settings extends Model
                     'googleEmailMismatch',
                     'facebookEmailMismatch',
                     'twitterEmailMismatch',
+                    'microsoftEmailMismatch',
                 ],
                 'required',
             ],
@@ -152,6 +159,10 @@ class Settings extends Model
                     'appleServiceSecret',
                     'appleRedirectUrl',
                     'skipSocialActivation',
+                    'microsoftAppId',
+                    'microsoftAppSecret',
+                    'microsoftRedirectUrl',
+                    'allowedMicrosoftDomains',
                 ],
                 'default',
             ],
