@@ -213,13 +213,15 @@ class MicrosoftService extends Component
             );
         }
 
-        $fullName = "{$user->claim('given_name')} {$user->claim('family_name')}";
+        $firstName = $user->claim('given_name');
+        $lastName = $user->claim('family_name');
 
         $sessionService->remove('state');
 
         return compact(
             'email',
-            'fullName'
+            'firstName',
+            'lastName'
         );
     }
 }
