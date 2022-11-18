@@ -8,6 +8,17 @@
 }, '') }}
 
 <hr/>
+
+{{ forms.field({
+  label: 'Skip Activation',
+  instructions: "Whether or not users will be automatically activated when registering via social mutations.",
+  name: 'skipSocialActivation',
+}, forms.lightswitch({
+  name: 'skipSocialActivation',
+  on: settings.skipSocialActivation,
+})) }}
+
+<hr/>
 <h2>Google</h2>
 
 {{ forms.field({
@@ -17,7 +28,7 @@
 
 {{ forms.autosuggestField({
   label: 'Client ID',
-  instructions: 'The client ID from your Google OAuth project.',
+  instructions: 'The Client ID from your Google OAuth project.',
   name: 'googleClientId',
   value: settings.googleClientId,
   placeholder: 'xxxx-xxxx.apps.googleusercontent.com',
@@ -187,5 +198,52 @@
   name: 'appleRedirectUrl',
   value: settings.appleRedirectUrl,
   placeholder: 'https://yoursite.com/redirect',
+  required: false,
+}) }}
+
+<hr/>
+<h2>Microsoft</h2>
+
+{{ forms.field({
+  instructions: 'Use the `microsoftOauthUrl` query to get the authorization URL, then use the `microsoftSignIn` mutation to authenticate a user, after filling in the all fields below.',
+  first: true,
+}, '') }}
+
+{{ forms.autosuggestField({
+  label: 'App ID',
+  instructions: 'The App ID from your Microsoft app.',
+  name: 'microsoftAppId',
+  value: settings.microsoftAppId,
+  placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxx',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+  label: 'App Secret',
+  instructions: 'The App Secret from your Microsoft app.',
+  name: 'microsoftAppSecret',
+  value: settings.microsoftAppSecret,
+  placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+  label: 'Redirect URL',
+  instructions: 'The URL to redirect to after authenticating.',
+  name: 'microsoftRedirectUrl',
+  value: settings.microsoftRedirectUrl,
+  placeholder: 'https://yoursite.com/redirect',
+  required: false,
+  suggestEnvVars: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Allowed Email Domains',
+  instructions: "The domains from which you'd like to allow Log in with Microsoft. Comma-delimited. Leave empty to allow any domain.",
+  name: 'allowedMicrosoftDomains',
+  value: settings.allowedMicrosoftDomains,
+  placeholder: 'domain1.com, domain2.co.uk',
   required: false,
 }) }}
