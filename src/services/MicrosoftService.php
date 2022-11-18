@@ -213,8 +213,8 @@ class MicrosoftService extends Component
             );
         }
 
-        $firstName = $user->claim('given_name');
-        $lastName = $user->claim('family_name');
+        $firstName = $user->claim('given_name') ?? '';
+        $lastName = $user->claim('family_name') ?? '';
 
         $sessionService->remove('state');
 
