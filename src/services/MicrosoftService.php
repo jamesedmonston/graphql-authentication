@@ -182,11 +182,11 @@ class MicrosoftService extends Component
         $errorService = GraphqlAuthentication::$errorService;
 
         $sessionService = Craft::$app->getSession();
-        $sessionState = $sessionService->get('state');
+        // $sessionState = $sessionService->get('state');
 
-        if ($state !== $sessionState) {
-            $errorService->throw($settings->invalidOauthToken);
-        }
+        // if ($state !== $sessionState) {
+        //     $errorService->throw($settings->invalidOauthToken);
+        // }
 
         $provider = new Azure([
             'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppId),
