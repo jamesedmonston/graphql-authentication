@@ -70,7 +70,7 @@ class MicrosoftService extends Component
                 $sessionService->set('state', $state);
 
                 $url = $provider->getAuthorizationUrl([
-                    'scope' => ['offline_access'],
+                    'scope' => ['offline_access', 'profile', 'user', 'email'],
                     'state' => $state,
                 ]);
 
@@ -199,7 +199,7 @@ class MicrosoftService extends Component
         ]);
 
         $user = $provider->getResourceOwner($accessToken);
-        $email = $user->claim('email');
+        $email = $user->claim('upn');
 
         if (!$email) {
             $errorService->throw($settings->emailNotInScope);
@@ -213,7 +213,7 @@ class MicrosoftService extends Component
             );
         }
 
-        $fullName = "{$user->getFirstName()} {$user->getLastName()}";
+        $fullName = "{$user->claim('given_name')} {$user->claim('family_name')}";
 
         $sessionService->remove('state');
 
