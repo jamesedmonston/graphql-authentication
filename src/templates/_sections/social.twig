@@ -8,17 +8,6 @@
 }, '') }}
 
 <hr/>
-
-{{ forms.field({
-  label: 'Skip Activation',
-  instructions: "Whether or not users will be automatically activated when registering via social mutations.",
-  name: 'skipSocialActivation',
-}, forms.lightswitch({
-  name: 'skipSocialActivation',
-  on: settings.skipSocialActivation,
-})) }}
-
-<hr/>
 <h2>Google</h2>
 
 {{ forms.field({
