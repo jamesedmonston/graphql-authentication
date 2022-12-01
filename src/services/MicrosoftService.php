@@ -199,7 +199,7 @@ class MicrosoftService extends Component
         ]);
 
         $user = $provider->getResourceOwner($accessToken);
-        $email = $user->claim('upn');
+        $email = $user->claim('email') ?? $user->claim('upn');
 
         if (!$email) {
             $errorService->throw($settings->emailNotInScope);
