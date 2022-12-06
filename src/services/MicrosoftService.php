@@ -14,6 +14,7 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use TheNetworg\OAuth2\Client\Provider\Azure;
+use Throwable;
 use yii\base\Event;
 
 class MicrosoftService extends Component
@@ -181,47 +182,42 @@ class MicrosoftService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        $sessionService = Craft::$app->getSession();
-        // $sessionState = $sessionService->get('state');
+        try {
+            $provider = new Azure([
+                'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppId),
+                'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppSecret),
+                'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftRedirectUrl),
+            ]);
 
-        // if ($state !== $sessionState) {
-        //     $errorService->throw($settings->invalidOauthToken);
-        // }
+            $accessToken = $provider->getAccessToken('authorization_code', [
+                'code' => $code,
+            ]);
 
-        $provider = new Azure([
-            'clientId' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppId),
-            'clientSecret' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftAppSecret),
-            'redirectUri' => GraphqlAuthentication::getInstance()->getSettingsData($settings->microsoftRedirectUrl),
-        ]);
+            $user = $provider->getResourceOwner($accessToken);
+            $email = $user->claim('email') ?? $user->claim('upn');
 
-        $accessToken = $provider->getAccessToken('authorization_code', [
-            'code' => $code,
-        ]);
+            if (!$email) {
+                $errorService->throw($settings->emailNotInScope);
+            }
 
-        $user = $provider->getResourceOwner($accessToken);
-        $email = $user->claim('email') ?? $user->claim('upn');
+            if ($settings->allowedMicrosoftDomains) {
+                GraphqlAuthentication::$socialService->verifyEmailDomain(
+                    $email,
+                    $settings->allowedMicrosoftDomains,
+                    $settings->microsoftEmailMismatch
+                );
+            }
 
-        if (!$email) {
-            $errorService->throw($settings->emailNotInScope);
-        }
+            $firstName = $user->claim('given_name') ?? '';
+            $lastName = $user->claim('family_name') ?? '';
 
-        if ($settings->allowedMicrosoftDomains) {
-            GraphqlAuthentication::$socialService->verifyEmailDomain(
-                $email,
-                $settings->allowedMicrosoftDomains,
-                $settings->microsoftEmailMismatch
+            return compact(
+                'email',
+                'firstName',
+                'lastName'
             );
+        } catch (Throwable $e) {
+            $errorService->throw($e->getMessage());
         }
-
-        $firstName = $user->claim('given_name') ?? '';
-        $lastName = $user->claim('family_name') ?? '';
-
-        $sessionService->remove('state');
-
-        return compact(
-            'email',
-            'firstName',
-            'lastName'
-        );
     }
 }
