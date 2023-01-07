@@ -73,9 +73,10 @@ class Settings extends Model
     public $invalidRefreshToken = 'Invalid Refresh Token';
     public $invalidEmailAddress = 'Invalid email address';
 
-    public $userNotActivated = "Please activate your account";
     public $activationEmailSent = 'You will receive an email if it matches an account in our system';
+    public $userNotActivated = "Please activate your account";
     public $userActivated = 'Successfully activated user';
+    public $userHasPassword = 'User not password-less';
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';

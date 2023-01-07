@@ -507,6 +507,30 @@ class UserService extends Component
                 return $settings->accountDeleted;
             },
         ];
+
+        $event->mutations['deleteSocialAccount'] = [
+            'description' => 'Deletes authenticated password-less user. Returns success message.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $tokenService, $elementsService, $permissionsService, $usersService) {
+                $user = $tokenService->getUserFromToken();
+                $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                if ($user->password) {
+                    $errorService->throw($settings->userHasPassword);
+                }
+
+                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                if (!in_array('accessCp', $userPermissions)) {
+                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                }
+
+                $elementsService->deleteElement($user);
+
+                return $settings->accountDeleted;
+            },
+        ];
     }
 
     /**
