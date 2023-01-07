@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.1 - 2023-01-07
+
+### Fixed
+
+- Fixed issue with settings breadcrumb being hardcoded to `/settings` ([#117](https://github.com/jamesedmonston/graphql-authentication/pull/117))
+
 ## 2.2.0 - 2023-01-07
 
 ### Added
