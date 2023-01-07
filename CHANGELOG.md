@@ -11,8 +11,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Added support for Microsoft OAuth sign in
 - Added `deleteSocialAccount` mutation, for deleting password-less accounts. Throws an error if run on an account with a password ([#110](https://github.com/jamesedmonston/graphql-authentication/issues/110))
 
-### Changed
-
 ### Fixed
 
 - Fixed issue with accounts not automatically activating ([#114](https://github.com/jamesedmonston/graphql-authentication/pull/114), thanks [@Stalex89](https://github.com/Stalex89)!)
