@@ -202,6 +202,7 @@ class RestrictionService extends Component
         if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
             return GraphqlAuthentication::$tokenService->getSchemaFromToken();
         }
+
         $gqlService = Craft::$app->getGql();
         return $gqlService->publicSchema;
     }
@@ -574,6 +575,7 @@ class RestrictionService extends Component
 
         if ($tokenService->getHeaderToken()) {
             $user = $tokenService->getUserFromToken();
+
             if ($user && $entry->authorId == $user->id) {
                 return true;
             }
@@ -626,6 +628,7 @@ class RestrictionService extends Component
 
         if ($tokenService->getHeaderToken()) {
             $user = $tokenService->getUserFromToken();
+
             if ((string) $asset->uploaderId === (string) $user->id) {
                 return true;
             }
