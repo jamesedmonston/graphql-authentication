@@ -4,11 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.0 - 2023-01-07
+
+## Added
+
+- Added support for Microsoft OAuth sign in
+- Added `deleteSocialAccount` mutation, for deleting password-less accounts. Throws an error if run on an account with a password ([#110](https://github.com/jamesedmonston/graphql-authentication/issues/110))
+
+## Changed
+
+## Fixed
+
+- Fixed issue with accounts not automatically activating ([#114](https://github.com/jamesedmonston/graphql-authentication/pull/114), thanks [@Stalex89](https://github.com/Stalex89)!)
+- Fixed issue with plugin's field restrictions not applying to public schema ([#109](https://github.com/jamesedmonston/graphql-authentication/pull/109), thanks [@Zsavajji](https://github.com/Zsavajji)!)
+
 ## 2.1.2 - 2022-09-19
 
 ### Fixed
 
-- Fixed issue with mutation field validation throwing an error ([#103](https://github.com/jamesedmonston/graphql-authentication/issues/100))
+- Fixed issue with mutation field validation throwing an error ([#103](https://github.com/jamesedmonston/graphql-authentication/issues/103))
 - Fixed issue with social registration not marking users as active if skip activation is enabled ([#100](https://github.com/jamesedmonston/graphql-authentication/issues/100))
 
 ## 2.1.1 - 2022-09-11
