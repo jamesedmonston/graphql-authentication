@@ -2,7 +2,7 @@
   "name": "jamesedmonston/graphql-authentication",
   "description": "GraphQL authentication for your headless Craft CMS applications.",
   "type": "craft-plugin",
-  "version": "2.1.2",
+  "version": "2.2",
   "keywords": [
     "craft",
     "cms",
