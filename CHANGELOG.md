@@ -6,14 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## 2.2.0 - 2023-01-07
 
-## Added
+### Added
 
 - Added support for Microsoft OAuth sign in
 - Added `deleteSocialAccount` mutation, for deleting password-less accounts. Throws an error if run on an account with a password ([#110](https://github.com/jamesedmonston/graphql-authentication/issues/110))
 
-## Changed
+### Changed
 
-## Fixed
+### Fixed
 
 - Fixed issue with accounts not automatically activating ([#114](https://github.com/jamesedmonston/graphql-authentication/pull/114), thanks [@Stalex89](https://github.com/Stalex89)!)
 - Fixed issue with plugin's field restrictions not applying to public schema ([#109](https://github.com/jamesedmonston/graphql-authentication/pull/109), thanks [@Zsavajji](https://github.com/Zsavajji)!)
