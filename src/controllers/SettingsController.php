@@ -3,7 +3,9 @@
 namespace jamesedmonston\graphqlauthentication\controllers;
 
 use Craft;
+use craft\helpers\App;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Fields;
@@ -13,6 +15,7 @@ use craft\services\Sites;
 use craft\services\UserGroups;
 use craft\services\Volumes;
 use craft\web\Controller;
+use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\web\HttpException;
 
@@ -35,7 +38,7 @@ class SettingsController extends Controller
         $fullPageForm = true;
 
         $crumbs = [
-            ['label' => 'Settings', 'url' => '/settings'],
+            ['label' => 'Settings', 'url' => UrlHelper::cpUrl('settings')],
         ];
 
         $tabs = [
