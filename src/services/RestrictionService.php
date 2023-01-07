@@ -155,7 +155,7 @@ class RestrictionService extends Component
     }
 
     /**
-     * Ensures plugin should be adding user/schema restrictions
+     * Ensures plugin should be adding user restrictions
      *
      * @return bool
      */
@@ -169,13 +169,53 @@ class RestrictionService extends Component
     }
 
     /**
+     * Ensures plugin should be adding schema restrictions
+     *
+     * @return bool
+     */
+    public function shouldRestrictFields(): bool
+    {
+        if (Craft::$app->getRequest()->isConsoleRequest || Craft::$app->getRequest()->isCpRequest) {
+            return false;
+        }
+
+        if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return true;
+        }
+
+        $settings = GraphqlAuthentication::$settings;
+        $fieldRestrictions = $settings->fieldRestrictions ?? [];
+        $gqlService = Craft::$app->getGql();
+
+        $fieldPermissions = $fieldRestrictions['schema-' . $gqlService->publicSchema->id] ?? [];
+
+        return (bool) count($fieldPermissions);
+    }
+
+    /**
+     * Ensures the correct schema is returned
+     *
+     * @return craft\models\GqlSchema
+     */
+    public function getSchema() : craft\models\GqlSchema
+    {
+        if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return GraphqlAuthentication::$tokenService->getSchemaFromToken();
+        }
+
+        $gqlService = Craft::$app->getGql();
+        return $gqlService->publicSchema;
+    }
+
+
+    /**
      * Restricts private fields from being accessed, based on the schema grabbed from the auth token
      *
      * @param ExecuteGqlQueryEvent $event
      */
     public function restrictForbiddenFields(ExecuteGqlQueryEvent $event)
     {
-        if (!$this->shouldRestrictRequests()) {
+        if (!$this->shouldRestrictFields()) {
             return;
         }
 
@@ -214,10 +254,10 @@ class RestrictionService extends Component
             return;
         }
 
-        $tokenService = GraphqlAuthentication::$tokenService;
-        $schema = $tokenService->getSchemaFromToken();
+        $schema = $this->getSchema();
+        $schemaCode = $schema->isPublic ? $schema->id : $schema->name;
 
-        $fieldPermissions = $fieldRestrictions['schema-' . $schema->name] ?? [];
+        $fieldPermissions = $fieldRestrictions['schema-' . $schemaCode] ?? [];
 
         if (!count($fieldPermissions)) {
             return;
@@ -268,7 +308,7 @@ class RestrictionService extends Component
      */
     public function restrictMutationFields(ModelEvent $event)
     {
-        if (!$this->shouldRestrictRequests()) {
+        if (!$this->shouldRestrictFields()) {
             return;
         }
 
@@ -532,19 +572,22 @@ class RestrictionService extends Component
         }
 
         $tokenService = GraphqlAuthentication::$tokenService;
-        $user = $tokenService->getUserFromToken();
 
-        if ($user && $entry->authorId == $user->id) {
-            return true;
+        if ($tokenService->getHeaderToken()) {
+            $user = $tokenService->getUserFromToken();
+
+            if ($user && $entry->authorId == $user->id) {
+                return true;
+            }
         }
 
-        $scope = $tokenService->getSchemaFromToken()->scope;
+        $scope = $this->getSchema()->scope;
 
         if (!in_array("sections.{$entry->section->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation);
         }
 
-        $authorOnlySections = $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
+        $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
         /** @var Sections */
         $sectionsService = Craft::$app->getSections();
@@ -582,13 +625,16 @@ class RestrictionService extends Component
         }
 
         $tokenService = GraphqlAuthentication::$tokenService;
-        $user = $tokenService->getUserFromToken();
 
-        if ((string) $asset->uploaderId === (string) $user->id) {
-            return true;
+        if ($tokenService->getHeaderToken()) {
+            $user = $tokenService->getUserFromToken();
+
+            if ((string) $asset->uploaderId === (string) $user->id) {
+                return true;
+            }
         }
 
-        $scope = $tokenService->getSchemaFromToken()->scope;
+        $scope = $this->getSchema()->scope;
 
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation);
