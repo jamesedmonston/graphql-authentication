@@ -3,7 +3,6 @@
 namespace jamesedmonston\graphqlauthentication\controllers;
 
 use Craft;
-use craft\helpers\App;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
@@ -15,7 +14,6 @@ use craft\services\Sites;
 use craft\services\UserGroups;
 use craft\services\Volumes;
 use craft\web\Controller;
-use craft\web\UrlManager;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\web\HttpException;
 
