@@ -140,9 +140,11 @@ class MagicService extends Component
                 'type' => Type::nonNull(Auth::getType()),
                 'args' => [
                     'code' => Type::nonNull(Type::int()),
+                    'email' => Type::nonNull(Type::string()),
                 ],
                 'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $userService, $elementsService, $usersService, $errorService) {
                     $code = $arguments['code'];
+                    $email = $arguments['email'];
 
                     $this->_clearExpiredCodes();
                     /** @var MagicCode|null $magicCodeElement */
@@ -152,10 +154,10 @@ class MagicService extends Component
                         $errorService->throw($settings->invalidMagicCode);
                     }
 
-                    $user = $usersService->getUserById($magicCodeElement->userId);
+                    $user = $usersService->getUserByUsernameOrEmail($email);
 
-                    if (!$user) {
-                        $errorService->throw($settings->userNotFound);
+                    if ($user->id !== $magicCodeElement->userId) {
+                        $errorService->throw($settings->invalidMagicCode);
                     }
 
                     $schemaId = $magicCodeElement->schemaId;
