@@ -52,7 +52,7 @@ class MagicService extends Component
                 'key' => 'magic_link',
                 'heading' => 'Magic Link Authentication',
                 'subject' => 'Open this link to log in to {{systemName}}',
-                'body' => "Hey {{user.friendlyName|e}},\r\n\r\nUse the following link to sign in to your account: {{siteUrl}}auth?magicCode={{code}}",
+                'body' => "Hey {{user.friendlyName|e}},\r\n\r\nUse the following link to sign in to your account: {{siteUrl}}auth?magicCode={{code}}\r\n\r\nOr, use the following code to sign in: {{code}}.\r\n\r\nThe link and code will expire in 15 minutes.",
             ];
         }
     }
