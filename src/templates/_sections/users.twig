@@ -39,7 +39,7 @@
 
   {{ forms.field({
     label: 'GraphQL Schema',
-    instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+    instructions: 'The schema that JWTs will be assigned to through the `authenticate` and `register` mutations.',
     name: 'schemaName',
     required: true,
   }, schemaInput) }}
@@ -198,7 +198,7 @@
 
       {{ forms.field({
         label: 'GraphQL Schema',
-        instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+        instructions: 'The schema that JWTs will be assigned to through the `authenticate` and `register` mutations.',
         name: 'schemaName',
       }, schemaInput) }}
 

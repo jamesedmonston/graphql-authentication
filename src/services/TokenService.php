@@ -544,7 +544,7 @@ class TokenService extends Component
         }
 
         if (!$user = $this->getUserFromToken($token)) {
-            throw new Error($settings->invalidHeader);
+            $errorService->throw($settings->invalidHeader);
         }
 
         if ($user->status !== 'active') {

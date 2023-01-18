@@ -344,7 +344,7 @@ class UserService extends Component
         ];
 
         $event->mutations['updatePassword'] = [
-            'description' => 'Updates password for authenticated user. Requires access token and current password. Returns success message.',
+            'description' => 'Updates password for authenticated user. Requires JWT and current password. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [
                 'currentPassword' => Type::nonNull(Type::string()),
