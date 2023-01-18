@@ -157,7 +157,7 @@ class MagicService extends Component
                     $user = $usersService->getUserByUsernameOrEmail($email);
 
                     if (!$user) {
-                        $errorService->throw($settings->userNotFound);
+                        $errorService->throw($settings->invalidMagicCode);
                     }
 
                     if ($user->id !== $magicCodeElement->userId) {
