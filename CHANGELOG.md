@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- Added 'magic link' authentication! To get started, enable it in your plugin settings and see [the docs](http://localhost:3000/usage/magic-authentication) ([#107](https://github.com/jamesedmonston/graphql-authentication/issues/107))
+- Added 'magic link' authentication! To get started, enable it in your plugin settings and see [the docs](https://graphql-authentication.jamesedmonston.co.uk/usage/magic-authentication) ([#107](https://github.com/jamesedmonston/graphql-authentication/issues/107))
 
 ## 2.2.1 - 2023-01-10
 
