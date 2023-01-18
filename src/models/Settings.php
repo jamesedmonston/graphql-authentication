@@ -14,6 +14,7 @@ class Settings extends Model
     /** @deprecated */
     public $schemaId = null;
     public $allowRegistration = true;
+    public $allowMagicAuthentication = false;
     public $userGroup = null;
     public $siteId = null;
     public $entryQueries = null;
@@ -72,11 +73,13 @@ class Settings extends Model
     public $invalidJwtSecretKey = 'Invalid JWT Secret Key';
     public $invalidRefreshToken = 'Invalid Refresh Token';
     public $invalidEmailAddress = 'Invalid email address';
+    public $invalidMagicCode = 'Invalid magic code';
 
     public $activationEmailSent = 'You will receive an email if it matches an account in our system';
     public $userNotActivated = "Please activate your account";
     public $userActivated = 'Successfully activated user';
     public $userHasPassword = 'User not password-less';
+    public $magicLinkSent = 'You will receive an email if it matches an account in our system';
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';
@@ -113,6 +116,20 @@ class Settings extends Model
                     'invalidPasswordUpdate',
                     'invalidUserUpdate',
                     'invalidOauthToken',
+                    'invalidJwtSecretKey',
+                    'invalidRefreshToken',
+                    'invalidEmailAddress',
+                    'invalidMagicCode',
+                    'activationEmailSent',
+                    'userNotActivated',
+                    'userActivated',
+                    'userHasPassword',
+                    'magicLinkSent',
+                    'passwordSaved',
+                    'passwordUpdated',
+                    'passwordResetSent',
+                    'passwordResetRequired',
+                    'accountDeleted',
                     'tokenNotFound',
                     'userNotFound',
                     'entryNotFound',
@@ -133,7 +150,9 @@ class Settings extends Model
                 [
                     'schemaName',
                     'allowRegistration',
+                    'allowMagicAuthentication',
                     'userGroup',
+                    'siteId',
                     'entryQueries',
                     'entryMutations',
                     'assetQueries',
@@ -159,11 +178,11 @@ class Settings extends Model
                     'appleServiceId',
                     'appleServiceSecret',
                     'appleRedirectUrl',
-                    'skipSocialActivation',
                     'microsoftAppId',
                     'microsoftAppSecret',
                     'microsoftRedirectUrl',
                     'allowedMicrosoftDomains',
+                    'skipSocialActivation',
                 ],
                 'default',
             ],

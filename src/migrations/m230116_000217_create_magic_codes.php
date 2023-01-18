@@ -5,7 +5,10 @@ namespace jamesedmonston\graphqlauthentication\migrations;
 use Craft;
 use craft\db\Migration;
 
-class Install extends Migration
+/**
+ * m230116_000217_create_magic_codes migration.
+ */
+class m230116_000217_create_magic_codes extends Migration
 {
     // Public Properties
     // =========================================================================
@@ -73,29 +76,6 @@ class Install extends Migration
     {
         $tablesCreated = false;
 
-        // gql_refresh_tokens table
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%gql_refresh_tokens}}');
-
-        if ($tableSchema === null) {
-            $tablesCreated = true;
-
-            $this->createTable(
-                '{{%gql_refresh_tokens}}',
-                [
-                    'id' => $this->integer()->notNull(),
-                    'token' => $this->text()->notNull(),
-                    'userId' => $this->integer()->notNull(),
-                    'schemaId' => $this->integer()->notNull(),
-                    'dateCreated' => $this->dateTime()->notNull(),
-                    'dateUpdated' => $this->dateTime()->notNull(),
-                    'expiryDate' => $this->dateTime()->notNull(),
-                    'uid' => $this->uid(),
-                    'PRIMARY KEY(id)',
-                ]
-            );
-
-        }
-
         // gql_magic_codes table
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%gql_magic_codes}}');
 
@@ -135,27 +115,6 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
-        // gql_refresh_tokens table
-        $this->addForeignKey(
-            null,
-            '{{%gql_refresh_tokens}}',
-            'id',
-            '{{%elements}}',
-            'id',
-            'CASCADE',
-            null
-        );
-
-        $this->addForeignKey(
-            null,
-            '{{%gql_refresh_tokens}}',
-            'userId',
-            '{{%elements}}',
-            'id',
-            'CASCADE',
-            null
-        );
-
         // gql_magic_codes table
         $this->addForeignKey(
             null,
@@ -194,9 +153,6 @@ class Install extends Migration
      */
     protected function removeTables()
     {
-        // gql_refresh_tokens table
-        $this->dropTableIfExists('{{%gql_refresh_tokens}}');
-
         // gql_magic_codes table
         $this->dropTableIfExists('{{%gql_magic_codes}}');
     }

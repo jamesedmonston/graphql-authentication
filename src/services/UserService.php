@@ -142,7 +142,7 @@ class UserService extends Component
 
                 if (!$user->authenticate($password)) {
                     if ($user->authError === User::AUTH_PASSWORD_RESET_REQUIRED) {
-                        Craft::$app->getUsers()->sendPasswordResetEmail($user);
+                        $usersService->sendPasswordResetEmail($user);
                         $errorService->throw($settings->passwordResetRequired, true);
                     }
 

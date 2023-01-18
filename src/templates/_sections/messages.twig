@@ -39,6 +39,13 @@
 }) }}
 
 {{ forms.textField({
+  label: 'Magic Link Sent',
+  name: 'magicLinkSent',
+  value: settings.magicLinkSent,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'Password Saved',
   name: 'passwordSaved',
   value: settings.passwordSaved,
@@ -101,6 +108,13 @@
   label: 'Invalid User Update',
   name: 'invalidUserUpdate',
   value: settings.invalidUserUpdate,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Magic Code',
+  name: 'invalidMagicCode',
+  value: settings.invalidMagicCode,
   required: true,
 }) }}
 

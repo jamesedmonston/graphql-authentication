@@ -15,6 +15,15 @@
   required: true,
 }) }}
 
+{{ forms.field({
+  label: 'Allow Magic Authentication',
+  instructions: "Whether or not the `sendMagicLink` and `verifyMagicCode` mutations should be available.",
+  name: 'allowMagicAuthentication',
+}, forms.lightswitch({
+  name: 'allowMagicAuthentication',
+  on: settings.allowMagicAuthentication,
+})) }}
+
 {% if settings.permissionType == 'single' %}
   <hr/>
 
