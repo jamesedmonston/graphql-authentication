@@ -124,7 +124,10 @@ class MagicService extends Component
                     }
 
                     $mailerService
-                        ->composeFromKey('magic_link', ['code' => $code])
+                        ->composeFromKey('magic_link', [
+                            'code' => $code,
+                            'user' => $user,
+                        ])
                         ->setTo($user)
                         ->send();
 
