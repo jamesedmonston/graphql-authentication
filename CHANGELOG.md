@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.3.0 - 2023-01-18
+
+### Added
+
+- Added 'magic link' authentication! To get started, enable it in your plugin settings and see [the docs](http://localhost:3000/usage/magic-authentication) ([#107](https://github.com/jamesedmonston/graphql-authentication/issues/107))
+
 ## 2.2.1 - 2023-01-10
 
 ### Fixed
