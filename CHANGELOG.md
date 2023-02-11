@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - Fixed issue with users sometimes being permanently granted Control Panel access ([#120](https://github.com/jamesedmonston/graphql-authentication/pull/120))
-- Fixed issue with field falling back to the public schema when passing `Bearer` tokens ([#119](https://github.com/jamesedmonston/graphql-authentication/pull/119))
+- Fixed issue with field permissions falling back to the public schema when passing `Bearer` tokens ([#119](https://github.com/jamesedmonston/graphql-authentication/pull/119))
 
 ## 2.3.0 - 2023-01-18
 
