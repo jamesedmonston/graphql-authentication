@@ -141,12 +141,13 @@ class UserService extends Component
                 }
 
                 if (!$user->authenticate($password)) {
+                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
+
                     if ($user->authError === User::AUTH_PASSWORD_RESET_REQUIRED) {
                         $usersService->sendPasswordResetEmail($user);
                         $errorService->throw($settings->passwordResetRequired, true);
                     }
 
-                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
                     $errorService->throw($settings->invalidLogin);
                 }
 
