@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.3.1 - 2023-02-11
+
+### Fixed
+
+- Fixed issue with users sometimes being permanently granted Control Panel access ([#120](https://github.com/jamesedmonston/graphql-authentication/pull/120))
+- Fixed issue with field falling back to the public schema when passing `Bearer` tokens ([#119](https://github.com/jamesedmonston/graphql-authentication/pull/119))
+
 ## 2.3.0 - 2023-01-18
 
 ### Added
