@@ -20,6 +20,7 @@ use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
 use craft\helpers\StringHelper;
+use craft\models\GqlToken;
 use craft\services\Assets;
 use craft\services\Gql;
 use craft\services\Sections;
@@ -29,6 +30,7 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\Type;
+use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
 use jamesedmonston\graphqlauthentication\resolvers\Entry as EntryResolver;
@@ -179,17 +181,7 @@ class RestrictionService extends Component
             return false;
         }
 
-        if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
-            return true;
-        }
-
-        $settings = GraphqlAuthentication::$settings;
-        $fieldRestrictions = $settings->fieldRestrictions ?? [];
-        $gqlService = Craft::$app->getGql();
-
-        $fieldPermissions = $fieldRestrictions['schema-' . $gqlService->publicSchema->id] ?? [];
-
-        return (bool) count($fieldPermissions);
+        return true;
     }
 
     /**
@@ -197,14 +189,37 @@ class RestrictionService extends Component
      *
      * @return craft\models\GqlSchema
      */
-    public function getSchema() : craft\models\GqlSchema
+    public function getSchema(): craft\models\GqlSchema
     {
         if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
             return GraphqlAuthentication::$tokenService->getSchemaFromToken();
         }
 
+        /** @var Gql */
         $gqlService = Craft::$app->getGql();
-        return $gqlService->publicSchema;
+        $schema = $gqlService->getPublicSchema();
+
+        $requestHeaders = Craft::$app->getRequest()->getHeaders();
+        $authHeaders = $requestHeaders->get('authorization', [], false);
+
+        foreach ($authHeaders as $authHeader) {
+            $authValues = array_map('trim', explode(',', $authHeader));
+
+            foreach ($authValues as $authValue) {
+                if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
+                    try {
+                        /** @var GqlToken */
+                        $token = $gqlService->getTokenByAccessToken($matches[1]);
+                        $schema = $token->getSchema();
+                    } catch (InvalidArgumentException) {
+                    }
+
+                    break 2;
+                }
+            }
+        }
+
+        return $schema;
     }
 
 
