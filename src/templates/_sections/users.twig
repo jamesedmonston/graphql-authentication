@@ -24,6 +24,15 @@
   on: settings.allowMagicAuthentication,
 })) }}
 
+{{ forms.field({
+  label: 'Skip Activated Check',
+  instructions: "When enabled, the plugin will no longer validate a user's activation status on incoming requests.",
+  name: 'skipActivatedCheck',
+}, forms.lightswitch({
+  name: 'skipActivatedCheck',
+  on: settings.skipActivatedCheck,
+})) }}
+
 {% if settings.permissionType == 'single' %}
   <hr/>
 

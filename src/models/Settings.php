@@ -15,6 +15,7 @@ class Settings extends Model
     public $schemaId = null;
     public $allowRegistration = true;
     public $allowMagicAuthentication = false;
+    public $skipActivatedCheck = false;
     public $userGroup = null;
     public $siteId = null;
     public $entryQueries = null;
