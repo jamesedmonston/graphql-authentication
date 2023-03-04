@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.4.0 - 2023-03-04
+
+### Added
+
+- Added ability to skip activation status on incoming requests (useful for multi-step registration flows) ([#83](https://github.com/jamesedmonston/graphql-authentication/pull/83))
+- Added ability to assign JWTs to the public schema ([#122](https://github.com/jamesedmonston/graphql-authentication/pull/122))
+- Added editable messages for account locked and account cooldown authentication errors ([#121](https://github.com/jamesedmonston/graphql-authentication/pull/121))
+
 ## 2.3.1 - 2023-02-11
 
 ### Fixed
