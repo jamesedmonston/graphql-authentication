@@ -84,6 +84,8 @@ class Settings extends Model
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';
     public $passwordResetRequired = 'Password reset required; please check your email';
+    public $accountLocked = 'Sorry, your account is currently locked';
+    public $accountCooldown = 'Too many log in attempts; please try again shortly';
     public $accountDeleted = 'Successfully deleted account';
 
     public $tokenNotFound = "We couldn't find any matching tokens";

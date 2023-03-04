@@ -74,6 +74,20 @@
 }) }}
 
 {{ forms.textField({
+  label: 'Account Locked',
+  name: 'accountLocked',
+  value: settings.accountLocked,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Account Cooldown',
+  name: 'accountCooldown',
+  value: settings.accountCooldown,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'Account Deleted',
   name: 'accountDeleted',
   value: settings.accountDeleted,
