@@ -48,7 +48,7 @@ class TwoFactorService extends Component
      *
      * @param RegisterGqlQueriesEvent $event
      */
-    public function registerGqlQueries(RegisterGqlMutationsEvent $event)
+    public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         $settings = GraphqlAuthentication::$settings;
 
