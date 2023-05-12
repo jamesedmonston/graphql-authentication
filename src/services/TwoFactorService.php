@@ -196,7 +196,7 @@ class TwoFactorService extends Component
 
         $event->mutations['disableTwoFactor'] = [
             'description' => 'Disables Two-Factor. Returns boolean.',
-            'type' => Type::nonNull(Auth::getType()),
+            'type' => Type::nonNull(Type::boolean()),
             'args' => [
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
@@ -224,6 +224,8 @@ class TwoFactorService extends Component
                 }
 
                 $verifyService->disableUser($user);
+
+                return true;
             }
         ];
     }
