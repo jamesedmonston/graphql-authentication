@@ -15,6 +15,35 @@
   required: true,
 }) }}
 
+{{ forms.field({
+  label: 'Allow Magic Authentication',
+  instructions: "Whether or not the Magic Code mutations should be available.",
+  name: 'allowMagicAuthentication',
+}, forms.lightswitch({
+  name: 'allowMagicAuthentication',
+  on: settings.allowMagicAuthentication,
+})) }}
+
+{% if craft.app.plugins.isPluginEnabled('two-factor-authentication') %}
+  {{ forms.field({
+    label: 'Allow Two-Factor Authentication',
+    instructions: "Whether or not the Two-Factor mutations should be available.",
+    name: 'allowTwoFactorAuthentication',
+  }, forms.lightswitch({
+    name: 'allowTwoFactorAuthentication',
+    on: settings.allowTwoFactorAuthentication,
+  })) }}
+{% endif %}
+
+{{ forms.field({
+  label: 'Skip Activated Check',
+  instructions: "When enabled, the plugin will no longer validate a user's activation status on incoming requests.",
+  name: 'skipActivatedCheck',
+}, forms.lightswitch({
+  name: 'skipActivatedCheck',
+  on: settings.skipActivatedCheck,
+})) }}
+
 {% if settings.permissionType == 'single' %}
   <hr/>
 
@@ -30,7 +59,7 @@
 
   {{ forms.field({
     label: 'GraphQL Schema',
-    instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+    instructions: 'The schema that JWTs will be assigned to through the `authenticate` and `register` mutations.',
     name: 'schemaName',
     required: true,
   }, schemaInput) }}
@@ -189,7 +218,7 @@
 
       {{ forms.field({
         label: 'GraphQL Schema',
-        instructions: 'The schema that access tokens will be assigned to through the `authenticate` and `register` mutations.',
+        instructions: 'The schema that JWTs will be assigned to through the `authenticate` and `register` mutations.',
         name: 'schemaName',
       }, schemaInput) }}
 

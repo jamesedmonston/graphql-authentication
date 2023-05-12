@@ -21,12 +21,13 @@ class GlobalSet extends ElementResolver
     /**
      * @inheritdoc
      */
-    public static function prepareQuery($source, array $arguments, $fieldName = null)
+    public static function prepareQuery(mixed $source, array $arguments, ?string $fieldName = null): mixed
     {
         $query = GlobalSetElement::find();
 
         if (GraphqlAuthentication::$restrictionService->shouldRestrictRequests()) {
             $settings = GraphqlAuthentication::$settings;
+            $siteId = null;
 
             if ($settings->permissionType === 'single') {
                 $siteId = $settings->siteId ?? null;

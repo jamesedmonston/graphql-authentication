@@ -66,10 +66,7 @@ class FacebookService extends Component
                     'graphApiVersion' => 'v2.10',
                 ]);
 
-                $url = $client->getAuthorizationUrl([
-                    'scope' => ['email'],
-                ]);
-
+                $url = $client->getAuthorizationUrl(['scope' => ['email']]);
                 return $url;
             },
         ];
@@ -183,14 +180,10 @@ class FacebookService extends Component
             'code' => $code,
         ]);
 
-        if (!$accessToken) {
-            $errorService->throw($settings->invalidOauthToken);
-        }
-
         $user = $client->getResourceOwner($accessToken);
         $email = $user->getEmail();
 
-        if (!$email || !isset($email)) {
+        if (!$email) {
             $errorService->throw($settings->emailNotInScope);
         }
 

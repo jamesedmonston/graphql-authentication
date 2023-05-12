@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Authentication plugin for Craft CMS 3.5
+ * GraphQL Authentication plugin for Craft CMS 3.5+
  *
  * GraphQL authentication for your headless Craft CMS applications.
  *
@@ -22,11 +22,13 @@ use jamesedmonston\graphqlauthentication\services\AppleService;
 use jamesedmonston\graphqlauthentication\services\ErrorService;
 use jamesedmonston\graphqlauthentication\services\FacebookService;
 use jamesedmonston\graphqlauthentication\services\GoogleService;
+use jamesedmonston\graphqlauthentication\services\MagicService;
 use jamesedmonston\graphqlauthentication\services\MicrosoftService;
 use jamesedmonston\graphqlauthentication\services\RestrictionService;
 use jamesedmonston\graphqlauthentication\services\SocialService;
 use jamesedmonston\graphqlauthentication\services\TokenService;
 use jamesedmonston\graphqlauthentication\services\TwitterService;
+use jamesedmonston\graphqlauthentication\services\TwoFactorService;
 use jamesedmonston\graphqlauthentication\services\UserService;
 use yii\base\Event;
 
@@ -46,7 +48,10 @@ use yii\base\Event;
  * @property TwitterService $twitter
  * @property AppleService $apple
  * @property MicrosoftService $microsoft
+ * @property MagicService $magic
+ * @property TwoFactorService $twoFactor
  * @property ErrorService $error
+ * @method Settings getSettings()
  */
 
 class GraphqlAuthentication extends Plugin
@@ -100,9 +105,19 @@ class GraphqlAuthentication extends Plugin
     public static $appleService;
 
     /**
-    * @var MicrosoftService
-    */
+     * @var MicrosoftService
+     */
     public static $microsoftService;
+
+    /**
+     * @var MagicService
+     */
+    public static $magicService;
+
+    /**
+     * @var TwoFactorService
+     */
+    public static $twoFactorService;
 
     /**
      * @var ErrorService
@@ -120,7 +135,7 @@ class GraphqlAuthentication extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.2.0';
+    public $schemaVersion = '1.3.0';
 
     /**
      * @var bool
@@ -152,6 +167,8 @@ class GraphqlAuthentication extends Plugin
             'twitter' => TwitterService::class,
             'apple' => AppleService::class,
             'microsoft' => MicrosoftService::class,
+            'magic' => MagicService::class,
+            'twoFactor' => TwoFactorService::class,
             'error' => ErrorService::class,
         ]);
 
@@ -164,6 +181,7 @@ class GraphqlAuthentication extends Plugin
         $this->twitter->init();
         $this->apple->init();
         $this->microsoft->init();
+        $this->magic->init();
         $this->error->init();
 
         self::$plugin = $this;
@@ -177,7 +195,13 @@ class GraphqlAuthentication extends Plugin
         self::$appleService = $this->apple;
         self::$microsoftService = $this->microsoft;
         self::$errorService = $this->error;
+        self::$magicService = $this->magic;
         self::$settings = $this->getSettings();
+
+        if (Craft::$app->plugins->isPluginEnabled('two-factor-authentication')) {
+            $this->twoFactor->init();
+            self::$twoFactorService = $this->twoFactor;
+        }
 
         if (Craft::$app->getUser()->getIsAdmin()) {
             Event::on(
@@ -189,13 +213,7 @@ class GraphqlAuthentication extends Plugin
             Event::on(
                 Cp::class,
                 Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-                function (RegisterCpNavItemsEvent $event) {
-                    $event->navItems[] = [
-                        'url' => 'graphql-authentication/refresh-tokens',
-                        'label' => 'JWT Refresh Tokens',
-                        'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
-                    ];
-                }
+                [$this, 'onRegisterCPNavItems']
             );
         }
     }
@@ -217,6 +235,23 @@ class GraphqlAuthentication extends Plugin
     {
         $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
         $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
+    }
+
+    public function onRegisterCPNavItems(RegisterCpNavItemsEvent $event)
+    {
+        $event->navItems[] = [
+            'url' => 'graphql-authentication/refresh-tokens',
+            'label' => 'JWT Refresh Tokens',
+            'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
+        ];
+
+        if (self::$settings->allowMagicAuthentication) {
+            $event->navItems[] = [
+                'url' => 'graphql-authentication/magic-codes',
+                'label' => 'JWT Magic Codes',
+                'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
+            ];
+        }
     }
 
     public function getSettingsData(string $setting): string

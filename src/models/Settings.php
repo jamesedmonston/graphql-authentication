@@ -14,6 +14,9 @@ class Settings extends Model
     /** @deprecated */
     public $schemaId = null;
     public $allowRegistration = true;
+    public $allowMagicAuthentication = false;
+    public $allowTwoFactorAuthentication = false;
+    public $skipActivatedCheck = false;
     public $userGroup = null;
     public $siteId = null;
     public $entryQueries = null;
@@ -58,26 +61,34 @@ class Settings extends Model
     public $microsoftRedirectUrl = null;
     public $allowedMicrosoftDomains = null;
 
+    public $skipSocialActivation = false;
+
     // Messages
     public $invalidHeader = 'Invalid Authorization Header';
     public $invalidSchema = 'No schema has been set for this user group';
     public $invalidRequest = 'Cannot validate request';
     public $invalidLogin = "We couldn't log you in with the provided details";
-    public $invalidPasswordMatch = 'New passwords do not match';
+    public $invalidPasswordMatch = 'Passwords do not match';
     public $invalidPasswordUpdate = "We couldn't update the password with the provided details";
     public $invalidUserUpdate = "We couldn't update the user with the provided details";
     public $invalidOauthToken = 'Invalid OAuth Token';
     public $invalidJwtSecretKey = 'Invalid JWT Secret Key';
     public $invalidRefreshToken = 'Invalid Refresh Token';
     public $invalidEmailAddress = 'Invalid email address';
+    public $invalidMagicCode = 'Invalid magic code';
 
-    public $userNotActivated = "Please activate your account before logging in";
     public $activationEmailSent = 'You will receive an email if it matches an account in our system';
+    public $userNotActivated = "Please activate your account";
     public $userActivated = 'Successfully activated user';
+    public $userHasPassword = 'User not password-less';
+    public $magicLinkSent = 'You will receive an email if it matches an account in our system';
     public $passwordSaved = 'Successfully saved password';
     public $passwordUpdated = 'Successfully updated password';
     public $passwordResetSent = 'You will receive an email if it matches an account in our system';
     public $passwordResetRequired = 'Password reset required; please check your email';
+    public $accountLocked = 'Sorry, your account is currently locked';
+    public $accountCooldown = 'Too many log in attempts; please try again shortly';
+    public $accountDeleted = 'Successfully deleted account';
 
     public $tokenNotFound = "We couldn't find any matching tokens";
     public $userNotFound = "We couldn't find any matching users";
@@ -95,7 +106,7 @@ class Settings extends Model
     public $twitterEmailMismatch = "Email address doesn't match allowed Twitter domains";
     public $microsoftEmailMismatch = "Email address doesn't match allowed Microsoft domains";
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [
@@ -109,6 +120,20 @@ class Settings extends Model
                     'invalidPasswordUpdate',
                     'invalidUserUpdate',
                     'invalidOauthToken',
+                    'invalidJwtSecretKey',
+                    'invalidRefreshToken',
+                    'invalidEmailAddress',
+                    'invalidMagicCode',
+                    'activationEmailSent',
+                    'userNotActivated',
+                    'userActivated',
+                    'userHasPassword',
+                    'magicLinkSent',
+                    'passwordSaved',
+                    'passwordUpdated',
+                    'passwordResetSent',
+                    'passwordResetRequired',
+                    'accountDeleted',
                     'tokenNotFound',
                     'userNotFound',
                     'entryNotFound',
@@ -129,7 +154,11 @@ class Settings extends Model
                 [
                     'schemaName',
                     'allowRegistration',
+                    'allowMagicAuthentication',
+                    'allowTwoFactorAuthentication',
+                    'skipActivatedCheck',
                     'userGroup',
+                    'siteId',
                     'entryQueries',
                     'entryMutations',
                     'assetQueries',
@@ -159,6 +188,7 @@ class Settings extends Model
                     'microsoftAppSecret',
                     'microsoftRedirectUrl',
                     'allowedMicrosoftDomains',
+                    'skipSocialActivation',
                 ],
                 'default',
             ],

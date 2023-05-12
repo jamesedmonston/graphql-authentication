@@ -93,6 +93,29 @@ class Install extends Migration
                     'PRIMARY KEY(id)',
                 ]
             );
+
+        }
+
+        // gql_magic_codes table
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%gql_magic_codes}}');
+
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+
+            $this->createTable(
+                '{{%gql_magic_codes}}',
+                [
+                    'id' => $this->integer()->notNull(),
+                    'code' => $this->integer()->notNull(),
+                    'userId' => $this->integer()->notNull(),
+                    'schemaId' => $this->integer()->notNull(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'expiryDate' => $this->dateTime()->notNull(),
+                    'uid' => $this->uid(),
+                    'PRIMARY KEY(id)',
+                ]
+            );
         }
 
         return $tablesCreated;
@@ -114,7 +137,7 @@ class Install extends Migration
     {
         // gql_refresh_tokens table
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%gql_refresh_tokens}}', 'id'),
+            null,
             '{{%gql_refresh_tokens}}',
             'id',
             '{{%elements}}',
@@ -124,8 +147,29 @@ class Install extends Migration
         );
 
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%gql_refresh_tokens}}', 'userId'),
+            null,
             '{{%gql_refresh_tokens}}',
+            'userId',
+            '{{%elements}}',
+            'id',
+            'CASCADE',
+            null
+        );
+
+        // gql_magic_codes table
+        $this->addForeignKey(
+            null,
+            '{{%gql_magic_codes}}',
+            'id',
+            '{{%elements}}',
+            'id',
+            'CASCADE',
+            null
+        );
+
+        $this->addForeignKey(
+            null,
+            '{{%gql_magic_codes}}',
             'userId',
             '{{%elements}}',
             'id',
@@ -152,5 +196,8 @@ class Install extends Migration
     {
         // gql_refresh_tokens table
         $this->dropTableIfExists('{{%gql_refresh_tokens}}');
+
+        // gql_magic_codes table
+        $this->dropTableIfExists('{{%gql_magic_codes}}');
     }
 }

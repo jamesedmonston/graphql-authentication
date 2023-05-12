@@ -11,13 +11,6 @@
 <h2>Responses</h2>
 
 {{ forms.textField({
-  label: 'User Not Activated',
-  name: 'userNotActivated',
-  value: settings.userNotActivated,
-  required: true,
-}) }}
-
-{{ forms.textField({
   label: 'Activation Email Sent',
   name: 'activationEmailSent',
   value: settings.activationEmailSent,
@@ -25,9 +18,30 @@
 }) }}
 
 {{ forms.textField({
+  label: 'User Not Activated',
+  name: 'userNotActivated',
+  value: settings.userNotActivated,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'User Activated',
   name: 'userActivated',
   value: settings.userActivated,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'User Has Password',
+  name: 'userHasPassword',
+  value: settings.userHasPassword,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Magic Link Sent',
+  name: 'magicLinkSent',
+  value: settings.magicLinkSent,
   required: true,
 }) }}
 
@@ -59,6 +73,27 @@
   required: true,
 }) }}
 
+{{ forms.textField({
+  label: 'Account Locked',
+  name: 'accountLocked',
+  value: settings.accountLocked,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Account Cooldown',
+  name: 'accountCooldown',
+  value: settings.accountCooldown,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Account Deleted',
+  name: 'accountDeleted',
+  value: settings.accountDeleted,
+  required: true,
+}) }}
+
 <hr/>
 <h2>Invalid</h2>
 
@@ -87,6 +122,13 @@
   label: 'Invalid User Update',
   name: 'invalidUserUpdate',
   value: settings.invalidUserUpdate,
+  required: true,
+}) }}
+
+{{ forms.textField({
+  label: 'Invalid Magic Code',
+  name: 'invalidMagicCode',
+  value: settings.invalidMagicCode,
   required: true,
 }) }}
 

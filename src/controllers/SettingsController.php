@@ -4,6 +4,7 @@ namespace jamesedmonston\graphqlauthentication\controllers;
 
 use Craft;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Fields;
@@ -35,7 +36,7 @@ class SettingsController extends Controller
         $fullPageForm = true;
 
         $crumbs = [
-            ['label' => 'Settings', 'url' => '/settings'],
+            ['label' => 'Settings', 'url' => UrlHelper::cpUrl('settings')],
         ];
 
         $tabs = [
@@ -115,10 +116,6 @@ class SettingsController extends Controller
         ];
 
         foreach ($schemas as $schema) {
-            if ($publicSchema && $schema->id === $publicSchema->id) {
-                continue;
-            }
-
             $schemaOptions[] = [
                 'label' => $schema->name,
                 'value' => $schema->name,
@@ -132,7 +129,7 @@ class SettingsController extends Controller
         $assetQueries = null;
         $assetMutations = null;
 
-        if ($settings->permissionType === 'single' && $settings->schemaName) {
+        if ($settings->permissionType === 'single' && $settings->schemaName && $settings->schemaName !== $publicSchema->name) {
             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
             $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($schemaId));
             $entryQueries = $schemaPermissions['entryQueries'];
@@ -146,7 +143,7 @@ class SettingsController extends Controller
                 $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                 $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
 
-                if (!$schemaId) {
+                if (!$schemaId || $schemaName === $publicSchema->name) {
                     continue;
                 }
 

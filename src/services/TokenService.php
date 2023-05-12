@@ -10,7 +10,6 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
-use craft\records\GqlToken as RecordsGqlToken;
 use craft\services\Elements;
 use craft\services\Gql;
 use craft\services\Users;
@@ -28,6 +27,7 @@ use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use yii\base\Event;
@@ -130,6 +130,7 @@ class TokenService extends Component
                 }
 
                 $this->_clearExpiredTokens();
+                /** @var RefreshToken|null $refreshTokenElement */
                 $refreshTokenElement = RefreshToken::find()->where(['[[token]]' => $refreshToken])->one();
 
                 if (!$refreshTokenElement) {
@@ -239,7 +240,7 @@ class TokenService extends Component
             return null;
         }
 
-        $this->_validateExpiry($token);
+        $this->_validateToken($token);
         return $token;
     }
 
@@ -250,7 +251,10 @@ class TokenService extends Component
      */
     public function setActiveSchema(ExecuteGqlQueryEvent $event)
     {
-        if (!$token = $this->getHeaderToken()) {
+        /** @var UnencryptedToken|null $token */
+        $token = $this->getHeaderToken();
+
+        if (!$token) {
             return;
         }
 
@@ -284,20 +288,16 @@ class TokenService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        if (!$token = $this->getHeaderToken()) {
+        /** @var UnencryptedToken|null $token */
+        $token = $this->getHeaderToken();
+
+        if (!$token) {
             $errorService->throw($settings->invalidHeader);
         }
 
         /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schemaId = $token->claims()->get('schemaId') ?? null;
-
-        // Temporary – remove this once users have had chance to update
-        if (!$schemaId) {
-            $schemaId = array_values(array_filter($gqlService->getSchemas(), function (GqlSchema $schema) use ($token) {
-                return $schema->name === $token->claims()->get('schema');
-            }))[0]->id ?? null;
-        }
 
         if (!$schemaId) {
             $errorService->throw($settings->invalidHeader);
@@ -327,6 +327,7 @@ class TokenService extends Component
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader);
         }
 
+        /** @var UnencryptedToken $token */
         $id = $token->claims()->get('sub');
 
         /** @var Users */
@@ -528,38 +529,38 @@ class TokenService extends Component
     }
 
     /**
-     * Validates token expiry date
+     * Validates token and user activation state
      *
      * @param Token $token
      * @throws Error
      */
-    protected function _validateExpiry(Token $token)
+    protected function _validateToken(Token $token)
     {
-        /** @var DateTimeImmutable */
+        $settings = GraphqlAuthentication::$settings;
+        $errorService = GraphqlAuthentication::$errorService;
+
+        /** @var UnencryptedToken|null $token */
+        /** @var DateTimeImmutable $expiry */
         $expiry = $token->claims()->get('exp');
 
-        if (!DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
-            return;
+        if (DateTimeHelper::isInThePast($expiry->format('Y-m-d H:i:s'))) {
+            $errorService->throw($settings->invalidHeader, true);
         }
 
-        GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidHeader, true);
+        if (!$user = $this->getUserFromToken($token)) {
+            $errorService->throw($settings->invalidHeader);
+        }
+
+        if ($user->status !== 'active' && !$settings->skipActivatedCheck) {
+            $errorService->throw($settings->userNotActivated);
+        }
     }
 
     /**
-     * Clears expired access and refresh tokens
+     * Clears expired refresh tokens
      */
     protected function _clearExpiredTokens()
     {
-        // Temporary – remove this once users have had chance to update
-        $gqlTokens = RecordsGqlToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->andWhere("name LIKE '%user-%'")->all();
-
-        /** @var Gql */
-        $gqlService = Craft::$app->getGql();
-
-        foreach ($gqlTokens as $gqlToken) {
-            $gqlService->deleteTokenById($gqlToken->id);
-        }
-
         $refreshTokens = RefreshToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->all();
 
         /** @var Elements */

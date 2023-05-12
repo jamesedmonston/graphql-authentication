@@ -6,9 +6,9 @@ use Craft;
 use craft\db\Migration;
 
 /**
- * m201129_224453_create_refresh_tokens migration.
+ * m230116_000217_create_magic_codes migration.
  */
-class m201129_224453_create_refresh_tokens extends Migration
+class m230116_000217_create_magic_codes extends Migration
 {
     // Public Properties
     // =========================================================================
@@ -76,17 +76,17 @@ class m201129_224453_create_refresh_tokens extends Migration
     {
         $tablesCreated = false;
 
-        // gql_refresh_tokens table
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%gql_refresh_tokens}}');
+        // gql_magic_codes table
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%gql_magic_codes}}');
 
         if ($tableSchema === null) {
             $tablesCreated = true;
 
             $this->createTable(
-                '{{%gql_refresh_tokens}}',
+                '{{%gql_magic_codes}}',
                 [
                     'id' => $this->integer()->notNull(),
-                    'token' => $this->text()->notNull(),
+                    'code' => $this->integer()->notNull(),
                     'userId' => $this->integer()->notNull(),
                     'schemaId' => $this->integer()->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
@@ -115,10 +115,10 @@ class m201129_224453_create_refresh_tokens extends Migration
      */
     protected function addForeignKeys()
     {
-        // gql_refresh_tokens table
+        // gql_magic_codes table
         $this->addForeignKey(
             null,
-            '{{%gql_refresh_tokens}}',
+            '{{%gql_magic_codes}}',
             'id',
             '{{%elements}}',
             'id',
@@ -128,7 +128,7 @@ class m201129_224453_create_refresh_tokens extends Migration
 
         $this->addForeignKey(
             null,
-            '{{%gql_refresh_tokens}}',
+            '{{%gql_magic_codes}}',
             'userId',
             '{{%elements}}',
             'id',
@@ -153,7 +153,7 @@ class m201129_224453_create_refresh_tokens extends Migration
      */
     protected function removeTables()
     {
-        // gql_refresh_tokens table
-        $this->dropTableIfExists('{{%gql_refresh_tokens}}');
+        // gql_magic_codes table
+        $this->dropTableIfExists('{{%gql_magic_codes}}');
     }
 }

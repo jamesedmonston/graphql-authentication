@@ -11,6 +11,7 @@ use craft\elements\Asset as AssetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
+use craft\models\Volume;
 use craft\services\Volumes;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
@@ -25,12 +26,12 @@ class Asset extends ElementResolver
     /**
      * @inheritdoc
      */
-    public static function prepareQuery($source, array $arguments, $fieldName = null)
+    public static function prepareQuery(mixed $source, array $arguments, ?string $fieldName = null)
     {
         // If this is the beginning of a resolver chain, start fresh
         if ($source === null) {
             $query = AssetElement::find();
-            // If not, get the prepared element query
+        // If not, get the prepared element query
         } else {
             $query = $source->$fieldName;
         }
@@ -56,8 +57,12 @@ class Asset extends ElementResolver
                         continue;
                     }
 
-                    if (isset($arguments['volumeId']) && trim((string) $arguments['volumeId'][0]) !== $volumesService->getVolumeByHandle($volume)->id) {
-                        continue;
+                    if (isset($arguments['volumeId'])) {
+                        /** @var Volume $volume */
+                        $volume = $volumesService->getVolumeByHandle($volume);
+                        if (trim((string) $arguments['volumeId'][0]) != $volume->id) {
+                            continue;
+                        }
                     }
 
                     $arguments['uploader'] = $user->id;
