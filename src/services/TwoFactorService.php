@@ -93,7 +93,6 @@ class TwoFactorService extends Component
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $code = $arguments['code'];
-                $user = $usersService->getUserByUsernameOrEmail($email);
 
                 if (!$user = $usersService->getUserByUsernameOrEmail($email)) {
                     $errorService->throw($settings->invalidLogin);
