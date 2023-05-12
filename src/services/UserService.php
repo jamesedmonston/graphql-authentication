@@ -3,6 +3,8 @@
 namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
+use born05\twofactorauthentication\Plugin as TwoFactorAuth;
+use born05\twofactorauthentication\services\Verify;
 use craft\base\Component;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
@@ -12,6 +14,8 @@ use craft\gql\arguments\elements\User as UserArguments;
 use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
+use craft\helpers\Template;
+use craft\mail\Mailer;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Elements;
 use craft\services\Fields;
@@ -139,17 +143,29 @@ class UserService extends Component
                 }
 
                 if (!$user->authenticate($password)) {
-                    if ($user->authError === User::AUTH_PASSWORD_RESET_REQUIRED) {
-                        Craft::$app->getUsers()->sendPasswordResetEmail($user);
-                        $errorService->throw($settings->passwordResetRequired, true);
-                    }
-
                     $permissionsService->saveUserPermissions($user->id, $userPermissions);
-                    $errorService->throw($settings->invalidLogin);
+
+                    switch ($user->authError) {
+                        case User::AUTH_PASSWORD_RESET_REQUIRED:
+                            $usersService->sendPasswordResetEmail($user);
+                            $errorService->throw($settings->passwordResetRequired, true);
+                            break;
+
+                        case User::AUTH_ACCOUNT_LOCKED:
+                            $errorService->throw($settings->accountLocked, true);
+                            break;
+
+                        case User::AUTH_ACCOUNT_COOLDOWN:
+                            $errorService->throw($settings->accountCooldown, true);
+                            break;
+
+                        default:
+                            $errorService->throw($settings->invalidLogin);
+                            break;
+                    }
                 }
 
                 $permissionsService->saveUserPermissions($user->id, $userPermissions);
-
                 $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                 if ($settings->permissionType === 'multiple') {
@@ -165,10 +181,30 @@ class UserService extends Component
                     $errorService->throw($settings->invalidSchema);
                 }
 
-                $this->_updateLastLogin($user);
-                $token = $tokenService->create($user, $schemaId);
+                $requiresTwoFactor = false;
 
-                return $this->getResponseFields($user, $schemaId, $token);
+                if (
+                    Craft::$app->plugins->isPluginEnabled('two-factor-authentication') &&
+                    $settings->allowTwoFactorAuthentication
+                ) {
+                    /** @var Verify */
+                    $verifyService = TwoFactorAuth::$plugin->verify;
+                    $requiresTwoFactor = $verifyService->isEnabled($user);
+                }
+
+                if ($requiresTwoFactor) {
+                    $token = [
+                        'jwt' => null,
+                        'jwtExpiresAt' => null,
+                        'refreshToken' => null,
+                        'refreshTokenExpiresAt' => null,
+                    ];
+                } else {
+                    $this->_updateLastLogin($user);
+                    $token = $tokenService->create($user, $schemaId);
+                }
+
+                return $this->getResponseFields($user, $schemaId, $token, $requiresTwoFactor);
             },
         ];
 
@@ -344,7 +380,7 @@ class UserService extends Component
         ];
 
         $event->mutations['updatePassword'] = [
-            'description' => 'Updates password for authenticated user. Requires access token and current password. Returns success message.',
+            'description' => 'Updates password for authenticated user. Requires JWT and current password. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [
                 'currentPassword' => Type::nonNull(Type::string()),
@@ -471,7 +507,70 @@ class UserService extends Component
                     $errorService->throw($errors[key($errors)][0]);
                 }
 
+                if ($email) {
+                    $usersService->sendNewEmailVerifyEmail($user);
+                }
+
                 return $user;
+            },
+        ];
+
+        $event->mutations['deleteAccount'] = [
+            'description' => 'Deletes authenticated user. Returns success message.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [
+                'password' => Type::nonNull(Type::string()),
+                'confirmPassword' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+                $user = $tokenService->getUserFromToken();
+                $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                $password = $arguments['password'];
+                $confirmPassword = $arguments['confirmPassword'];
+
+                if ($password !== $confirmPassword) {
+                    $errorService->throw($settings->invalidPasswordMatch);
+                }
+
+                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                if (!in_array('accessCp', $userPermissions)) {
+                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                }
+
+                if (!$user->authenticate($password)) {
+                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
+                    $errorService->throw($settings->invalidLogin);
+                }
+
+                $elementsService->deleteElement($user);
+
+                return $settings->accountDeleted;
+            },
+        ];
+
+        $event->mutations['deleteSocialAccount'] = [
+            'description' => 'Deletes authenticated password-less user. Returns success message.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+                $user = $tokenService->getUserFromToken();
+                $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                if ($user->password) {
+                    $errorService->throw($settings->userHasPassword);
+                }
+
+                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                if (!in_array('accessCp', $userPermissions)) {
+                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                }
+
+                $elementsService->deleteElement($user);
+
+                return $settings->accountDeleted;
             },
         ];
     }
@@ -481,10 +580,11 @@ class UserService extends Component
      *
      * @param array $arguments
      * @param int $userGroup
+     * @param bool $social
      * @return User
      * @throws Error
      */
-    public function create(array $arguments, int $userGroup): User
+    public function create(array $arguments, int $userGroup, bool $social = false): User
     {
         $email = $arguments['email'];
         $password = $arguments['password'];
@@ -519,8 +619,17 @@ class UserService extends Component
         $requiresVerification = $projectConfigService->get('users.requireEmailVerification');
         $suspendByDefault = $projectConfigService->get('users.suspendByDefault');
 
+        $settings = GraphqlAuthentication::$settings;
+        $skipSocialActivation = $settings->skipSocialActivation;
+
         if ($requiresVerification || $suspendByDefault) {
+            $user->active = false;
             $user->pending = true;
+        }
+
+        if ($social && $skipSocialActivation) {
+            $user->active = true;
+            $user->pending = false;
         }
 
         /** @var Elements */
@@ -545,7 +654,20 @@ class UserService extends Component
         }
 
         if ($requiresVerification) {
-            $usersService->sendActivationEmail($user);
+            if ($social) {
+                if (!$skipSocialActivation) {
+                    /** @var Mailer */
+                    $mailerService = Craft::$app->getMailer();
+                    $url = $usersService->getEmailVerifyUrl($user);
+
+                    $mailerService
+                        ->composeFromKey('account_activation', ['link' => Template::raw($url)])
+                        ->setTo($user)
+                        ->send();
+                }
+            } else {
+                $usersService->sendActivationEmail($user);
+            }
         }
 
         $this->_updateLastLogin($user);
@@ -558,20 +680,28 @@ class UserService extends Component
      * @param User $user
      * @param int $schemaId
      * @param array $token
+     * @param bool $requiresTwoFactor
      * @return array
      */
-    public function getResponseFields(User $user, int $schemaId, array $token): array
+    public function getResponseFields(User $user, int $schemaId, array $token, bool $requiresTwoFactor = false): array
     {
         /** @var Gql */
         $gqlService = Craft::$app->getGql();
+        $schema = $gqlService->getSchemaById($schemaId)->name;
+
+        if ($requiresTwoFactor) {
+            $user = null;
+            $schema = null;
+        }
 
         return [
             'user' => $user,
-            'schema' => $gqlService->getSchemaById($schemaId)->name,
+            'schema' => $schema,
             'jwt' => $token['jwt'],
             'jwtExpiresAt' => $token['jwtExpiresAt'],
             'refreshToken' => $token['refreshToken'],
             'refreshTokenExpiresAt' => $token['refreshTokenExpiresAt'],
+            'requiresTwoFactor' => $requiresTwoFactor,
         ];
     }
 
