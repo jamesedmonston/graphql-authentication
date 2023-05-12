@@ -8,6 +8,7 @@ use born05\twofactorauthentication\services\Verify;
 use craft\base\Component;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
+use craft\events\RegisterGqlQueriesEvent;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Gql;
 use craft\services\UserPermissions;
@@ -31,9 +32,44 @@ class TwoFactorService extends Component
 
         Event::on(
             Gql::class,
+            Gql::EVENT_REGISTER_GQL_QUERIES,
+            [$this, 'registerGqlQueries']
+        );
+
+        Event::on(
+            Gql::class,
             Gql::EVENT_REGISTER_GQL_MUTATIONS,
             [$this, 'registerGqlMutations']
         );
+    }
+
+    /**
+     * Registers Two-Factor queries
+     *
+     * @param RegisterGqlQueriesEvent $event
+     */
+    public function registerGqlQueries(RegisterGqlMutationsEvent $event)
+    {
+        $settings = GraphqlAuthentication::$settings;
+
+        if (!$settings->allowTwoFactorAuthentication) {
+            return;
+        }
+
+        $tokenService = GraphqlAuthentication::$tokenService;
+
+        /** @var Verify */
+        $verifyService = TwoFactorAuth::$plugin->verify;
+
+        $event->queries['twoFactorEnabled'] = [
+            'description' => 'Checks if user has Two-Factor enabled. Returns boolean.',
+            'type' => Type::nonNull(Type::boolean()),
+            'args' => [],
+            'resolve' => function ($source, array $arguments) use ($tokenService, $verifyService) {
+                $user = $tokenService->getUserFromToken();
+                return $verifyService->isEnabled($user);
+            }
+        ];
     }
 
     /**
