@@ -29,12 +29,13 @@ class Auth extends ObjectType
         return GqlEntityRegistry::createEntity(static::getName(), new ObjectType([
             'name' => static::getName(),
             'fields' => [
-                'user' => User::getType(),
-                'schema' => Type::nonNull(Type::string()),
-                'jwt' => Type::nonNull(Type::string()),
-                'jwtExpiresAt' => Type::nonNull(Type::float()),
-                'refreshToken' => Type::nonNull(Type::string()),
-                'refreshTokenExpiresAt' => Type::nonNull(Type::float()),
+                'user' => Type::getNullableType(User::getType()),
+                'schema' => Type::string(),
+                'jwt' => Type::string(),
+                'jwtExpiresAt' => Type::float(),
+                'refreshToken' => Type::string(),
+                'refreshTokenExpiresAt' => Type::float(),
+                'requiresTwoFactor' => Type::boolean(),
             ],
         ]));
     }

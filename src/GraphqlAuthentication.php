@@ -29,6 +29,7 @@ use jamesedmonston\graphqlauthentication\services\RestrictionService;
 use jamesedmonston\graphqlauthentication\services\SocialService;
 use jamesedmonston\graphqlauthentication\services\TokenService;
 use jamesedmonston\graphqlauthentication\services\TwitterService;
+use jamesedmonston\graphqlauthentication\services\TwoFactorService;
 use jamesedmonston\graphqlauthentication\services\UserService;
 use yii\base\Event;
 
@@ -49,6 +50,7 @@ use yii\base\Event;
  * @property AppleService $apple
  * @property MicrosoftService $microsoft
  * @property MagicService $magic
+ * @property TwoFactorService $twoFactor
  * @property ErrorService $error
  * @method Settings getSettings()
  */
@@ -114,6 +116,11 @@ class GraphqlAuthentication extends Plugin
     public static $magicService;
 
     /**
+     * @var TwoFactorService
+     */
+    public static $twoFactorService;
+
+    /**
      * @var ErrorService
      */
     public static $errorService;
@@ -162,6 +169,7 @@ class GraphqlAuthentication extends Plugin
             'apple' => AppleService::class,
             'microsoft' => MicrosoftService::class,
             'magic' => MagicService::class,
+            'twoFactor' => TwoFactorService::class,
             'error' => ErrorService::class,
         ]);
 
@@ -190,6 +198,11 @@ class GraphqlAuthentication extends Plugin
         self::$errorService = $this->error;
         self::$magicService = $this->magic;
         self::$settings = $this->getSettings();
+
+        if (Craft::$app->plugins->isPluginEnabled('two-factor-authentication')) {
+            $this->twoFactor->init();
+            self::$twoFactorService = $this->twoFactor;
+        }
 
         if (Craft::$app->getUser()->getIsAdmin()) {
             Event::on(

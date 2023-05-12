@@ -15,6 +15,7 @@ class Settings extends Model
     public $schemaId = null;
     public $allowRegistration = true;
     public $allowMagicAuthentication = false;
+    public $allowTwoFactorAuthentication = false;
     public $skipActivatedCheck = false;
     public $userGroup = null;
     public $siteId = null;
@@ -154,6 +155,8 @@ class Settings extends Model
                     'schemaName',
                     'allowRegistration',
                     'allowMagicAuthentication',
+                    'allowTwoFactorAuthentication',
+                    'skipActivatedCheck',
                     'userGroup',
                     'siteId',
                     'entryQueries',

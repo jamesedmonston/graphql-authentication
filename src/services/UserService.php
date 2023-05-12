@@ -3,6 +3,8 @@
 namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
+use born05\twofactorauthentication\Plugin as TwoFactorAuth;
+use born05\twofactorauthentication\services\Verify;
 use craft\base\Component;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
@@ -161,11 +163,9 @@ class UserService extends Component
                             $errorService->throw($settings->invalidLogin);
                             break;
                     }
-
                 }
 
                 $permissionsService->saveUserPermissions($user->id, $userPermissions);
-
                 $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                 if ($settings->permissionType === 'multiple') {
@@ -181,10 +181,30 @@ class UserService extends Component
                     $errorService->throw($settings->invalidSchema);
                 }
 
-                $this->_updateLastLogin($user);
-                $token = $tokenService->create($user, $schemaId);
+                $requiresTwoFactor = false;
 
-                return $this->getResponseFields($user, $schemaId, $token);
+                if (
+                    Craft::$app->plugins->isPluginEnabled('two-factor-authentication') &&
+                    $settings->allowTwoFactorAuthentication
+                ) {
+                    /** @var Verify */
+                    $verifyService = TwoFactorAuth::$plugin->verify;
+                    $requiresTwoFactor = $verifyService->isEnabled($user);
+                }
+
+                if ($requiresTwoFactor) {
+                    $token = [
+                        'jwt' => null,
+                        'jwtExpiresAt' => null,
+                        'refreshToken' => null,
+                        'refreshTokenExpiresAt' => null,
+                    ];
+                } else {
+                    $this->_updateLastLogin($user);
+                    $token = $tokenService->create($user, $schemaId);
+                }
+
+                return $this->getResponseFields($user, $schemaId, $token, $requiresTwoFactor);
             },
         ];
 
@@ -494,7 +514,7 @@ class UserService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $tokenService, $elementsService, $permissionsService, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
@@ -526,7 +546,7 @@ class UserService extends Component
             'description' => 'Deletes authenticated password-less user. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $tokenService, $elementsService, $permissionsService, $usersService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
@@ -648,20 +668,28 @@ class UserService extends Component
      * @param User $user
      * @param int $schemaId
      * @param array $token
+     * @param bool $requiresTwoFactor
      * @return array
      */
-    public function getResponseFields(User $user, int $schemaId, array $token): array
+    public function getResponseFields(User $user, int $schemaId, array $token, bool $requiresTwoFactor = false): array
     {
         /** @var Gql */
         $gqlService = Craft::$app->getGql();
+        $schema = $gqlService->getSchemaById($schemaId)->name;
+
+        if ($requiresTwoFactor) {
+            $user = null;
+            $schema = null;
+        }
 
         return [
             'user' => $user,
-            'schema' => $gqlService->getSchemaById($schemaId)->name,
+            'schema' => $schema,
             'jwt' => $token['jwt'],
             'jwtExpiresAt' => $token['jwtExpiresAt'],
             'refreshToken' => $token['refreshToken'],
             'refreshTokenExpiresAt' => $token['refreshTokenExpiresAt'],
+            'requiresTwoFactor' => $requiresTwoFactor,
         ];
     }
 

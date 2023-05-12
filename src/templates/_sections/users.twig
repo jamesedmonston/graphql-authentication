@@ -17,12 +17,23 @@
 
 {{ forms.field({
   label: 'Allow Magic Authentication',
-  instructions: "Whether or not the `sendMagicLink` and `verifyMagicCode` mutations should be available.",
+  instructions: "Whether or not the Magic Code mutations should be available.",
   name: 'allowMagicAuthentication',
 }, forms.lightswitch({
   name: 'allowMagicAuthentication',
   on: settings.allowMagicAuthentication,
 })) }}
+
+{% if craft.app.plugins.isPluginEnabled('two-factor-authentication') %}
+  {{ forms.field({
+    label: 'Allow Two-Factor Authentication',
+    instructions: "Whether or not the Two-Factor mutations should be available.",
+    name: 'allowTwoFactorAuthentication',
+  }, forms.lightswitch({
+    name: 'allowTwoFactorAuthentication',
+    on: settings.allowTwoFactorAuthentication,
+  })) }}
+{% endif %}
 
 {{ forms.field({
   label: 'Skip Activated Check',
