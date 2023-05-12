@@ -10,6 +10,7 @@ use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\records\GqlSchema as GqlSchemaRecord;
+use craft\services\Elements;
 use craft\services\Gql;
 use craft\services\UserPermissions;
 use craft\services\Users;
@@ -87,6 +88,9 @@ class TwoFactorService extends Component
 
         $tokenService = GraphqlAuthentication::$tokenService;
         $errorService = GraphqlAuthentication::$errorService;
+
+        /** @var Elements */
+        $elementsService = Craft::$app->getElements();
 
         /** @var Users */
         $usersService = Craft::$app->getUsers();
@@ -201,7 +205,7 @@ class TwoFactorService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService, $verifyService) {
+            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService, $verifyService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
@@ -224,6 +228,11 @@ class TwoFactorService extends Component
                 }
 
                 $verifyService->disableUser($user);
+
+                if (!$elementsService->saveElement($user)) {
+                    $errors = $user->getErrors();
+                    $errorService->throw($errors[key($errors)][0]);
+                }
 
                 return true;
             }
