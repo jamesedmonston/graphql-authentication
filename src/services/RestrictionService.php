@@ -441,7 +441,8 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
+        // Robin Beatty: added user check here
+        $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
@@ -655,7 +656,8 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation);
         }
 
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
+        // Robin Beatty: added user check here
+        $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
