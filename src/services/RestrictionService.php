@@ -403,7 +403,8 @@ class RestrictionService extends Component
             $entry->authorId = $user->id;
         }
 
-        $authorOnlySections = $this->getAuthorOnlySections($user, 'mutation');
+        // RB
+        $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
@@ -440,8 +441,9 @@ class RestrictionService extends Component
             $asset->uploaderId = $user->id;
             return true;
         }
-
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
+        
+        // RB
+        $authorOnlyVolumes = isset($user) && $user ? Volumes($user, 'mutation') : [];
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
@@ -602,6 +604,7 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation);
         }
 
+        // RB
         $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
         /** @var Sections */
@@ -654,8 +657,9 @@ class RestrictionService extends Component
         if (!in_array("volumes.{$asset->volume->uid}:read", $scope)) {
             $errorService->throw($settings->forbiddenMutation);
         }
-
-        $authorOnlyVolumes = $this->getAuthorOnlyVolumes($user, 'mutation');
+        
+        // RB
+        $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
         /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
