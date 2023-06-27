@@ -1,5 +1,5 @@
 {
-  "name": "jamesedmonston/graphql-authentication",
+  "name": "robinbeatty/graphql-authentication-forked",
   "description": "GraphQL authentication for your headless Craft CMS applications.",
   "type": "craft-plugin",
   "version": "2.4.0",
