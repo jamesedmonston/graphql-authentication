@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.5.0 - 2023-07-01
+
+### Added
+
+- Added 2FA support! See [the docs](https://graphql-authentication.jamesedmonston.co.uk/usage/two-factor-authentication) ([#118](https://github.com/jamesedmonston/graphql-authentication/issues/118))
+
+### Fixed
+
+- Fixed issue with public mutations throwing `null` `$user` errors. Thanks [@robinbeatty](https://github.com/robinbeatty) for the PR! ([#125](https://github.com/jamesedmonston/graphql-authentication/issues/125))
+
 ## 2.4.0 - 2023-03-04
 
 ### Added
