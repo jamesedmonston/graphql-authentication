@@ -22,6 +22,7 @@ use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
 use craft\helpers\StringHelper;
 use craft\models\GqlToken;
 use craft\services\Assets;
+use craft\services\Entries;
 use craft\services\Gql;
 use craft\services\Sections;
 use craft\services\Volumes;
@@ -403,8 +404,9 @@ class RestrictionService extends Component
             $entry->authorId = $user->id;
         }
 
-        $authorOnlySections = $this->getAuthorOnlySections($user, 'mutation');
+        $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
+        /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
@@ -436,12 +438,11 @@ class RestrictionService extends Component
         $asset = $event->sender;
         $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
-        if ($event->isNew) {
+        if ($user && $event->isNew && !$asset->uploaderId) {
             $asset->uploaderId = $user->id;
             return true;
         }
 
-        // Robin Beatty: added user check here
         $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
         /** @var Volumes */
@@ -452,7 +453,7 @@ class RestrictionService extends Component
             return true;
         }
 
-        if ((string) $asset->uploaderId !== (string) $user->id) {
+        if (!$user || $asset->uploaderId != $user->id) {
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->forbiddenMutation);
         }
 
@@ -577,7 +578,9 @@ class RestrictionService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        $entry = Craft::$app->getEntries()->getEntryById($id, $siteId);
+        /** @var Entries */
+        $entriesService = Craft::$app->getEntries();
+        $entry = $entriesService->getEntryById($id, $siteId);
 
         if (!$entry) {
             $errorService->throw($settings->entryNotFound);
@@ -656,7 +659,6 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation);
         }
 
-        // Robin Beatty: added user check here
         $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
         /** @var Volumes */
