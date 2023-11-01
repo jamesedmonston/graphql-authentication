@@ -211,7 +211,7 @@ class RestrictionService extends Component
                         /** @var GqlToken */
                         $token = $gqlService->getTokenByAccessToken($matches[1]);
                         $schema = $token->getSchema();
-                    } catch (InvalidArgumentException) {
+                    } catch (InvalidArgumentException $e) {
                     }
 
                     break 2;
