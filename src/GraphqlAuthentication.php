@@ -204,19 +204,17 @@ class GraphqlAuthentication extends Plugin
             self::$twoFactorService = $this->twoFactor;
         }
 
-        if (Craft::$app->getUser()->getIsAdmin()) {
-            Event::on(
-                UrlManager::class,
-                UrlManager::EVENT_REGISTER_CP_URL_RULES,
-                [$this, 'onRegisterCPUrlRules']
-            );
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            [$this, 'onRegisterCPUrlRules']
+        );
 
-            Event::on(
-                Cp::class,
-                Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-                [$this, 'onRegisterCPNavItems']
-            );
-        }
+        Event::on(
+            Cp::class,
+            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
+            [$this, 'onRegisterCPNavItems']
+        );
     }
 
     // Settings
@@ -234,24 +232,28 @@ class GraphqlAuthentication extends Plugin
 
     public function onRegisterCPUrlRules(RegisterUrlRulesEvent $event)
     {
-        $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
-        $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
+        if (Craft::$app->getUser()->getIsAdmin()) {        
+            $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
+            $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
+        }
     }
 
     public function onRegisterCPNavItems(RegisterCpNavItemsEvent $event)
     {
-        $event->navItems[] = [
-            'url' => 'graphql-authentication/refresh-tokens',
-            'label' => 'JWT Refresh Tokens',
-            'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
-        ];
-
-        if (self::$settings->allowMagicAuthentication) {
+        if (Craft::$app->getUser()->getIsAdmin()) {
             $event->navItems[] = [
-                'url' => 'graphql-authentication/magic-codes',
-                'label' => 'JWT Magic Codes',
+                'url' => 'graphql-authentication/refresh-tokens',
+                'label' => 'JWT Refresh Tokens',
                 'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
             ];
+
+            if (self::$settings->allowMagicAuthentication) {
+                $event->navItems[] = [
+                    'url' => 'graphql-authentication/magic-codes',
+                    'label' => 'JWT Magic Codes',
+                    'icon' => '@jamesedmonston/graphqlauthentication/icon.svg',
+                ];
+            }
         }
     }
 
