@@ -148,7 +148,8 @@ class TwoFactorService extends Component
 
                 $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
 
-                if (!in_array('accessCp', $userPermissions)) {
+                $hasCpAccess = in_array('accesscp', $userPermissions);
+                if (!$hasCpAccess) {
                     $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
                 }
 
@@ -175,7 +176,10 @@ class TwoFactorService extends Component
                     }
                 }
 
-                $permissionsService->saveUserPermissions($user->id, $userPermissions);
+                if (!$hasCpAccess) {
+                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
+                }
+
                 $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                 if ($settings->permissionType === 'multiple') {
