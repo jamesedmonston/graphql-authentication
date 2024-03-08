@@ -548,7 +548,7 @@ class TokenService extends Component
         }
 
         if ($user->status !== 'active' && !$settings->skipActivatedCheck) {
-            $errorService->throw($settings->userNotActivated);
+            $errorService->throw($settings->userNotActivated, true);
         }
     }
 
