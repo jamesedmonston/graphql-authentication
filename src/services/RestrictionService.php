@@ -6,7 +6,6 @@ use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
 use craft\elements\db\ElementQuery;
-use craft\elements\db\MatrixBlockQuery;
 use craft\elements\Entry;
 use craft\elements\MatrixBlock;
 use craft\elements\User;
@@ -329,8 +328,7 @@ class RestrictionService extends Component
         $siteId = $element->site->id;
 
         foreach ($element->getFieldValues() as $fieldValue) {
-            /** @phpstan-ignore-next-line */
-            if (!$fieldValue instanceof ElementQuery && !$fieldValue instanceof MatrixBlockQuery) {
+            if (!$fieldValue instanceof ElementQuery) {
                 continue;
             }
 
