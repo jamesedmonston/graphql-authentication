@@ -6,6 +6,7 @@ use Craft;
 use born05\twofactorauthentication\Plugin as TwoFactorAuth;
 use born05\twofactorauthentication\services\Verify;
 use craft\base\Component;
+use craft\base\Field;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
@@ -85,24 +86,14 @@ class UserService extends Component
         $tokenService = GraphqlAuthentication::$tokenService;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
-
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
-
-        /** @var UserPermissions */
         $permissionsService = Craft::$app->getUserPermissions();
-
-        /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
-
-        /** @var ProjectConfig */
         $projectConfigService = Craft::$app->getProjectConfig();
-
-        /** @var Fields */
         $fieldsService = Craft::$app->getFields();
 
+        /** @var Field[] $userFields */
         $userFields = $fieldsService->getLayoutByType(User::class)->getCustomFields();
         $userArguments = [];
 
@@ -149,19 +140,15 @@ class UserService extends Component
                         case User::AUTH_PASSWORD_RESET_REQUIRED:
                             $usersService->sendPasswordResetEmail($user);
                             $errorService->throw($settings->passwordResetRequired, true);
-                            break;
 
                         case User::AUTH_ACCOUNT_LOCKED:
                             $errorService->throw($settings->accountLocked, true);
-                            break;
 
                         case User::AUTH_ACCOUNT_COOLDOWN:
                             $errorService->throw($settings->accountCooldown, true);
-                            break;
 
                         default:
                             $errorService->throw($settings->invalidLogin);
-                            break;
                     }
                 }
 
@@ -187,7 +174,8 @@ class UserService extends Component
                     Craft::$app->plugins->isPluginEnabled('two-factor-authentication') &&
                     $settings->allowTwoFactorAuthentication
                 ) {
-                    /** @var Verify */
+                    /** @var Verify $verifyService */
+                    /** @phpstan-ignore-next-line */
                     $verifyService = TwoFactorAuth::$plugin->verify;
                     $requiresTwoFactor = $verifyService->isEnabled($user);
                 }
@@ -238,7 +226,6 @@ class UserService extends Component
         }
 
         if ($settings->permissionType === 'multiple') {
-            /** @var UserGroups */
             $userGroupsService = Craft::$app->getUserGroups();
             $userGroups = $userGroupsService->getAllGroups();
 
@@ -602,7 +589,6 @@ class UserService extends Component
 
         $this->_saveCustomFields($arguments, $user);
 
-        /** @var ProjectConfig */
         $projectConfigService = Craft::$app->getProjectConfig();
         $requiresVerification = $projectConfigService->get('users.requireEmailVerification');
         $suspendByDefault = $projectConfigService->get('users.suspendByDefault');
@@ -620,7 +606,6 @@ class UserService extends Component
             $user->pending = false;
         }
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($user)) {
@@ -628,7 +613,6 @@ class UserService extends Component
             GraphqlAuthentication::$errorService->throw($errors[key($errors)][0]);
         }
 
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
 
         if ($userGroup) {
@@ -644,7 +628,6 @@ class UserService extends Component
         if ($requiresVerification) {
             if ($social) {
                 if (!$skipSocialActivation) {
-                    /** @var Mailer */
                     $mailerService = Craft::$app->getMailer();
                     $url = $usersService->getEmailVerifyUrl($user);
 
@@ -673,7 +656,6 @@ class UserService extends Component
      */
     public function getResponseFields(User $user, int $schemaId, array $token, bool $requiresTwoFactor = false): array
     {
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schema = $gqlService->getSchemaById($schemaId)->name;
 
@@ -728,7 +710,6 @@ class UserService extends Component
      */
     protected function _updateLastLogin(User $user)
     {
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
         $usersService->handleValidLogin($user);
     }

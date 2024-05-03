@@ -137,7 +137,6 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidRefreshToken);
                 }
 
-                /** @var Users */
                 $usersService = Craft::$app->getUsers();
                 $user = $usersService->getUserById($refreshTokenElement->userId);
 
@@ -151,7 +150,6 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidSchema);
                 }
 
-                /** @var Elements */
                 $elementsService = Craft::$app->getElements();
                 $elementsService->deleteElementById($refreshTokenElement->id);
                 $token = $this->create($user, $schemaId);
@@ -262,7 +260,6 @@ class TokenService extends Component
             return;
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schema = $this->getSchemaFromToken();
 
@@ -295,7 +292,6 @@ class TokenService extends Component
             $errorService->throw($settings->invalidHeader);
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schemaId = $token->claims()->get('schemaId') ?? null;
 
@@ -330,7 +326,6 @@ class TokenService extends Component
         /** @var UnencryptedToken $token */
         $id = $token->claims()->get('sub');
 
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
         return $usersService->getUserById($id);
     }
@@ -357,7 +352,6 @@ class TokenService extends Component
             InMemory::plainText($jwtSecretKey)
         );
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $now = new DateTimeImmutable();
 
@@ -392,7 +386,6 @@ class TokenService extends Component
             'expiryDate' => $refreshTokenExpiration->format('Y-m-d H:i:s'),
         ]);
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($refreshTokenElement)) {
@@ -423,7 +416,6 @@ class TokenService extends Component
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidRefreshToken);
         }
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
         $elementsService->deleteElementById($refreshToken->id);
     }
@@ -435,9 +427,9 @@ class TokenService extends Component
      */
     public function deleteRefreshTokens(User $user)
     {
+        /** @var RefreshToken[] $refreshTokens */
         $refreshTokens = RefreshToken::find()->where(['[[userId]]' => $user->id])->all();
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         foreach ($refreshTokens as $refreshToken) {
@@ -557,9 +549,9 @@ class TokenService extends Component
      */
     protected function _clearExpiredTokens()
     {
+        /** @var RefreshToken[] $refreshTokens */
         $refreshTokens = RefreshToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->all();
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         foreach ($refreshTokens as $refreshToken) {

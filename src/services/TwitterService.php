@@ -124,7 +124,6 @@ class TwitterService extends Component
                 break;
 
             case 'multiple':
-                /** @var UserGroups */
                 $userGroupsService = Craft::$app->getUserGroups();
                 $userGroups = $userGroupsService->getAllGroups();
 

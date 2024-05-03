@@ -59,7 +59,8 @@ class TwoFactorService extends Component
 
         $tokenService = GraphqlAuthentication::$tokenService;
 
-        /** @var Verify */
+        /** @var Verify $verifyService */
+        /** @phpstan-ignore-next-line */
         $verifyService = TwoFactorAuth::$plugin->verify;
 
         $event->queries['twoFactorEnabled'] = [
@@ -89,16 +90,12 @@ class TwoFactorService extends Component
         $tokenService = GraphqlAuthentication::$tokenService;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
-
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
-
-        /** @var UserPermissions */
         $permissionsService = Craft::$app->getUserPermissions();
 
-        /** @var Verify */
+        /** @var Verify $verifyService */
+        /** @phpstan-ignore-next-line */
         $verifyService = TwoFactorAuth::$plugin->verify;
 
         $event->mutations['generateTwoFactorQrCode'] = [
@@ -159,19 +156,15 @@ class TwoFactorService extends Component
                         case User::AUTH_PASSWORD_RESET_REQUIRED:
                             $usersService->sendPasswordResetEmail($user);
                             $errorService->throw($settings->passwordResetRequired, true);
-                            break;
 
                         case User::AUTH_ACCOUNT_LOCKED:
                             $errorService->throw($settings->accountLocked, true);
-                            break;
 
                         case User::AUTH_ACCOUNT_COOLDOWN:
                             $errorService->throw($settings->accountCooldown, true);
-                            break;
 
                         default:
                             $errorService->throw($settings->invalidLogin);
-                            break;
                     }
                 }
 

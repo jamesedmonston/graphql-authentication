@@ -14,6 +14,7 @@ use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use TheNetworg\OAuth2\Client\Provider\Azure;
+use TheNetworg\OAuth2\Client\Provider\AzureResourceOwner;
 use Throwable;
 use yii\base\Event;
 
@@ -119,7 +120,6 @@ class MicrosoftService extends Component
                 break;
 
             case 'multiple':
-                /** @var UserGroups */
                 $userGroupsService = Craft::$app->getUserGroups();
                 $userGroups = $userGroupsService->getAllGroups();
 
@@ -193,6 +193,7 @@ class MicrosoftService extends Component
                 'code' => $code,
             ]);
 
+            /** @var AzureResourceOwner $user */
             $user = $provider->getResourceOwner($accessToken);
             $email = $user->claim('email') ?? $user->claim('upn');
 

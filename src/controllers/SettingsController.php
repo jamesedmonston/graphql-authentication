@@ -67,7 +67,6 @@ class SettingsController extends Controller
             ],
         ];
 
-        /** @var UserGroups */
         $userGroupsService = Craft::$app->getUserGroups();
         $userGroups = $userGroupsService->getAllGroups();
 
@@ -85,7 +84,6 @@ class SettingsController extends Controller
             ];
         }
 
-        /** @var Sites */
         $sitesService = Craft::$app->getSites();
         $sites = $sitesService->getAllSites();
 
@@ -103,7 +101,6 @@ class SettingsController extends Controller
             ];
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schemas = $gqlService->getSchemas();
         $publicSchema = $gqlService->getPublicSchema();
@@ -163,7 +160,6 @@ class SettingsController extends Controller
             $settings->jwtSecretKey = Craft::$app->getSecurity()->generateRandomString(32);
         }
 
-        /** @var Fields */
         $fieldsServices = Craft::$app->getFields();
         $fields = $fieldsServices->getAllFields();
 
@@ -187,11 +183,9 @@ class SettingsController extends Controller
 
     protected function _getSchemaPermissions(GqlSchema $schema)
     {
-        /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $sections = $sectionsService->getAllSections();
 
-        /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $volumes = $volumesService->getAllVolumes();
 

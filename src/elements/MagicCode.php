@@ -36,7 +36,6 @@ class MagicCode extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         return [
@@ -67,13 +66,11 @@ class MagicCode extends Element
                 return $this->code;
 
             case 'userId':
-                /** @var Users */
                 $usersService = Craft::$app->getUsers();
                 $user = $usersService->getUserById($this->userId);
                 return $user ? Craft::$app->getView()->renderTemplate('_elements/element', ['element' => $user]) : '';
 
             case 'schemaName':
-                /** @var Gql */
                 $gqlService = Craft::$app->getGql();
                 $schema = $gqlService->getSchemaById($this->schemaId);
                 return $schema->name ?? '';

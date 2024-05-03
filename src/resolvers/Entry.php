@@ -48,7 +48,6 @@ class Entry extends ElementResolver
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                 $authorOnlySections = $user ? $restrictionService->getAuthorOnlySections($user, 'query') : [];
 
-                /** @var Sections */
                 $sectionsService = Craft::$app->getSections();
 
                 foreach ($authorOnlySections as $section) {

@@ -37,7 +37,8 @@
   "require-dev": {
     "craftcms/ecs": "dev-main",
     "craftcms/phpstan": "dev-main",
-    "craftcms/rector": "dev-main"
+    "craftcms/rector": "dev-main",
+    "born05/craft-twofactorauthentication": "^3.3"
   },
   "autoload": {
     "psr-4": {

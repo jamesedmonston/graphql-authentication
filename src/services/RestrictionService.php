@@ -20,6 +20,7 @@ use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
 use craft\helpers\StringHelper;
+use craft\models\GqlSchema;
 use craft\models\GqlToken;
 use craft\services\Assets;
 use craft\services\Entries;
@@ -188,15 +189,14 @@ class RestrictionService extends Component
     /**
      * Ensures the correct schema is returned
      *
-     * @return craft\models\GqlSchema
+     * @return GqlSchema
      */
-    public function getSchema(): craft\models\GqlSchema
+    public function getSchema(): GqlSchema
     {
-        if ((bool) GraphqlAuthentication::$tokenService->getHeaderToken()) {
+        if (GraphqlAuthentication::$tokenService->getHeaderToken()) {
             return GraphqlAuthentication::$tokenService->getSchemaFromToken();
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schema = $gqlService->getPublicSchema();
 
@@ -209,7 +209,6 @@ class RestrictionService extends Component
             foreach ($authValues as $authValue) {
                 if (preg_match('/^Bearer\s+(.+)$/i', $authValue, $matches)) {
                     try {
-                        /** @var GqlToken */
                         $token = $gqlService->getTokenByAccessToken($matches[1]);
                         $schema = $token->getSchema();
                     } catch (InvalidArgumentException) {
@@ -333,6 +332,7 @@ class RestrictionService extends Component
         $siteId = $element->site->id;
 
         foreach ($element->getFieldValues() as $fieldValue) {
+            /** @phpstan-ignore-next-line */
             if (!$fieldValue instanceof ElementQuery && !$fieldValue instanceof MatrixBlockQuery) {
                 continue;
             }
@@ -340,19 +340,23 @@ class RestrictionService extends Component
             switch ($fieldValue->elementType) {
                 case Entry::class:
                     foreach ($fieldValue->all() as $entry) {
+                        /** @var Entry $entry */
                         $this->_ensureValidEntry($entry->id, $siteId);
                     }
                     break;
 
                 case Asset::class:
                     foreach ($fieldValue->all() as $asset) {
+                        /** @var Asset $asset */
                         $this->_ensureValidAsset($asset->id);
                     }
                     break;
 
                 case MatrixBlock::class:
                     foreach ($fieldValue->all() as $block) {
-                        foreach ($block->getFieldValues() as $blockFieldValue) {
+                        /** @var MatrixBlock $block */
+                        $fieldValues = $block->getFieldValues();
+                        foreach ($fieldValues as $blockFieldValue) {
                             if (!$blockFieldValue instanceof ElementQuery) {
                                 continue;
                             }
@@ -360,12 +364,14 @@ class RestrictionService extends Component
                             switch ($blockFieldValue->elementType) {
                                 case Entry::class:
                                     foreach ($blockFieldValue->all() as $blockFieldEntry) {
+                                        /** @var Entry $blockFieldEntry */
                                         $this->_ensureValidEntry($blockFieldEntry->id, $siteId);
                                     }
                                     break;
 
                                 case Asset::class:
                                     foreach ($blockFieldValue->all() as $blockFieldAsset) {
+                                        /** @var Asset $blockFieldAsset */
                                         $this->_ensureValidAsset($blockFieldAsset->id);
                                     }
                                     break;
@@ -404,9 +410,8 @@ class RestrictionService extends Component
             $entry->authorId = $user->id;
         }
 
-        $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
+        $authorOnlySections = $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
-        /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
@@ -443,9 +448,8 @@ class RestrictionService extends Component
             return true;
         }
 
-        $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
+        $authorOnlyVolumes = $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
-        /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $assetVolume = $volumesService->getVolumeById($asset->volumeId)->handle;
 
@@ -543,7 +547,7 @@ class RestrictionService extends Component
     /**
      * Recurses through query and mutation field selections, ensuring they're queryable
      *
-     * @param $selectionSet
+     * @param FieldNode $selectionSet
      * @param array $fields
      * @throws Error
      */
@@ -552,9 +556,7 @@ class RestrictionService extends Component
         $errorService = GraphqlAuthentication::$errorService;
         $settings = GraphqlAuthentication::$settings;
 
-        /** @var FieldNode */
         foreach ($selectionSet->selectionSet->selections ?? [] as $field) {
-            /** @phpstan-ignore-next-line */
             if (in_array($field->name->value ?? '', $fields)) {
                 $errorService->throw($settings->forbiddenField, true);
             }
@@ -578,7 +580,6 @@ class RestrictionService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Entries */
         $entriesService = Craft::$app->getEntries();
         $entry = $entriesService->getEntryById($id, $siteId);
 
@@ -591,6 +592,7 @@ class RestrictionService extends Component
         }
 
         $tokenService = GraphqlAuthentication::$tokenService;
+        $user = null;
 
         if ($tokenService->getHeaderToken()) {
             $user = $tokenService->getUserFromToken();
@@ -606,9 +608,8 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation);
         }
 
-        $authorOnlySections = isset($user) && $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
+        $authorOnlySections = $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
-        /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
 
@@ -631,7 +632,6 @@ class RestrictionService extends Component
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Assets */
         $assetsService = Craft::$app->getAssets();
         $asset = $assetsService->getAssetById($id);
 
@@ -644,6 +644,7 @@ class RestrictionService extends Component
         }
 
         $tokenService = GraphqlAuthentication::$tokenService;
+        $user = null;
 
         if ($tokenService->getHeaderToken()) {
             $user = $tokenService->getUserFromToken();
@@ -659,9 +660,8 @@ class RestrictionService extends Component
             $errorService->throw($settings->forbiddenMutation);
         }
 
-        $authorOnlyVolumes = isset($user) && $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
+        $authorOnlyVolumes = $user ? $this->getAuthorOnlyVolumes($user, 'mutation') : [];
 
-        /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $assetVolume = $volumesService->getVolumeById($asset->volumeId)->handle;
 

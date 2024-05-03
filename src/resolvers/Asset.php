@@ -49,7 +49,6 @@ class Asset extends ElementResolver
             if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
                 $authorOnlyVolumes = $restrictionService->getAuthorOnlyVolumes($user, 'query');
 
-                /** @var Volumes */
                 $volumesService = Craft::$app->getVolumes();
 
                 foreach ($authorOnlyVolumes as $volume) {

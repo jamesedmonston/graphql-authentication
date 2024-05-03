@@ -56,7 +56,6 @@ class SocialService extends Component
         $userService = GraphqlAuthentication::$userService;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
         $user = $usersService->getUserByUsernameOrEmail($tokenUser['email']);
 

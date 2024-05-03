@@ -76,13 +76,8 @@ class MagicService extends Component
         $tokenService = GraphqlAuthentication::$tokenService;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
-
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
-
-        /** @var Mailer */
         $mailerService = Craft::$app->getMailer();
 
         $event->mutations['sendMagicLink'] = [
@@ -189,9 +184,9 @@ class MagicService extends Component
      */
     protected function _clearExpiredCodes()
     {
+        /** @var MagicCode[] $magicCodes */
         $magicCodes = MagicCode::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->all();
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         foreach ($magicCodes as $magicCode) {
