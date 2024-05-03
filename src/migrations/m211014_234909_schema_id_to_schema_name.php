@@ -5,7 +5,6 @@ namespace jamesedmonston\graphqlauthentication\migrations;
 use Craft;
 use craft\db\Migration;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Plugins;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**

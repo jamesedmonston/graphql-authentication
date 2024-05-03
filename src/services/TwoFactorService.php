@@ -2,18 +2,15 @@
 
 namespace jamesedmonston\graphqlauthentication\services;
 
-use Craft;
 use born05\twofactorauthentication\Plugin as TwoFactorAuth;
 use born05\twofactorauthentication\services\Verify;
+use Craft;
 use craft\base\Component;
 use craft\elements\User;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Elements;
 use craft\services\Gql;
-use craft\services\UserPermissions;
-use craft\services\Users;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
@@ -67,10 +64,10 @@ class TwoFactorService extends Component
             'description' => 'Checks if user has Two-Factor enabled. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function ($source, array $arguments) use ($tokenService, $verifyService) {
+            'resolve' => function($source, array $arguments) use ($tokenService, $verifyService) {
                 $user = $tokenService->getUserFromToken();
                 return $verifyService->isEnabled($user);
-            }
+            },
         ];
     }
 
@@ -102,20 +99,20 @@ class TwoFactorService extends Component
             'description' => 'Generates Two-Factor QR Code data URI. Returns string.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function ($source, array $arguments) use ($tokenService, $verifyService) {
+            'resolve' => function($source, array $arguments) use ($tokenService, $verifyService) {
                 $user = $tokenService->getUserFromToken();
                 return $verifyService->getUserQRCode($user);
-            }
+            },
         ];
 
         $event->mutations['generateTwoFactorSecretCode'] = [
             'description' => 'Generates Two-Factor secret code. Returns string.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function ($source, array $arguments) use ($tokenService, $verifyService) {
+            'resolve' => function($source, array $arguments) use ($tokenService, $verifyService) {
                 $user = $tokenService->getUserFromToken();
                 return $verifyService->getUserSecret($user);
-            }
+            },
         ];
 
         $event->mutations['verifyTwoFactor'] = [
@@ -126,7 +123,7 @@ class TwoFactorService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'code' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService, $verifyService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService, $verifyService) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $code = $arguments['code'];
@@ -157,12 +154,15 @@ class TwoFactorService extends Component
                             $usersService->sendPasswordResetEmail($user);
                             $errorService->throw($settings->passwordResetRequired, true);
 
+                            // no break
                         case User::AUTH_ACCOUNT_LOCKED:
                             $errorService->throw($settings->accountLocked, true);
 
+                            // no break
                         case User::AUTH_ACCOUNT_COOLDOWN:
                             $errorService->throw($settings->accountCooldown, true);
 
+                            // no break
                         default:
                             $errorService->throw($settings->invalidLogin);
                     }
@@ -198,7 +198,7 @@ class TwoFactorService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService, $verifyService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService, $verifyService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
@@ -228,7 +228,7 @@ class TwoFactorService extends Component
                 }
 
                 return true;
-            }
+            },
         ];
     }
 }

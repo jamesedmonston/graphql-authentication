@@ -5,7 +5,6 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\helpers\StringHelper;
-use craft\services\Users;
 use GraphQL\Error\Error;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 

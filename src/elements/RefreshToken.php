@@ -6,9 +6,6 @@ use Craft;
 use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
-use craft\services\Elements;
-use craft\services\Gql;
-use craft\services\Users;
 use jamesedmonston\graphqlauthentication\elements\db\RefreshTokenQuery;
 
 class RefreshToken extends Element

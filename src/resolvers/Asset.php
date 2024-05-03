@@ -12,7 +12,6 @@ use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
 use craft\models\Volume;
-use craft\services\Volumes;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**

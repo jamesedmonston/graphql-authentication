@@ -11,7 +11,6 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\services\Sections;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**

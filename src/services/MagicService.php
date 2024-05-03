@@ -6,12 +6,9 @@ use Craft;
 use craft\base\Component;
 use craft\events\RegisterEmailMessagesEvent;
 use craft\events\RegisterGqlMutationsEvent;
-use craft\mail\Mailer;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Elements;
 use craft\services\Gql;
 use craft\services\SystemMessages;
-use craft\services\Users;
 use DateTime;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\elements\MagicCode;
@@ -86,7 +83,7 @@ class MagicService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $elementsService, $usersService, $mailerService, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $elementsService, $usersService, $mailerService, $errorService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->magicLinkSent;
@@ -143,7 +140,7 @@ class MagicService extends Component
                 'code' => Type::nonNull(Type::int()),
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $userService, $elementsService, $usersService, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $userService, $elementsService, $usersService, $errorService) {
                 $code = $arguments['code'];
                 $email = $arguments['email'];
 

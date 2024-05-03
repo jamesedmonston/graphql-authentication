@@ -2,9 +2,9 @@
 
 namespace jamesedmonston\graphqlauthentication\services;
 
-use Craft;
 use born05\twofactorauthentication\Plugin as TwoFactorAuth;
 use born05\twofactorauthentication\services\Verify;
+use Craft;
 use craft\base\Component;
 use craft\base\Field;
 use craft\elements\User;
@@ -16,16 +16,9 @@ use craft\gql\interfaces\elements\User as ElementsUser;
 use craft\gql\resolvers\mutations\Asset;
 use craft\gql\types\input\File;
 use craft\helpers\Template;
-use craft\mail\Mailer;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Gql;
-use craft\services\ProjectConfig;
-use craft\services\UserGroups;
-use craft\services\UserPermissions;
-use craft\services\Users;
-use craft\services\Volumes;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -69,7 +62,7 @@ class UserService extends Component
             'description' => 'Gets authenticated user.',
             'type' => ElementsUser::getType(),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function() {
                 return GraphqlAuthentication::$tokenService->getUserFromToken();
             },
         ];
@@ -115,7 +108,7 @@ class UserService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
 
@@ -141,12 +134,15 @@ class UserService extends Component
                             $usersService->sendPasswordResetEmail($user);
                             $errorService->throw($settings->passwordResetRequired, true);
 
+                            // no break
                         case User::AUTH_ACCOUNT_LOCKED:
                             $errorService->throw($settings->accountLocked, true);
 
+                            // no break
                         case User::AUTH_ACCOUNT_COOLDOWN:
                             $errorService->throw($settings->accountCooldown, true);
 
+                            // no break
                         default:
                             $errorService->throw($settings->invalidLogin);
                     }
@@ -210,7 +206,7 @@ class UserService extends Component
                     ],
                     $userArguments
                 ),
-                'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService) {
+                'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                     if (!$schemaId) {
@@ -249,7 +245,7 @@ class UserService extends Component
                         ],
                         $userArguments
                     ),
-                    'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
+                    'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
 
@@ -273,7 +269,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService, $usersService) {
                 $code = $arguments['code'];
                 $id = $arguments['id'];
 
@@ -295,7 +291,7 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->activationEmailSent;
@@ -316,7 +312,7 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->passwordResetSent;
@@ -339,7 +335,7 @@ class UserService extends Component
                 'code' => Type::nonNull(Type::string()),
                 'id' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService, $elementsService, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService, $elementsService, $usersService) {
                 $password = $arguments['password'];
                 $code = $arguments['code'];
                 $id = $arguments['id'];
@@ -372,7 +368,7 @@ class UserService extends Component
                 'newPassword' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
                 $user = $tokenService->getUserFromToken();
 
                 $currentPassword = $arguments['currentPassword'];
@@ -422,7 +418,7 @@ class UserService extends Component
                 ],
                 $userArguments
             ),
-            'resolve' => function ($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
+            'resolve' => function($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
                 $user = $tokenService->getUserFromToken();
 
                 $email = $arguments['email'] ?? null;
@@ -501,7 +497,7 @@ class UserService extends Component
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
@@ -533,7 +529,7 @@ class UserService extends Component
             'description' => 'Deletes authenticated password-less user. Returns success message.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function ($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
