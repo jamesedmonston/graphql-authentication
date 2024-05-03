@@ -166,27 +166,27 @@ class UserService extends Component
 
                 $requiresTwoFactor = false;
 
-                if (
-                    Craft::$app->plugins->isPluginEnabled('two-factor-authentication') &&
-                    $settings->allowTwoFactorAuthentication
-                ) {
-                    /** @var Verify $verifyService */
-                    /** @phpstan-ignore-next-line */
-                    $verifyService = TwoFactorAuth::$plugin->verify;
-                    $requiresTwoFactor = $verifyService->isEnabled($user);
-                }
-
-                if ($requiresTwoFactor) {
-                    $token = [
-                        'jwt' => null,
-                        'jwtExpiresAt' => null,
-                        'refreshToken' => null,
-                        'refreshTokenExpiresAt' => null,
-                    ];
-                } else {
+                // todo: add 2FA support
+//                if (
+//                    Craft::$app->plugins->isPluginEnabled('two-factor-authentication') &&
+//                    $settings->allowTwoFactorAuthentication
+//                ) {
+//                    /** @var Verify $verifyService */
+//                    $verifyService = TwoFactorAuth::$plugin->verify;
+//                    $requiresTwoFactor = $verifyService->isEnabled($user);
+//                }
+//
+//                if ($requiresTwoFactor) {
+//                    $token = [
+//                        'jwt' => null,
+//                        'jwtExpiresAt' => null,
+//                        'refreshToken' => null,
+//                        'refreshTokenExpiresAt' => null,
+//                    ];
+//                } else {
                     $this->_updateLastLogin($user);
                     $token = $tokenService->create($user, $schemaId);
-                }
+//                }
 
                 return $this->getResponseFields($user, $schemaId, $token, $requiresTwoFactor);
             },
