@@ -56,7 +56,7 @@ class RefreshToken extends Element
         ];
     }
 
-    protected function tableAttributeHtml(string $attribute): string
+    protected function attributeHtml(string $attribute): string
     {
         switch ($attribute) {
             case 'token':
@@ -73,7 +73,7 @@ class RefreshToken extends Element
                 return $schema->name ?? '';
         }
 
-        return parent::tableAttributeHtml($attribute);
+        return parent::attributeHtml($attribute);
     }
 
     /**

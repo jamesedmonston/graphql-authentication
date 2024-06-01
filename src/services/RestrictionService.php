@@ -4,6 +4,8 @@ namespace jamesedmonston\graphqlauthentication\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\ElementInterface;
+use craft\base\NestedElementInterface;
 use craft\elements\Asset;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
@@ -325,61 +327,24 @@ class RestrictionService extends Component
 
         /** @var Entry|Asset $element */
         $element = $event->sender;
-        $siteId = $element->site->id;
+        $this->restrictMutationFieldsForElement($element);
+    }
 
+    private function restrictMutationFieldsForElement(ElementInterface $element): void
+    {
         foreach ($element->getFieldValues() as $fieldValue) {
             if (!$fieldValue instanceof ElementQuery) {
                 continue;
             }
 
-            switch ($fieldValue->elementType) {
-                case Entry::class:
-                    foreach ($fieldValue->all() as $entry) {
-                        /** @var Entry $entry */
-                        $this->_ensureValidEntry($entry->id, $siteId);
-                    }
-                    break;
-
-                case Asset::class:
-                    foreach ($fieldValue->all() as $asset) {
-                        /** @var Asset $asset */
-                        $this->_ensureValidAsset($asset->id);
-                    }
-                    break;
-
-                case MatrixBlock::class:
-                    foreach ($fieldValue->all() as $block) {
-                        /** @var MatrixBlock $block */
-                        $fieldValues = $block->getFieldValues();
-                        foreach ($fieldValues as $blockFieldValue) {
-                            if (!$blockFieldValue instanceof ElementQuery) {
-                                continue;
-                            }
-
-                            switch ($blockFieldValue->elementType) {
-                                case Entry::class:
-                                    foreach ($blockFieldValue->all() as $blockFieldEntry) {
-                                        /** @var Entry $blockFieldEntry */
-                                        $this->_ensureValidEntry($blockFieldEntry->id, $siteId);
-                                    }
-                                    break;
-
-                                case Asset::class:
-                                    foreach ($blockFieldValue->all() as $blockFieldAsset) {
-                                        /** @var Asset $blockFieldAsset */
-                                        $this->_ensureValidAsset($blockFieldAsset->id);
-                                    }
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        }
-                    }
-                    break;
-
-                default:
-                    break;
+            foreach ($fieldValue->all() as $e) {
+                if ($e instanceof NestedElementInterface && $e->getOwnerId()) {
+                    $this->restrictMutationFieldsForElement($e);
+                } elseif ($e instanceof Entry) {
+                    $this->_ensureValidEntry($e->id, $element->siteId);
+                } elseif ($e instanceof Asset) {
+                    $this->_ensureValidAsset($e->id);
+                }
             }
         }
     }
@@ -407,8 +372,8 @@ class RestrictionService extends Component
 
         $authorOnlySections = $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
-        $sectionsService = Craft::$app->getSections();
-        $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
+        $entriesService = Craft::$app->getEntries();
+        $entrySection = $entriesService->getSectionById($entry->sectionId)->handle;
 
         if (!in_array($entrySection, $authorOnlySections)) {
             return true;
@@ -605,8 +570,7 @@ class RestrictionService extends Component
 
         $authorOnlySections = $user ? $this->getAuthorOnlySections($user, 'mutation') : [];
 
-        $sectionsService = Craft::$app->getSections();
-        $entrySection = $sectionsService->getSectionById($entry->sectionId)->handle;
+        $entrySection = $entriesService->getSectionById($entry->sectionId)->handle;
 
         if (in_array($entrySection, $authorOnlySections)) {
             $errorService->throw($settings->forbiddenMutation);

@@ -56,7 +56,7 @@ class MagicCode extends Element
         ];
     }
 
-    protected function tableAttributeHtml(string $attribute): string
+    protected function attributeHtml(string $attribute): string
     {
         switch ($attribute) {
             case 'code':
@@ -73,7 +73,7 @@ class MagicCode extends Element
                 return $schema->name ?? '';
         }
 
-        return parent::tableAttributeHtml($attribute);
+        return parent::attributeHtml($attribute);
     }
 
     /**

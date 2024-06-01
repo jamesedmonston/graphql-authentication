@@ -26,9 +26,9 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": "^8.0.2",
+    "php": "^8.2",
     "abraham/twitteroauth": "^3.1",
-    "craftcms/cms": "^4.0.0-alpha.1",
+    "craftcms/cms": "^5.0.0",
     "google/apiclient": "^2.10",
     "lcobucci/jwt": "^4.1",
     "league/oauth2-facebook": "^2.0",
@@ -37,8 +37,7 @@
   "require-dev": {
     "craftcms/ecs": "dev-main",
     "craftcms/phpstan": "dev-main",
-    "craftcms/rector": "dev-main",
-    "born05/craft-twofactorauthentication": "^3.3"
+    "craftcms/rector": "dev-main"
   },
   "autoload": {
     "psr-4": {

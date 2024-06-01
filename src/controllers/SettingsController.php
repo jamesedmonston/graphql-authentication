@@ -177,8 +177,8 @@ class SettingsController extends Controller
 
     protected function _getSchemaPermissions(GqlSchema $schema)
     {
-        $sectionsService = Craft::$app->getSections();
-        $sections = $sectionsService->getAllSections();
+        $entriesService = Craft::$app->getEntries();
+        $sections = $entriesService->getAllSections();
 
         $volumesService = Craft::$app->getVolumes();
         $volumes = $volumesService->getAllVolumes();
