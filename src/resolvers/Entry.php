@@ -11,7 +11,6 @@ use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\services\Sections;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -48,7 +47,6 @@ class Entry extends ElementResolver
             if (isset($arguments['section']) || isset($arguments['sectionId'])) {
                 $authorOnlySections = $user ? $restrictionService->getAuthorOnlySections($user, 'query') : [];
 
-                /** @var Sections */
                 $sectionsService = Craft::$app->getSections();
 
                 foreach ($authorOnlySections as $section) {

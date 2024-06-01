@@ -8,12 +8,12 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Gql;
-use craft\services\UserGroups;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use TheNetworg\OAuth2\Client\Provider\Azure;
+use TheNetworg\OAuth2\Client\Provider\AzureResourceOwner;
 use Throwable;
 use yii\base\Event;
 
@@ -57,7 +57,7 @@ class MicrosoftService extends Component
             'description' => 'Generates the Microsoft OAuth URL for allowing users to authenticate.',
             'type' => Type::nonNull(Type::string()),
             'args' => [],
-            'resolve' => function () {
+            'resolve' => function() {
                 $settings = GraphqlAuthentication::$settings;
 
                 $provider = new Azure([
@@ -100,7 +100,7 @@ class MicrosoftService extends Component
                         'code' => Type::nonNull(Type::string()),
                         'state' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) {
+                    'resolve' => function($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -119,7 +119,6 @@ class MicrosoftService extends Component
                 break;
 
             case 'multiple':
-                /** @var UserGroups */
                 $userGroupsService = Craft::$app->getUserGroups();
                 $userGroups = $userGroupsService->getAllGroups();
 
@@ -133,7 +132,7 @@ class MicrosoftService extends Component
                             'code' => Type::nonNull(Type::string()),
                             'state' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                        'resolve' => function($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
@@ -193,6 +192,7 @@ class MicrosoftService extends Component
                 'code' => $code,
             ]);
 
+            /** @var AzureResourceOwner $user */
             $user = $provider->getResourceOwner($accessToken);
             $email = $user->claim('email') ?? $user->claim('upn');
 

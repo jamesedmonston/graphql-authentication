@@ -10,9 +10,7 @@ use craft\events\RegisterGqlMutationsEvent;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
-use craft\services\Elements;
 use craft\services\Gql;
-use craft\services\Users;
 use DateTime;
 use DateTimeImmutable;
 use GraphQL\Error\Error;
@@ -122,7 +120,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 $refreshToken = $_COOKIE['gql_refreshToken'] ?? $arguments['refreshToken'] ?? null;
 
                 if (!$refreshToken) {
@@ -137,7 +135,6 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidRefreshToken);
                 }
 
-                /** @var Users */
                 $usersService = Craft::$app->getUsers();
                 $user = $usersService->getUserById($refreshTokenElement->userId);
 
@@ -151,7 +148,6 @@ class TokenService extends Component
                     $errorService->throw($settings->invalidSchema);
                 }
 
-                /** @var Elements */
                 $elementsService = Craft::$app->getElements();
                 $elementsService->deleteElementById($refreshTokenElement->id);
                 $token = $this->create($user, $schemaId);
@@ -166,7 +162,7 @@ class TokenService extends Component
             'args' => [
                 'refreshToken' => Type::string(),
             ],
-            'resolve' => function ($source, array $arguments) use ($settings, $errorService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService) {
                 if (!$this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -187,7 +183,7 @@ class TokenService extends Component
             'description' => 'Deletes all refresh tokens belonging to the authenticated user. Useful for logging out of all devices. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
             'args' => [],
-            'resolve' => function () use ($settings, $errorService) {
+            'resolve' => function() use ($settings, $errorService) {
                 if (!$user = $this->getUserFromToken()) {
                     $errorService->throw($settings->tokenNotFound);
                 }
@@ -262,7 +258,6 @@ class TokenService extends Component
             return;
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schema = $this->getSchemaFromToken();
 
@@ -295,7 +290,6 @@ class TokenService extends Component
             $errorService->throw($settings->invalidHeader);
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schemaId = $token->claims()->get('schemaId') ?? null;
 
@@ -330,7 +324,6 @@ class TokenService extends Component
         /** @var UnencryptedToken $token */
         $id = $token->claims()->get('sub');
 
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
         return $usersService->getUserById($id);
     }
@@ -357,7 +350,6 @@ class TokenService extends Component
             InMemory::plainText($jwtSecretKey)
         );
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $now = new DateTimeImmutable();
 
@@ -392,7 +384,6 @@ class TokenService extends Component
             'expiryDate' => $refreshTokenExpiration->format('Y-m-d H:i:s'),
         ]);
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         if (!$elementsService->saveElement($refreshTokenElement)) {
@@ -423,7 +414,6 @@ class TokenService extends Component
             GraphqlAuthentication::$errorService->throw(GraphqlAuthentication::$settings->invalidRefreshToken);
         }
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
         $elementsService->deleteElementById($refreshToken->id);
     }
@@ -435,9 +425,9 @@ class TokenService extends Component
      */
     public function deleteRefreshTokens(User $user)
     {
+        /** @var RefreshToken[] $refreshTokens */
         $refreshTokens = RefreshToken::find()->where(['[[userId]]' => $user->id])->all();
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         foreach ($refreshTokens as $refreshToken) {
@@ -557,9 +547,9 @@ class TokenService extends Component
      */
     protected function _clearExpiredTokens()
     {
+        /** @var RefreshToken[] $refreshTokens */
         $refreshTokens = RefreshToken::find()->where('[[expiryDate]] <= CURRENT_TIMESTAMP')->all();
 
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         foreach ($refreshTokens as $refreshToken) {

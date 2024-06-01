@@ -4,7 +4,6 @@
 .env
 
 # COMPOSER
-composer.lock
 /vendor
 
 # BUILD FILES

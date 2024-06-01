@@ -7,7 +7,6 @@ use craft\base\Component;
 use craft\events\RegisterGqlMutationsEvent;
 use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Gql;
-use craft\services\UserGroups;
 use Google_Client;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -53,7 +52,7 @@ class GoogleService extends Component
                     'args' => [
                         'idToken' => Type::nonNull(Type::string()),
                     ],
-                    'resolve' => function ($source, array $arguments) {
+                    'resolve' => function($source, array $arguments) {
                         $settings = GraphqlAuthentication::$settings;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
@@ -71,7 +70,6 @@ class GoogleService extends Component
                 break;
 
             case 'multiple':
-                /** @var UserGroups */
                 $userGroupsService = Craft::$app->getUserGroups();
                 $userGroups = $userGroupsService->getAllGroups();
 
@@ -84,7 +82,7 @@ class GoogleService extends Component
                         'args' => [
                             'idToken' => Type::nonNull(Type::string()),
                         ],
-                        'resolve' => function ($source, array $arguments) use ($userGroup) {
+                        'resolve' => function($source, array $arguments) use ($userGroup) {
                             $settings = GraphqlAuthentication::$settings;
                             $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                             $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();

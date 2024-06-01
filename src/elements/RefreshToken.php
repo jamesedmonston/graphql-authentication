@@ -6,9 +6,6 @@ use Craft;
 use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
-use craft\services\Elements;
-use craft\services\Gql;
-use craft\services\Users;
 use jamesedmonston\graphqlauthentication\elements\db\RefreshTokenQuery;
 
 class RefreshToken extends Element
@@ -36,7 +33,6 @@ class RefreshToken extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        /** @var Elements */
         $elementsService = Craft::$app->getElements();
 
         return [
@@ -67,13 +63,11 @@ class RefreshToken extends Element
                 return substr($this->token, 0, 10) . '...';
 
             case 'userId':
-                /** @var Users */
                 $usersService = Craft::$app->getUsers();
                 $user = $usersService->getUserById($this->userId);
                 return $user ? Craft::$app->getView()->renderTemplate('_elements/element', ['element' => $user]) : '';
 
             case 'schemaName':
-                /** @var Gql */
                 $gqlService = Craft::$app->getGql();
                 $schema = $gqlService->getSchemaById($this->schemaId);
                 return $schema->name ?? '';

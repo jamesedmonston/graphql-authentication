@@ -232,7 +232,7 @@ class GraphqlAuthentication extends Plugin
 
     public function onRegisterCPUrlRules(RegisterUrlRulesEvent $event)
     {
-        if (Craft::$app->getUser()->getIsAdmin()) {        
+        if (Craft::$app->getUser()->getIsAdmin()) {
             $event->rules['POST graphql-authentication/settings'] = 'graphql-authentication/settings/save';
             $event->rules['graphql-authentication/settings'] = 'graphql-authentication/settings/index';
         }

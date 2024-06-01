@@ -12,7 +12,6 @@ use craft\gql\base\ElementResolver;
 use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
 use craft\models\Volume;
-use craft\services\Volumes;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -49,7 +48,6 @@ class Asset extends ElementResolver
             if (isset($arguments['volume']) || isset($arguments['volumeId'])) {
                 $authorOnlyVolumes = $restrictionService->getAuthorOnlyVolumes($user, 'query');
 
-                /** @var Volumes */
                 $volumesService = Craft::$app->getVolumes();
 
                 foreach ($authorOnlyVolumes as $volume) {

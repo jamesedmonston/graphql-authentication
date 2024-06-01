@@ -7,12 +7,6 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\GqlSchema;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Fields;
-use craft\services\Gql;
-use craft\services\Sections;
-use craft\services\Sites;
-use craft\services\UserGroups;
-use craft\services\Volumes;
 use craft\web\Controller;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use yii\web\HttpException;
@@ -67,7 +61,6 @@ class SettingsController extends Controller
             ],
         ];
 
-        /** @var UserGroups */
         $userGroupsService = Craft::$app->getUserGroups();
         $userGroups = $userGroupsService->getAllGroups();
 
@@ -85,7 +78,6 @@ class SettingsController extends Controller
             ];
         }
 
-        /** @var Sites */
         $sitesService = Craft::$app->getSites();
         $sites = $sitesService->getAllSites();
 
@@ -103,7 +95,6 @@ class SettingsController extends Controller
             ];
         }
 
-        /** @var Gql */
         $gqlService = Craft::$app->getGql();
         $schemas = $gqlService->getSchemas();
         $publicSchema = $gqlService->getPublicSchema();
@@ -163,7 +154,6 @@ class SettingsController extends Controller
             $settings->jwtSecretKey = Craft::$app->getSecurity()->generateRandomString(32);
         }
 
-        /** @var Fields */
         $fieldsServices = Craft::$app->getFields();
         $fields = $fieldsServices->getAllFields();
 
@@ -187,25 +177,23 @@ class SettingsController extends Controller
 
     protected function _getSchemaPermissions(GqlSchema $schema)
     {
-        /** @var Sections */
         $sectionsService = Craft::$app->getSections();
         $sections = $sectionsService->getAllSections();
 
-        /** @var Volumes */
         $volumesService = Craft::$app->getVolumes();
         $volumes = $volumesService->getAllVolumes();
 
         $entryQueries = [];
         $entryMutations = [];
 
-        $scopes = array_filter($schema->scope, function ($key) {
+        $scopes = array_filter($schema->scope, function($key) {
             return StringHelper::contains($key, 'sections');
         });
 
         foreach ($scopes as $scope) {
             $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-            $section = array_values(array_filter($sections, function ($type) use ($scopeId) {
+            $section = array_values(array_filter($sections, function($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
             }))[0] ?? null;
 
@@ -246,14 +234,14 @@ class SettingsController extends Controller
         $assetQueries = [];
         $assetMutations = [];
 
-        $scopes = array_filter($schema->scope, function ($key) {
+        $scopes = array_filter($schema->scope, function($key) {
             return StringHelper::contains($key, 'volumes');
         });
 
         foreach ($scopes as $scope) {
             $scopeId = explode(':', explode('.', $scope)[1])[0];
 
-            $volume = array_values(array_filter($volumes, function ($type) use ($scopeId) {
+            $volume = array_values(array_filter($volumes, function($type) use ($scopeId) {
                 return $type['uid'] === $scopeId;
             }))[0] ?? null;
 

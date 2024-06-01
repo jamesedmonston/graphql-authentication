@@ -5,7 +5,6 @@ namespace jamesedmonston\graphqlauthentication\migrations;
 use Craft;
 use craft\db\Migration;
 use craft\records\GqlSchema as GqlSchemaRecord;
-use craft\services\Plugins;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
 /**
@@ -24,7 +23,6 @@ class m211014_234909_schema_id_to_schema_name extends Migration
         $schemaVersion = $projectConfig->get('plugins.graphql-authentication.schemaVersion', true);
 
         if (version_compare($schemaVersion, '1.2.0', '<')) {
-            /** @var Plugins */
             $plugins = Craft::$app->getPlugins();
             $settings = GraphqlAuthentication::$settings;
 

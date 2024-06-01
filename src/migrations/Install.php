@@ -93,7 +93,6 @@ class Install extends Migration
                     'PRIMARY KEY(id)',
                 ]
             );
-
         }
 
         // gql_magic_codes table

@@ -5,7 +5,6 @@ namespace jamesedmonston\graphqlauthentication\services;
 use Craft;
 use craft\base\Component;
 use craft\helpers\StringHelper;
-use craft\services\Users;
 use GraphQL\Error\Error;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 
@@ -56,7 +55,6 @@ class SocialService extends Component
         $userService = GraphqlAuthentication::$userService;
         $errorService = GraphqlAuthentication::$errorService;
 
-        /** @var Users */
         $usersService = Craft::$app->getUsers();
         $user = $usersService->getUserByUsernameOrEmail($tokenUser['email']);
 
