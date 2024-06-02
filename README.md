@@ -15,6 +15,16 @@ GraphQL Authentication adds a JWT authentication layer to your Craft CMS GraphQL
 - Adds ability to mark fields as private – stopping users from querying/mutating fields on entries
 - Adds a unique, per-user query cache
 
+---
+
+Use the table below to determine which version of the plugin you should install.
+
+| Craft CMS Version | Plugin Version |
+| --- | --- |
+| 5 | 3 |
+| 4 | 2 |
+| 3 | 1 |
+
 ## Documentation
 
 You can view the documention for the plugin [here](https://graphql-authentication.jamesedmonston.co.uk).
