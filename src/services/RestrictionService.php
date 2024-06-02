@@ -9,7 +9,6 @@ use craft\base\NestedElementInterface;
 use craft\elements\Asset;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
-use craft\elements\MatrixBlock;
 use craft\elements\User;
 use craft\events\ExecuteGqlQueryEvent;
 use craft\events\ModelEvent;
@@ -20,11 +19,10 @@ use craft\gql\arguments\elements\GlobalSet as GlobalSetArguments;
 use craft\gql\interfaces\elements\Asset as AssetInterface;
 use craft\gql\interfaces\elements\Entry as EntryInterface;
 use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
+use craft\helpers\Gql as GqlHelper;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
 use craft\services\Gql;
-use craft\services\Sections;
-use craft\services\Volumes;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
@@ -100,59 +98,67 @@ class RestrictionService extends Component
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
         $event->queries['entries'] = [
-            'description' => 'This query is used to query for entries.',
             'type' => Type::listOf(EntryInterface::getType()),
             'args' => EntryArguments::getArguments(),
             'resolve' => EntryResolver::class . '::resolve',
+            'description' => 'This query is used to query for entries.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['entry'] = [
-            'description' => 'This query is used to query for a single entry.',
             'type' => EntryInterface::getType(),
             'args' => EntryArguments::getArguments(),
             'resolve' => EntryResolver::class . '::resolveOne',
+            'description' => 'This query is used to query for a single entry.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['entryCount'] = [
-            'description' => 'This query is used to return the number of entries.',
             'type' => Type::nonNull(Type::int()),
             'args' => EntryArguments::getArguments(),
             'resolve' => EntryResolver::class . '::resolveCount',
+            'description' => 'This query is used to return the number of entries.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['assets'] = [
-            'description' => 'This query is used to query for assets.',
             'type' => Type::listOf(AssetInterface::getType()),
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolve',
+            'description' => 'This query is used to query for assets.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['asset'] = [
-            'description' => 'This query is used to query for a single asset.',
             'type' => AssetInterface::getType(),
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolveOne',
+            'description' => 'This query is used to query for a single asset.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['assetCount'] = [
-            'description' => 'This query is used to return the number of assets.',
             'type' => Type::nonNull(Type::int()),
             'args' => AssetArguments::getArguments(),
             'resolve' => AssetResolver::class . '::resolveCount',
+            'description' => 'This query is used to return the number of assets.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['globalSets'] = [
-            'description' => 'This query is used to query for global sets.',
             'type' => Type::listOf(GlobalSetInterface::getType()),
             'args' => GlobalSetArguments::getArguments(),
             'resolve' => GlobalSetResolver::class . '::resolve',
+            'description' => 'This query is used to query for global sets.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
 
         $event->queries['globalSet'] = [
-            'description' => 'This query is used to query for a single global set.',
             'type' => GlobalSetInterface::getType(),
             'args' => GlobalSetArguments::getArguments(),
             'resolve' => GlobalSetResolver::class . '::resolveOne',
+            'description' => 'This query is used to query for a single global set.',
+            'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
     }
 
