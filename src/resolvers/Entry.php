@@ -6,12 +6,13 @@
 namespace jamesedmonston\graphqlauthentication\resolvers;
 
 use Craft;
-use craft\db\Table;
+use craft\elements\db\ElementQuery;
+use craft\elements\ElementCollection;
 use craft\elements\Entry as EntryElement;
 use craft\gql\base\ElementResolver;
-use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
+use yii\base\UnknownMethodException;
 
 /**
  * Class Entry
@@ -29,13 +30,44 @@ class Entry extends ElementResolver
         // If this is the beginning of a resolver chain, start fresh
         if ($source === null) {
             $query = EntryElement::find();
+            $pairs = GqlHelper::extractAllowedEntitiesFromSchema('read');
+            $condition = [];
+
+            if (isset($pairs['sections'])) {
+                $entriesService = Craft::$app->getEntries();
+                $sectionIds = array_filter(array_map(
+                    fn(string $uid) => $entriesService->getSectionByUid($uid)?->id,
+                    $pairs['sections'],
+                ));
+                if (!empty($sectionIds)) {
+                    $condition[] = ['in', 'entries.sectionId', $sectionIds];
+                }
+            }
+
+            if (isset($pairs['nestedentryfields'])) {
+                $fieldsService = Craft::$app->getFields();
+                $types = array_flip($fieldsService->getNestedEntryFieldTypes());
+                $fieldIds = array_filter(array_map(function(string $uid) use ($fieldsService, $types) {
+                    $field = $fieldsService->getFieldByUid($uid);
+                    return $field && isset($types[$field::class]) ? $field->id : null;
+                }, $pairs['nestedentryfields']));
+                if (!empty($fieldIds)) {
+                    $condition[] = ['in', 'entries.fieldId', $fieldIds];
+                }
+            }
+
+            if (empty($condition)) {
+                return ElementCollection::empty();
+            }
+
+            $query->andWhere(['or', ...$condition]);
         // If not, get the prepared element query
         } else {
             $query = $source->$fieldName;
         }
 
         // If it's preloaded, it's preloaded.
-        if (is_array($query)) {
+        if (!$query instanceof ElementQuery) {
             return $query;
         }
 
@@ -70,7 +102,7 @@ class Entry extends ElementResolver
                     $userGroup = $user ? ($user->getGroups()[0]->id ?? null) : null;
 
                     if ($userGroup) {
-                        $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'] ?? null;
+                        $siteId = $settings->granularSchemas["group-$userGroup"]['siteId'] ?? null;
                     }
                 }
 
@@ -83,17 +115,14 @@ class Entry extends ElementResolver
         }
 
         foreach ($arguments as $key => $value) {
-            $query->$key($value);
+            try {
+                $query->$key($value);
+            } catch (UnknownMethodException $e) {
+                if ($value !== null) {
+                    throw $e;
+                }
+            }
         }
-
-        $pairs = GqlHelper::extractAllowedEntitiesFromSchema('read');
-
-        if (!GqlHelper::canQueryEntries()) {
-            return [];
-        }
-
-        $query->andWhere(['in', 'entries.sectionId', array_values(Db::idsByUids(Table::SECTIONS, $pairs['sections']))]);
-        $query->andWhere(['in', 'entries.typeId', array_values(Db::idsByUids(Table::ENTRYTYPES, $pairs['entrytypes']))]);
 
         return $query;
     }

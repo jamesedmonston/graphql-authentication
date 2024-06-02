@@ -6,13 +6,13 @@
 namespace jamesedmonston\graphqlauthentication\resolvers;
 
 use Craft;
-use craft\db\Table;
 use craft\elements\Asset as AssetElement;
+use craft\elements\db\ElementQuery;
+use craft\elements\ElementCollection;
 use craft\gql\base\ElementResolver;
-use craft\helpers\Db;
 use craft\helpers\Gql as GqlHelper;
-use craft\models\Volume;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
+use yii\base\UnknownMethodException;
 
 /**
  * Class Asset
@@ -36,7 +36,7 @@ class Asset extends ElementResolver
         }
 
         // If it's preloaded, it's preloaded.
-        if (is_array($query)) {
+        if (!$query instanceof ElementQuery) {
             return $query;
         }
 
@@ -71,16 +71,28 @@ class Asset extends ElementResolver
         }
 
         foreach ($arguments as $key => $value) {
-            $query->$key($value);
+            try {
+                $query->$key($value);
+            } catch (UnknownMethodException $e) {
+                if ($value !== null) {
+                    throw $e;
+                }
+            }
         }
 
         $pairs = GqlHelper::extractAllowedEntitiesFromSchema('read');
 
         if (!GqlHelper::canQueryAssets()) {
-            return [];
+            return ElementCollection::empty();
         }
 
-        $query->andWhere(['in', 'assets.volumeId', array_values(Db::idsByUids(Table::VOLUMES, $pairs['volumes']))]);
+        $volumesService = Craft::$app->getVolumes();
+        $volumeIds = array_filter(array_map(function(string $uid) use ($volumesService) {
+            $volume = $volumesService->getVolumeByUid($uid);
+            return $volume->id ?? null;
+        }, $pairs['volumes']));
+
+        $query->andWhere(['in', 'assets.volumeId', $volumeIds]);
 
         return $query;
     }

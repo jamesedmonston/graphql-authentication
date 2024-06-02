@@ -5,10 +5,12 @@
 
 namespace jamesedmonston\graphqlauthentication\resolvers;
 
+use craft\elements\ElementCollection;
 use craft\elements\GlobalSet as GlobalSetElement;
 use craft\gql\base\ElementResolver;
 use craft\helpers\Gql as GqlHelper;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
+use yii\base\UnknownMethodException;
 
 /**
  * Class GlobalSet
@@ -36,7 +38,7 @@ class GlobalSet extends ElementResolver
                 $userGroup = $user->getGroups()[0]->id ?? null;
 
                 if ($userGroup) {
-                    $siteId = $settings->granularSchemas["group-${userGroup}"]['siteId'] ?? null;
+                    $siteId = $settings->granularSchemas["group-$userGroup"]['siteId'] ?? null;
                 }
             }
 
@@ -46,13 +48,19 @@ class GlobalSet extends ElementResolver
         }
 
         foreach ($arguments as $key => $value) {
-            $query->$key($value);
+            try {
+                $query->$key($value);
+            } catch (UnknownMethodException $e) {
+                if ($value !== null) {
+                    throw $e;
+                }
+            }
         }
 
         $pairs = GqlHelper::extractAllowedEntitiesFromSchema('read');
 
         if (!GqlHelper::canQueryGlobalSets()) {
-            return [];
+            return ElementCollection::empty();
         }
 
         $query->andWhere(['in', 'globalsets.uid', $pairs['globalsets']]);
