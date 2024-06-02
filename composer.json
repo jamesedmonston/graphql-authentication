@@ -27,7 +27,7 @@
   "prefer-stable": true,
   "require": {
     "php": "^8.2",
-    "abraham/twitteroauth": "^7.1",
+    "abraham/twitteroauth": "^7.0",
     "craftcms/cms": "^5.0.0",
     "google/apiclient": "^2.16.0",
     "lcobucci/jwt": "^5.3.0",
