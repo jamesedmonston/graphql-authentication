@@ -291,13 +291,17 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->activationEmailSent;
 
                 if (!$user) {
                     return $message;
+                }
+
+                if ($user->suspended) {
+                    $errorService->throw($settings->accountLocked);
                 }
 
                 $usersService->sendActivationEmail($user);
@@ -312,13 +316,17 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
             ],
-            'resolve' => function($source, array $arguments) use ($settings, $usersService) {
+            'resolve' => function($source, array $arguments) use ($settings, $errorService, $usersService) {
                 $email = $arguments['email'];
                 $user = $usersService->getUserByUsernameOrEmail($email);
                 $message = $settings->passwordResetSent;
 
                 if (!$user) {
                     return $message;
+                }
+
+                if ($user->suspended) {
+                    $errorService->throw($settings->accountLocked);
                 }
 
                 $usersService->sendPasswordResetEmail($user);
