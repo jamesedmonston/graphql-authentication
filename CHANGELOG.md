@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.0-RC1 - 2024-08-26
+
+### Added
+
+- Added Craft 5 support ([#149](https://github.com/jamesedmonston/graphql-authentication/issues/149))
+- Added option to disable password verification when using `deleteAccount` mutation ([#133](https://github.com/jamesedmonston/graphql-authentication/issues/133))
+
+### Fixed
+
+- Element query executed before Craft is fully initialized ([#140](https://github.com/jamesedmonston/graphql-authentication/issues/140))
+- Inefficiency in authenticate mutation ([#137](https://github.com/jamesedmonston/graphql-authentication/issues/137))
+- Fixed issue with `forgottenPassword` mutation sending emails for suspended users ([#134](https://github.com/jamesedmonston/graphql-authentication/issues/134))
+
 ## 2.5.0 - 2023-07-01
 
 ### Added
