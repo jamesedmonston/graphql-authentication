@@ -16,6 +16,7 @@ class Settings extends Model
     public $allowRegistration = true;
     public $allowMagicAuthentication = false;
     public $allowTwoFactorAuthentication = false;
+    public $allowPasswordlessDelete = false;
     public $skipActivatedCheck = false;
     public $userGroup = null;
     public $siteId = null;
@@ -156,6 +157,7 @@ class Settings extends Model
                     'allowRegistration',
                     'allowMagicAuthentication',
                     'allowTwoFactorAuthentication',
+                    'allowPasswordlessDelete',
                     'skipActivatedCheck',
                     'userGroup',
                     'siteId',

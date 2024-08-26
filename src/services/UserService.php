@@ -501,7 +501,7 @@ class UserService extends Component
         $event->mutations['deleteAccount'] = [
             'description' => 'Deletes authenticated user. Returns success message.',
             'type' => Type::nonNull(Type::string()),
-            'args' => [
+            'args' => $settings->allowPasswordlessDelete ? [] : [
                 'password' => Type::nonNull(Type::string()),
                 'confirmPassword' => Type::nonNull(Type::string()),
             ],
@@ -509,11 +509,13 @@ class UserService extends Component
                 $user = $tokenService->getUserFromToken();
                 $user = $usersService->getUserByUsernameOrEmail($user->email);
 
-                $password = $arguments['password'];
-                $confirmPassword = $arguments['confirmPassword'];
+                if (!$settings->allowPasswordlessDelete) {
+                    $password = $arguments['password'];
+                    $confirmPassword = $arguments['confirmPassword'];
 
-                if ($password !== $confirmPassword) {
-                    $errorService->throw($settings->invalidPasswordMatch);
+                    if ($password !== $confirmPassword) {
+                        $errorService->throw($settings->invalidPasswordMatch);
+                    }
                 }
 
                 $userPermissions = $permissionsService->getPermissionsByUserId($user->id);

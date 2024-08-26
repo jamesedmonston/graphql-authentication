@@ -36,6 +36,15 @@
 {% endif %}
 
 {{ forms.field({
+  label: 'Allow Passwordless Account Deletion',
+  instructions: "When enabled, the plugin will no longer validate a user's password when using the `deleteAccount` mutation.",
+  name: 'allowPasswordlessDelete',
+}, forms.lightswitch({
+  name: 'allowPasswordlessDelete',
+  on: settings.allowPasswordlessDelete,
+})) }}
+
+{{ forms.field({
   label: 'Skip Activated Check',
   instructions: "When enabled, the plugin will no longer validate a user's activation status on incoming requests.",
   name: 'skipActivatedCheck',
