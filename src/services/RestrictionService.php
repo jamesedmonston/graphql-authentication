@@ -22,6 +22,7 @@ use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
 use craft\helpers\Gql as GqlHelper;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
+use craft\services\Entries;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\FieldNode;
@@ -160,6 +161,23 @@ class RestrictionService extends Component
             'description' => 'This query is used to query for a single global set.',
             'complexity' => GqlHelper::relatedArgumentComplexity(),
         ];
+
+        $sections = (new Entries())->getAllSections();
+        $scope = $this->getSchema()->scope;
+
+        foreach ($sections as $section) {
+            if (!in_array("sections.{$section->uid}:read", $scope)) {
+                continue;
+            }
+
+            $event->queries["{$section->handle}Entries"] = [
+                'type' => Type::listOf(EntryInterface::getType()),
+                'args' => EntryArguments::getArguments(),
+                'resolve' => EntryResolver::class . '::resolve',
+                'description' => 'This query is used to query for entries.',
+                'complexity' => GqlHelper::relatedArgumentComplexity(),
+            ];
+        }
     }
 
     /**
