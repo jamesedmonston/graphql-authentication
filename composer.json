@@ -30,7 +30,7 @@
     "abraham/twitteroauth": "^7.0",
     "craftcms/cms": "^5.0.0",
     "google/apiclient": "^2.16.0",
-    "lcobucci/jwt": "^5.3.0",
+    "lcobucci/jwt": "^5.0.0",
     "league/oauth2-facebook": "^2.2.0",
     "thenetworg/oauth2-azure": "^2.2.0"
   },
