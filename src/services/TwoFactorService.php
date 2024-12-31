@@ -62,6 +62,10 @@ class TwoFactorService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $settings = GraphqlAuthentication::$settings;
 
         if (!$settings->allowTwoFactorAuthentication) {
@@ -88,6 +92,10 @@ class TwoFactorService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $settings = GraphqlAuthentication::$settings;
 
         if (!$settings->allowTwoFactorAuthentication) {

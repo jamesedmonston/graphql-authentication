@@ -98,6 +98,10 @@ class RestrictionService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $event->queries['entries'] = [
             'type' => Type::listOf(EntryInterface::getType()),
             'args' => EntryArguments::getArguments(),

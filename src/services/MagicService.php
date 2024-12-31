@@ -63,6 +63,10 @@ class MagicService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $settings = GraphqlAuthentication::$settings;
 
         if (!$settings->allowMagicAuthentication) {

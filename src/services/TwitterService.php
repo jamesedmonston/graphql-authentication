@@ -47,6 +47,10 @@ class TwitterService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         if (!$this->_validateSettings()) {
             return;
         }

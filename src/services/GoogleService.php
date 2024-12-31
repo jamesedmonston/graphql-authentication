@@ -40,6 +40,10 @@ class GoogleService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         if (!$this->_validateSettings()) {
             return;
         }
