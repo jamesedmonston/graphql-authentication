@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.0 - 2025-02-04
+
+### Fixed
+
+- Fixed queries failing after upgrading to Craft 5.6+ Thanks [@brandonkelly](https://github.com/brandonkelly) for the PR! ([#161](https://github.com/jamesedmonston/graphql-authentication/issues/161))
+- Removed irrelevant queries/mutations from showing on the public schema, when users are unauthenticated ([44b751](https://github.com/jamesedmonston/graphql-authentication/commit/44b75103690b859bf16e0479387e5c6e77bff36d))
+
 ## 3.0.0-RC3 - 2024-08-27
 
 ### Fixed
