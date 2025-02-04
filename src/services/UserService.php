@@ -20,6 +20,7 @@ use craft\records\GqlSchema as GqlSchemaRecord;
 use craft\services\Fields;
 use craft\services\Gql;
 use GraphQL\Error\Error;
+use GraphQL\GraphQL;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use jamesedmonston\graphqlauthentication\gql\Auth;
@@ -58,6 +59,10 @@ class UserService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $event->queries['viewer'] = [
             'description' => 'Gets authenticated user.',
             'type' => ElementsUser::getType(),
@@ -368,196 +373,198 @@ class UserService extends Component
             },
         ];
 
-        $event->mutations['updatePassword'] = [
-            'description' => 'Updates password for authenticated user. Requires JWT and current password. Returns success message.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => [
-                'currentPassword' => Type::nonNull(Type::string()),
-                'newPassword' => Type::nonNull(Type::string()),
-                'confirmPassword' => Type::nonNull(Type::string()),
-            ],
-            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
-                $user = $tokenService->getUserFromToken();
-
-                $currentPassword = $arguments['currentPassword'];
-                $newPassword = $arguments['newPassword'];
-                $confirmPassword = $arguments['confirmPassword'];
-
-                if ($newPassword !== $confirmPassword) {
-                    $errorService->throw($settings->invalidPasswordMatch);
-                }
-
-                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
-
-                if (!in_array('accessCp', $userPermissions)) {
-                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
-                }
-
-                $user = $usersService->getUserByUsernameOrEmail($user->email);
-
-                if (!$user->authenticate($currentPassword)) {
-                    $permissionsService->saveUserPermissions($user->id, $userPermissions);
-                    $errorService->throw($settings->invalidPasswordUpdate);
-                }
-
-                $permissionsService->saveUserPermissions($user->id, $userPermissions);
-
-                $user->newPassword = $newPassword;
-
-                if (!$elementsService->saveElement($user)) {
-                    $errors = $user->getErrors();
-                    $errorService->throw($errors[key($errors)][0]);
-                }
-
-                return $settings->passwordUpdated;
-            },
-        ];
-
-        $event->mutations['updateViewer'] = [
-            'description' => 'Updates authenticated user. Returns user.',
-            'type' => ElementsUser::getType(),
-            'args' => array_merge(
-                [
-                    'email' => Type::string(),
-                    'username' => Type::string(),
-                    'fullName' => Type::string(),
-                    'preferredLanguage' => Type::string(),
-                    'photo' => File::getType(),
+        if (GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            $event->mutations['updatePassword'] = [
+                'description' => 'Updates password for authenticated user. Requires JWT and current password. Returns success message.',
+                'type' => Type::nonNull(Type::string()),
+                'args' => [
+                    'currentPassword' => Type::nonNull(Type::string()),
+                    'newPassword' => Type::nonNull(Type::string()),
+                    'confirmPassword' => Type::nonNull(Type::string()),
                 ],
-                $userArguments
-            ),
-            'resolve' => function($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
-                $user = $tokenService->getUserFromToken();
+                'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $permissionsService) {
+                    $user = $tokenService->getUserFromToken();
 
-                $email = $arguments['email'] ?? null;
-                $username = $arguments['username'] ?? null;
-                $fullName = $arguments['fullName'] ?? null;
-                $preferredLanguage = $arguments['preferredLanguage'] ?? null;
-
-                if ($email) {
-                    if ($user->username === $user->email) {
-                        $user->username = $email;
-                    }
-
-                    $user->email = $email;
-                }
-
-                if ($username) {
-                    $user->username = $username;
-                }
-
-                if ($fullName) {
-                    $user->fullName = $fullName;
-                }
-
-                if ($preferredLanguage) {
-                    $usersService->saveUserPreferences($user, ['language' => $preferredLanguage]);
-                }
-
-                if (array_key_exists('photo', $arguments)) {
-                    $photo = $arguments['photo'];
-
-                    if ($photo === null) {
-                        $user->setPhoto(null);
-                    } else {
-                        $volumeUid = $projectConfigService->get('users.photoVolumeUid');
-
-                        if (empty($volumeUid)) {
-                            $errorService->throw($settings->volumeNotFound);
-                        }
-
-                        $volume = $volumesService->getVolumeByUid($volumeUid);
-
-                        $resolver = new Asset([
-                            'volume' => $volumesService->getVolumeByHandle($volume->handle),
-                        ]);
-
-                        $newPhoto = $resolver->saveAsset(
-                            $source,
-                            ['_file' => $photo],
-                            $context,
-                            $resolveInfo
-                        );
-
-                        $user->setPhoto($newPhoto);
-                    }
-                }
-
-                $this->_saveCustomFields($arguments, $user);
-
-                if (!$elementsService->saveElement($user)) {
-                    $errors = $user->getErrors();
-                    $errorService->throw($errors[key($errors)][0]);
-                }
-
-                if ($email) {
-                    $usersService->sendNewEmailVerifyEmail($user);
-                }
-
-                return $user;
-            },
-        ];
-
-        $event->mutations['deleteAccount'] = [
-            'description' => 'Deletes authenticated user. Returns success message.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => $settings->allowPasswordlessDelete ? [] : [
-                'password' => Type::nonNull(Type::string()),
-                'confirmPassword' => Type::nonNull(Type::string()),
-            ],
-            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
-                $user = $tokenService->getUserFromToken();
-                $user = $usersService->getUserByUsernameOrEmail($user->email);
-
-                if (!$settings->allowPasswordlessDelete) {
-                    $password = $arguments['password'];
+                    $currentPassword = $arguments['currentPassword'];
+                    $newPassword = $arguments['newPassword'];
                     $confirmPassword = $arguments['confirmPassword'];
 
-                    if ($password !== $confirmPassword) {
+                    if ($newPassword !== $confirmPassword) {
                         $errorService->throw($settings->invalidPasswordMatch);
                     }
-                }
 
-                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+                    $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
 
-                if (!in_array('accessCp', $userPermissions)) {
-                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
-                }
+                    if (!in_array('accessCp', $userPermissions)) {
+                        $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                    }
 
-                if (!$user->authenticate($password)) {
+                    $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                    if (!$user->authenticate($currentPassword)) {
+                        $permissionsService->saveUserPermissions($user->id, $userPermissions);
+                        $errorService->throw($settings->invalidPasswordUpdate);
+                    }
+
                     $permissionsService->saveUserPermissions($user->id, $userPermissions);
-                    $errorService->throw($settings->invalidLogin);
-                }
 
-                $elementsService->deleteElement($user);
+                    $user->newPassword = $newPassword;
 
-                return $settings->accountDeleted;
-            },
-        ];
+                    if (!$elementsService->saveElement($user)) {
+                        $errors = $user->getErrors();
+                        $errorService->throw($errors[key($errors)][0]);
+                    }
 
-        $event->mutations['deleteSocialAccount'] = [
-            'description' => 'Deletes authenticated password-less user. Returns success message.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => [],
-            'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
-                $user = $tokenService->getUserFromToken();
-                $user = $usersService->getUserByUsernameOrEmail($user->email);
+                    return $settings->passwordUpdated;
+                },
+            ];
 
-                if ($user->password) {
-                    $errorService->throw($settings->userHasPassword);
-                }
+            $event->mutations['updateViewer'] = [
+                'description' => 'Updates authenticated user. Returns user.',
+                'type' => ElementsUser::getType(),
+                'args' => array_merge(
+                    [
+                        'email' => Type::string(),
+                        'username' => Type::string(),
+                        'fullName' => Type::string(),
+                        'preferredLanguage' => Type::string(),
+                        'photo' => File::getType(),
+                    ],
+                    $userArguments
+                ),
+                'resolve' => function($source, array $arguments, $context, ResolveInfo $resolveInfo) use ($settings, $tokenService, $errorService, $elementsService, $usersService, $volumesService, $projectConfigService) {
+                    $user = $tokenService->getUserFromToken();
 
-                $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+                    $email = $arguments['email'] ?? null;
+                    $username = $arguments['username'] ?? null;
+                    $fullName = $arguments['fullName'] ?? null;
+                    $preferredLanguage = $arguments['preferredLanguage'] ?? null;
 
-                if (!in_array('accessCp', $userPermissions)) {
-                    $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
-                }
+                    if ($email) {
+                        if ($user->username === $user->email) {
+                            $user->username = $email;
+                        }
 
-                $elementsService->deleteElement($user);
+                        $user->email = $email;
+                    }
 
-                return $settings->accountDeleted;
-            },
-        ];
+                    if ($username) {
+                        $user->username = $username;
+                    }
+
+                    if ($fullName) {
+                        $user->fullName = $fullName;
+                    }
+
+                    if ($preferredLanguage) {
+                        $usersService->saveUserPreferences($user, ['language' => $preferredLanguage]);
+                    }
+
+                    if (array_key_exists('photo', $arguments)) {
+                        $photo = $arguments['photo'];
+
+                        if ($photo === null) {
+                            $user->setPhoto(null);
+                        } else {
+                            $volumeUid = $projectConfigService->get('users.photoVolumeUid');
+
+                            if (empty($volumeUid)) {
+                                $errorService->throw($settings->volumeNotFound);
+                            }
+
+                            $volume = $volumesService->getVolumeByUid($volumeUid);
+
+                            $resolver = new Asset([
+                                'volume' => $volumesService->getVolumeByHandle($volume->handle),
+                            ]);
+
+                            $newPhoto = $resolver->saveAsset(
+                                $source,
+                                ['_file' => $photo],
+                                $context,
+                                $resolveInfo
+                            );
+
+                            $user->setPhoto($newPhoto);
+                        }
+                    }
+
+                    $this->_saveCustomFields($arguments, $user);
+
+                    if (!$elementsService->saveElement($user)) {
+                        $errors = $user->getErrors();
+                        $errorService->throw($errors[key($errors)][0]);
+                    }
+
+                    if ($email) {
+                        $usersService->sendNewEmailVerifyEmail($user);
+                    }
+
+                    return $user;
+                },
+            ];
+
+            $event->mutations['deleteAccount'] = [
+                'description' => 'Deletes authenticated user. Returns success message.',
+                'type' => Type::nonNull(Type::string()),
+                'args' => $settings->allowPasswordlessDelete ? [] : [
+                    'password' => Type::nonNull(Type::string()),
+                    'confirmPassword' => Type::nonNull(Type::string()),
+                ],
+                'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+                    $user = $tokenService->getUserFromToken();
+                    $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                    if (!$settings->allowPasswordlessDelete) {
+                        $password = $arguments['password'];
+                        $confirmPassword = $arguments['confirmPassword'];
+
+                        if ($password !== $confirmPassword) {
+                            $errorService->throw($settings->invalidPasswordMatch);
+                        }
+                    }
+
+                    $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                    if (!in_array('accessCp', $userPermissions)) {
+                        $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                    }
+
+                    if (!$user->authenticate($password)) {
+                        $permissionsService->saveUserPermissions($user->id, $userPermissions);
+                        $errorService->throw($settings->invalidLogin);
+                    }
+
+                    $elementsService->deleteElement($user);
+
+                    return $settings->accountDeleted;
+                },
+            ];
+
+            $event->mutations['deleteSocialAccount'] = [
+                'description' => 'Deletes authenticated password-less user. Returns success message.',
+                'type' => Type::nonNull(Type::string()),
+                'args' => [],
+                'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $elementsService, $permissionsService, $usersService) {
+                    $user = $tokenService->getUserFromToken();
+                    $user = $usersService->getUserByUsernameOrEmail($user->email);
+
+                    if ($user->password) {
+                        $errorService->throw($settings->userHasPassword);
+                    }
+
+                    $userPermissions = $permissionsService->getPermissionsByUserId($user->id);
+
+                    if (!in_array('accessCp', $userPermissions)) {
+                        $permissionsService->saveUserPermissions($user->id, array_merge($userPermissions, ['accessCp']));
+                    }
+
+                    $elementsService->deleteElement($user);
+
+                    return $settings->accountDeleted;
+                },
+            ];
+        }
     }
 
     /**

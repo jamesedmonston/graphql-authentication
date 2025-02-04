@@ -111,6 +111,10 @@ class TokenService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $settings = GraphqlAuthentication::$settings;
         $errorService = GraphqlAuthentication::$errorService;
 

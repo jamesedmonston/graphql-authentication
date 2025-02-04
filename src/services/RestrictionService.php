@@ -98,6 +98,10 @@ class RestrictionService extends Component
      */
     public function registerGqlQueries(RegisterGqlQueriesEvent $event)
     {
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
         $resolvers = [
             'entries' => EntryResolver::class . '::resolve',
             'entry' => EntryResolver::class . '::resolveOne',
