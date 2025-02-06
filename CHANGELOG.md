@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 3.0.0 - 2025-02-04
+## 3.0.0-RC5 - 2025-02-06
+
+### Fixed
+
+- Reverted some mutation removals from the public schema ([#162](https://github.com/jamesedmonston/graphql-authentication/issues/162))
+
+## 3.0.0-RC4 - 2025-02-04
 
 ### Fixed
 
@@ -15,13 +21,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- Loosened `lcobucci/jwt` dependency requirements ([#152](https://github.com/jamesedmonston/graphql-authentication/issues/149))
+- Loosened `lcobucci/jwt` dependency requirements ([#152](https://github.com/jamesedmonston/graphql-authentication/issues/152))
 
 ## 3.0.0-RC2 - 2024-08-27
 
 ### Fixed
 
-- Loosened `lcobucci/jwt` dependency requirements ([#152](https://github.com/jamesedmonston/graphql-authentication/issues/149))
+- Loosened `lcobucci/jwt` dependency requirements ([#152](https://github.com/jamesedmonston/graphql-authentication/issues/152))
 
 ## 3.0.0-RC1 - 2024-08-26
 
