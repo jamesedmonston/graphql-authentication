@@ -308,12 +308,12 @@ class RestrictionService extends Component
                     $this->restrictMutationFieldsForElement($e);
                 // } elseif ($e instanceof Entry) {
                 //     $this->_ensureValidEntry($e->id, $element->siteId);
-                } elseif ($e instanceof Entry) {
-                    if (!$e->id) {
-                        Craft::warning('Skipping Entry with null ID — likely a Matrix or Super Table block.', __METHOD__);
-                        continue;
-                    }
-                    $this->_ensureValidEntry($e->id, $element->siteId);
+                //} elseif ($e instanceof Entry) {
+                //    if (!$e->id) {
+                //        Craft::warning('Skipping Entry with null ID — likely a Matrix or Super Table block.', __METHOD__);
+                //        continue;
+                //    }
+                //    $this->_ensureValidEntry($e->id, $element->siteId);
                 } elseif ($e instanceof Asset) {
                     $this->_ensureValidAsset($e->id);
                 }
