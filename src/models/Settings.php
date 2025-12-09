@@ -81,6 +81,7 @@ class Settings extends Model
     public $activationEmailSent = 'You will receive an email if it matches an account in our system';
     public $userNotActivated = "Please activate your account";
     public $userActivated = 'Successfully activated user';
+    public $userCreatedNotActivated = 'Your account has been created, but requires admin approval before you can log in';
     public $userHasPassword = 'User not password-less';
     public $magicLinkSent = 'You will receive an email if it matches an account in our system';
     public $passwordSaved = 'Successfully saved password';
@@ -128,6 +129,7 @@ class Settings extends Model
                     'activationEmailSent',
                     'userNotActivated',
                     'userActivated',
+                    'userCreatedNotActivated',
                     'userHasPassword',
                     'magicLinkSent',
                     'passwordSaved',

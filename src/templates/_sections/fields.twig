@@ -3,7 +3,7 @@
 <h1>Fields</h1>
 
 {{ forms.field({
-  instructions: "Choose which fields are forbidden from being accessed through queries and mutations – per schema. Any attempts to access a restricted field will cause the request to throw.",
+  instructions: 'For each schema, you can choose which fields are forbidden from being accessed through queries and mutations. Any attempts to access a restricted field will cause the request to throw.',
   first: true,
 }, '') }}
 
@@ -18,7 +18,9 @@
         </th>
 
         {% for schema in schemaOptions %}
-          <th>{{ schema.label == '-' ? 'Public' : schema.label }}</th>
+          {% if schema.value != '' %}
+            <th>{{ schema.label }}</th>
+          {% endif %}
         {% endfor %}
       </tr>
     </thead>
@@ -36,19 +38,21 @@
           </td>
 
           {% for schema in schemaOptions %}
-            {% set schemaKey = 'schema-' ~ (schema.value != '' ? schema.value : '1') %}
+            {% if schema.value != '' %}
+              {% set schemaKey = 'schema-' ~ schema.value %}
 
-            <td style='vertical-align:top;padding-top:20px'>
-              {{ forms.selectField({
-                name: 'fieldRestrictions[' ~ schemaKey ~ '][' ~ field.handle ~ ']',
-                value: settings.fieldRestrictions[schemaKey][field.handle] ?? 'queryMutate',
-                options: [
-                  { value: 'queryMutate', label: 'Query & Mutate' },
-                  { value: 'query', label: 'Query' },
-                  { value: 'private', label: 'Private' },
-                ],
-              }) }}
-            </td>
+              <td style='vertical-align:top;padding-top:20px'>
+                {{ forms.selectField({
+                  name: 'fieldRestrictions[' ~ schemaKey ~ '][' ~ field.handle ~ ']',
+                  value: settings.fieldRestrictions[schemaKey][field.handle] ?? 'queryMutate',
+                  options: [
+                    { value: 'queryMutate', label: 'Query & Mutate' },
+                    { value: 'query', label: 'Query' },
+                    { value: 'private', label: 'Private' },
+                  ],
+                }) }}
+              </td>
+            {% endif %}
           {% endfor %}
         </tr>
       {% endfor %}

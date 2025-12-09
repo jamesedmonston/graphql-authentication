@@ -22,6 +22,12 @@ use yii\base\UnknownMethodException;
  */
 class Entry extends ElementResolver
 {
+
+    /**
+     * Static property to store current section context
+     */
+    protected static ?string $sectionHandle = null;
+
     /**
      * @inheritdoc
      */
@@ -76,7 +82,7 @@ class Entry extends ElementResolver
         if ($restrictionService->shouldRestrictRequests()) {
             $user = GraphqlAuthentication::$tokenService->getUserFromToken();
 
-            if (isset($arguments['section']) || isset($arguments['sectionId'])) {
+            if (isset($arguments['section']) || isset($arguments['sectionId']) || isset(static::$sectionHandle)) {
                 $authorOnlySections = $user ? $restrictionService->getAuthorOnlySections($user, 'query') : [];
 
                 $entriesService = Craft::$app->getEntries();
@@ -87,6 +93,9 @@ class Entry extends ElementResolver
                     }
 
                     if (isset($arguments['sectionId']) && trim((string) $arguments['sectionId'][0]) !== $entriesService->getSectionByHandle($section)->id) {
+                        continue;
+                    }
+                    if (isset(static::$sectionHandle) && trim(static::$sectionHandle) !== $section) {
                         continue;
                     }
 
@@ -124,6 +133,24 @@ class Entry extends ElementResolver
             }
         }
 
+        if (static::$sectionHandle) {
+            $query->section(static::$sectionHandle);
+        }
+
         return $query;
+    }
+
+    public static function resolveWithSection($source, array $arguments, $context, $resolveInfo, $sectionHandle = null)
+    {
+        // Set the section handle for this execution
+        static::$sectionHandle = $sectionHandle;
+
+        // Call the parent (ElementResolver) resolve method
+        $result = parent::resolve($source, $arguments, $context, $resolveInfo);
+
+        // Reset the static property after use (for safety)
+        static::$sectionHandle = null;
+
+        return $result;
     }
 }

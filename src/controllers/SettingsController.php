@@ -108,8 +108,8 @@ class SettingsController extends Controller
 
         foreach ($schemas as $schema) {
             $schemaOptions[] = [
-                'label' => $schema->name,
-                'value' => $schema->name,
+                'label' => $schema->isPublic ? 'Public' : $schema->name,
+                'value' => $schema->isPublic ? 'public' : $schema->name,
             ];
         }
 
@@ -120,9 +120,15 @@ class SettingsController extends Controller
         $assetQueries = null;
         $assetMutations = null;
 
-        if ($settings->permissionType === 'single' && $settings->schemaName && $settings->schemaName !== $publicSchema->name) {
-            $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
-            $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($schemaId));
+        if ($settings->permissionType === 'single' && $settings->schemaName) {
+            if ($settings->schemaName === 'public') {
+                // For public schema, get it directly
+                $schemaPermissions = $this->_getSchemaPermissions($publicSchema);
+            } else {
+                // For named schemas, find by name
+                $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
+                $schemaPermissions = $this->_getSchemaPermissions($gqlService->getSchemaById($schemaId));
+            }
             $entryQueries = $schemaPermissions['entryQueries'];
             $entryMutations = $schemaPermissions['entryMutations'];
             $assetQueries = $schemaPermissions['assetQueries'];
@@ -132,13 +138,20 @@ class SettingsController extends Controller
         if ($settings->permissionType === 'multiple') {
             foreach ($userGroups as $userGroup) {
                 $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
-                $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
 
-                if (!$schemaId || $schemaName === $publicSchema->name) {
+                if (!$schemaName) {
                     continue;
                 }
 
-                $schema = $gqlService->getSchemaById($schemaId);
+                if ($schemaName === 'public') {
+                    $schema = $publicSchema;
+                } else {
+                    $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
+                    if (!$schemaId) {
+                        continue;
+                    }
+                    $schema = $gqlService->getSchemaById($schemaId);
+                }
 
                 if ($schema) {
                     $schemaPermissions = $this->_getSchemaPermissions($schema);

@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
+use craft\helpers\Cp;
 use jamesedmonston\graphqlauthentication\elements\db\MagicCodeQuery;
 
 class MagicCode extends Element
@@ -65,7 +66,7 @@ class MagicCode extends Element
             case 'userId':
                 $usersService = Craft::$app->getUsers();
                 $user = $usersService->getUserById($this->userId);
-                return $user ? Craft::$app->getView()->renderTemplate('_elements/element', ['element' => $user]) : '';
+                return $user ? Cp::elementChipHtml($user) : '';
 
             case 'schemaName':
                 $gqlService = Craft::$app->getGql();

@@ -13,22 +13,13 @@ use craft\elements\User;
 use craft\events\ExecuteGqlQueryEvent;
 use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
-use craft\gql\arguments\elements\Asset as AssetArguments;
-use craft\gql\arguments\elements\Entry as EntryArguments;
-use craft\gql\arguments\elements\GlobalSet as GlobalSetArguments;
-use craft\gql\interfaces\elements\Asset as AssetInterface;
-use craft\gql\interfaces\elements\Entry as EntryInterface;
-use craft\gql\interfaces\elements\GlobalSet as GlobalSetInterface;
-use craft\helpers\Gql as GqlHelper;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
-use craft\services\Entries;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\Parser;
-use GraphQL\Type\Definition\Type;
 use InvalidArgumentException;
 use jamesedmonston\graphqlauthentication\GraphqlAuthentication;
 use jamesedmonston\graphqlauthentication\resolvers\Asset as AssetResolver;
@@ -115,13 +106,17 @@ class RestrictionService extends Component
 
         foreach (Craft::$app->getEntries()->getAllSections() as $section) {
             // "Entries" was added in Craft 5.6.5
-            $resolvers[$section->handle] = EntryResolver::class . '::resolve';
-            $resolvers["{$section->handle}Entries"] = EntryResolver::class . '::resolve';
+            $resolvers[$section->handle] = function ($source, $arguments, $context, $resolveInfo) use ($section) {
+                return EntryResolver::resolveWithSection($source, $arguments, $context, $resolveInfo, $section->handle);
+            };
+            $resolvers["{$section->handle}Entries"] = function ($source, $arguments, $context, $resolveInfo) use ($section) {
+                return EntryResolver::resolveWithSection($source, $arguments, $context, $resolveInfo, $section->handle);
+            };
         }
 
         foreach ($resolvers as $name => $resolver) {
             if (isset($event->queries[$name])) {
-                $event->queries[$name]['resolver'] = $resolver;
+                $event->queries[$name]['resolve'] = $resolver;
             }
         }
     }
@@ -234,7 +229,7 @@ class RestrictionService extends Component
         }
 
         $schema = $this->getSchema();
-        $schemaCode = $schema->isPublic ? $schema->id : $schema->name;
+        $schemaCode = $schema->isPublic ? 'public' : $schema->name;
 
         $fieldPermissions = $fieldRestrictions['schema-' . $schemaCode] ?? [];
 

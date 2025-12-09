@@ -197,12 +197,8 @@ class GraphqlAuthentication extends Plugin
         self::$microsoftService = $this->microsoft;
         self::$errorService = $this->error;
         self::$magicService = $this->magic;
+        self::$twoFactorService = $this->twoFactor;
         self::$settings = $this->getSettings();
-
-        if (Craft::$app->plugins->isPluginEnabled('two-factor-authentication')) {
-            $this->twoFactor->init();
-            self::$twoFactorService = $this->twoFactor;
-        }
 
         Event::on(
             UrlManager::class,

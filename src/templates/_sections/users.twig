@@ -4,7 +4,7 @@
 
 {{ forms.selectField({
   label: 'Permission Type',
-  instructions: "Choose whether to have one schema for all users, or a schema per user group.",
+  instructions: 'Choose whether to have one schema for all users, or a schema per user group.',
   name: 'permissionType',
   id: 'permissionType',
   value: settings.permissionType,
@@ -17,7 +17,7 @@
 
 {{ forms.field({
   label: 'Allow Magic Authentication',
-  instructions: "Whether or not the Magic Code mutations should be available.",
+  instructions: 'When enabled, Magic Code mutations will be available in the schema.',
   name: 'allowMagicAuthentication',
 }, forms.lightswitch({
   name: 'allowMagicAuthentication',
@@ -27,7 +27,7 @@
 {% if craft.app.plugins.isPluginEnabled('two-factor-authentication') %}
   {{ forms.field({
     label: 'Allow Two-Factor Authentication',
-    instructions: "Whether or not the Two-Factor mutations should be available.",
+    instructions: 'When enabled, Two-Factor mutations will be available in the schema.',
     name: 'allowTwoFactorAuthentication',
   }, forms.lightswitch({
     name: 'allowTwoFactorAuthentication',
@@ -37,7 +37,7 @@
 
 {{ forms.field({
   label: 'Allow Passwordless Account Deletion',
-  instructions: "When enabled, the plugin will no longer validate a user's password when using the `deleteAccount` mutation.",
+  instructions: 'When enabled, the plugin will no longer validate a user’s password when using the `deleteAccount` mutation.',
   name: 'allowPasswordlessDelete',
 }, forms.lightswitch({
   name: 'allowPasswordlessDelete',
@@ -46,7 +46,7 @@
 
 {{ forms.field({
   label: 'Skip Activated Check',
-  instructions: "When enabled, the plugin will no longer validate a user's activation status on incoming requests.",
+  instructions: 'When enabled, the plugin will no longer validate a user’s activation status on incoming requests.',
   name: 'skipActivatedCheck',
 }, forms.lightswitch({
   name: 'skipActivatedCheck',
@@ -75,7 +75,7 @@
 
   {{ forms.field({
     label: 'Allow Registration',
-    instructions: "Whether or not the `register` mutation should be available.",
+    instructions: 'When enabled, the `register` mutation will be available in the schema.',
     name: 'allowRegistration',
   }, forms.lightswitch({
     name: 'allowRegistration',
@@ -113,7 +113,7 @@
           <label>Restricted Entry Queries</label>
 
           <div class="instructions">
-            <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
+            <p>Users will only be able to query their own entries in the selected sections. Only sections allowed in your schema will show here.</p>
           </div>
         </div>
 
@@ -138,7 +138,7 @@
           <label>Restricted Entry Mutations</label>
 
           <div class="instructions">
-            <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
+            <p>Users will only be able to mutate their own entries in the selected sections. Only sections allowed in your schema will show here.</p>
           </div>
         </div>
 
@@ -163,7 +163,7 @@
           <label>Restricted Asset Queries</label>
 
           <div class="instructions">
-            <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
+            <p>Users will only be able to query their own assets in the selected volumes. Only volumes allowed in your schema will show here.</p>
           </div>
         </div>
 
@@ -188,7 +188,7 @@
           <label>Restricted Asset Mutations</label>
 
           <div class="instructions">
-            <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
+            <p>Users will only be able to mutate their own assets in the selected volumes. Only volumes allowed in your schema will show here.</p>
           </div>
         </div>
 
@@ -233,7 +233,7 @@
 
       {{ forms.field({
         label: 'Allow Registration',
-        instructions: "Whether or not the `register` mutation should be available.",
+        instructions: 'When enabled, the `register' ~ userGroup.label ~ '` mutation will be available in the schema.',
         name: 'granularSchemas[' ~ groupKey ~ '][allowRegistration]',
       }, forms.lightswitch({
         name: 'granularSchemas[' ~ groupKey ~ '][allowRegistration]',
@@ -262,7 +262,7 @@
               <label>Restricted Entry Queries</label>
 
               <div class="instructions">
-                <p>Choose which sections are limited so that authenticated users can only query their own entries. Only sections allowed in your schema will show here.</p>
+                <p>Users will only be able to query their own entries in the selected sections. Only sections allowed in your schema will show here.</p>
               </div>
             </div>
 
@@ -287,7 +287,7 @@
               <label>Restricted Entry Mutations</label>
 
               <div class="instructions">
-                <p>Choose which sections are limited so that authenticated users can only mutate their own entries. Only sections allowed in your schema will show here.</p>
+                <p>Users will only be able to mutate their own entries in the selected sections. Only sections allowed in your schema will show here.</p>
               </div>
             </div>
 
@@ -312,7 +312,7 @@
               <label>Restricted Asset Queries</label>
 
               <div class="instructions">
-                <p>Choose which volumes are limited so that authenticated users can only query their own assets. Only volumes allowed in your schema will show here.</p>
+                <p>Users will only be able to query their own assets in the selected volumes. Only volumes allowed in your schema will show here.</p>
               </div>
             </div>
 
@@ -337,7 +337,7 @@
               <label>Restricted Asset Mutations</label>
 
               <div class="instructions">
-                <p>Choose which volumes are limited so that authenticated users can only mutate their own assets. Only volumes allowed in your schema will show here.</p>
+                <p>Users will only be able to mutate their own assets in the selected volumes. Only volumes allowed in your schema will show here.</p>
               </div>
             </div>
 

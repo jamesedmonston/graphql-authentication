@@ -3,7 +3,7 @@
 <h1>Social Settings</h1>
 
 {{ forms.field({
-  instructions: "Separate mutations for each service will be available once you've filled in the appropriate details.",
+  instructions: 'Separate mutations for each service will be available once you’ve filled in the appropriate details.',
   first: true,
 }, '') }}
 
@@ -11,7 +11,7 @@
 
 {{ forms.field({
   label: 'Skip Activation',
-  instructions: "Whether or not users will be automatically activated when registering via social mutations.",
+  instructions: 'When enabled, users will be automatically activated when registering via social mutations.',
   name: 'skipSocialActivation',
 }, forms.lightswitch({
   name: 'skipSocialActivation',
@@ -38,7 +38,7 @@
 
 {{ forms.textField({
   label: 'Allowed Email Domains',
-  instructions: "The domains from which you'd like to allow Google Sign-In. Comma-delimited. Leave empty to allow any domain.",
+  instructions: 'The domains from which you’d like to allow Google Sign-In. Comma-delimited. Leave empty to allow any domain.',
   name: 'allowedGoogleDomains',
   value: settings.allowedGoogleDomains,
   placeholder: 'domain1.com, domain2.co.uk',
@@ -85,7 +85,7 @@
 
 {{ forms.textField({
   label: 'Allowed Email Domains',
-  instructions: "The domains from which you'd like to allow Facebook Login. Comma-delimited. Leave empty to allow any domain.",
+  instructions: 'The domains from which you’d like to allow Facebook Login. Comma-delimited. Leave empty to allow any domain.',
   name: 'allowedFacebookDomains',
   value: settings.allowedFacebookDomains,
   placeholder: 'domain1.com, domain2.co.uk',
@@ -132,7 +132,7 @@
 
 {{ forms.textField({
   label: 'Allowed Email Domains',
-  instructions: "The domains from which you'd like to allow Log in with Twitter. Comma-delimited. Leave empty to allow any domain.",
+  instructions: 'The domains from which you’d like to allow Log in with Twitter. Comma-delimited. Leave empty to allow any domain.',
   name: 'allowedTwitterDomains',
   value: settings.allowedTwitterDomains,
   placeholder: 'domain1.com, domain2.co.uk',
@@ -241,7 +241,7 @@
 
 {{ forms.textField({
   label: 'Allowed Email Domains',
-  instructions: "The domains from which you'd like to allow Log in with Microsoft. Comma-delimited. Leave empty to allow any domain.",
+  instructions: 'The domains from which you’d like to allow Log in with Microsoft. Comma-delimited. Leave empty to allow any domain.',
   name: 'allowedMicrosoftDomains',
   value: settings.allowedMicrosoftDomains,
   placeholder: 'domain1.com, domain2.co.uk',

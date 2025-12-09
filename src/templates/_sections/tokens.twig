@@ -4,7 +4,6 @@
 
 {{ forms.selectField({
   label: 'JWT Expiration',
-  instructions: 'The length of time before JWTs expire.',
   name: 'jwtExpiration',
   value: settings.jwtExpiration,
   options: [
@@ -18,7 +17,6 @@
 
 {{ forms.selectField({
   label: 'Refresh Token Expiration',
-  instructions: 'The length of time before refresh tokens expire.',
   name: 'jwtRefreshExpiration',
   value: settings.jwtRefreshExpiration,
   options: [
@@ -32,7 +30,7 @@
 
 {{ forms.autosuggestField({
   label: 'JWT Secret Key',
-  instructions: 'The secret key used to sign JWTs (this is randomly generated, but feel free to use your own).',
+  instructions: 'This is randomly generated, but feel free to use your own.',
   name: 'jwtSecretKey',
   value: settings.jwtSecretKey,
   suggestEnvVars: true,
@@ -40,7 +38,6 @@
 
 {{ forms.selectField({
   label: 'SameSite Cookie Policy',
-  instructions: 'The `SameSite` policy to use on cookies.',
   name: 'sameSitePolicy',
   value: settings.sameSitePolicy,
   options: [

@@ -32,6 +32,13 @@
 }) }}
 
 {{ forms.textField({
+  label: 'User Created, Not Activated',
+  name: 'userCreatedNotActivated',
+  value: settings.userCreatedNotActivated,
+  required: true,
+}) }}
+
+{{ forms.textField({
   label: 'User Has Password',
   name: 'userHasPassword',
   value: settings.userHasPassword,

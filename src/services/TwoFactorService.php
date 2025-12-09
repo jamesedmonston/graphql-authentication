@@ -92,10 +92,6 @@ class TwoFactorService extends Component
      */
     public function registerGqlMutations(RegisterGqlMutationsEvent $event)
     {
-        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
-            return;
-        }
-
         $settings = GraphqlAuthentication::$settings;
 
         if (!$settings->allowTwoFactorAuthentication) {
@@ -107,26 +103,6 @@ class TwoFactorService extends Component
 
         $usersService = Craft::$app->getUsers();
         $permissionsService = Craft::$app->getUserPermissions();
-
-        $event->mutations['generateTwoFactorQrCode'] = [
-            'description' => 'Generates Two-Factor QR Code data URI. Returns string.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => [],
-            'resolve' => function($source, array $arguments) use ($tokenService) {
-                $user = $tokenService->getUserFromToken();
-                return $this->generateQrCode($user);
-            },
-        ];
-
-        $event->mutations['generateTwoFactorSecretCode'] = [
-            'description' => 'Generates Two-Factor secret code. Returns string.',
-            'type' => Type::nonNull(Type::string()),
-            'args' => [],
-            'resolve' => function($source, array $arguments) use ($tokenService) {
-                $user = $tokenService->getUserFromToken();
-                return $this->secret($user);
-            },
-        ];
 
         $event->mutations['verifyTwoFactor'] = [
             'description' => 'Verifies Two-Factor code. Returns user and token.',
@@ -204,6 +180,30 @@ class TwoFactorService extends Component
             },
         ];
 
+        if (!GraphqlAuthentication::$tokenService->getHeaderToken()) {
+            return;
+        }
+
+        $event->mutations['generateTwoFactorQrCode'] = [
+            'description' => 'Generates Two-Factor QR Code data URI. Returns string.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function($source, array $arguments) use ($tokenService) {
+                $user = $tokenService->getUserFromToken();
+                return $this->generateQrCode($user);
+            },
+        ];
+
+        $event->mutations['generateTwoFactorSecretCode'] = [
+            'description' => 'Generates Two-Factor secret code. Returns string.',
+            'type' => Type::nonNull(Type::string()),
+            'args' => [],
+            'resolve' => function($source, array $arguments) use ($tokenService) {
+                $user = $tokenService->getUserFromToken();
+                return $this->secret($user);
+            },
+        ];
+
         $event->mutations['disableTwoFactor'] = [
             'description' => 'Disables Two-Factor. Returns boolean.',
             'type' => Type::nonNull(Type::boolean()),
@@ -248,7 +248,7 @@ class TwoFactorService extends Component
      *
      * @param User $user
      */
-    private function twoFactorEnabled(User $user) {
+    public function twoFactorEnabled(User $user) {
         $secret = $this->secretFromDb($user);
         return (bool) $secret;
     }
