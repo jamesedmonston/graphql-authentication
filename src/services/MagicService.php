@@ -139,10 +139,12 @@ class MagicService extends Component
             'args' => [
                 'code' => Type::nonNull(Type::int()),
                 'email' => Type::nonNull(Type::string()),
+                'sessionOnly' => Type::boolean(),
             ],
             'resolve' => function($source, array $arguments) use ($settings, $tokenService, $userService, $elementsService, $usersService, $errorService) {
                 $code = $arguments['code'];
                 $email = $arguments['email'];
+                $sessionOnly = $arguments['sessionOnly'] ?? false;
 
                 $this->_clearExpiredCodes();
                 /** @var MagicCode|null $magicCodeElement */
@@ -169,7 +171,7 @@ class MagicService extends Component
                 }
 
                 $elementsService->deleteElementById($magicCodeElement->id);
-                $token = $tokenService->create($user, $schemaId);
+                $token = $tokenService->create($user, $schemaId, $sessionOnly);
 
                 return $userService->getResponseFields($user, $schemaId, $token);
             },

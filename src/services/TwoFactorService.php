@@ -111,11 +111,13 @@ class TwoFactorService extends Component
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
                 'code' => Type::nonNull(Type::string()),
+                'sessionOnly' => Type::boolean(),
             ],
             'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService, $permissionsService) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
                 $code = $arguments['code'];
+                $sessionOnly = $arguments['sessionOnly'] ?? false;
 
                 if (!$user = $usersService->getUserByUsernameOrEmail($email)) {
                     $errorService->throw($settings->invalidLogin);
@@ -174,7 +176,7 @@ class TwoFactorService extends Component
                 }
 
                 $usersService->handleValidLogin($user);
-                $token = $tokenService->create($user, $schemaId);
+                $token = $tokenService->create($user, $schemaId, $sessionOnly);
 
                 return GraphqlAuthentication::$userService->getResponseFields($user, $schemaId, $token);
             },

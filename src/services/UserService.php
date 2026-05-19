@@ -107,10 +107,12 @@ class UserService extends Component
             'args' => [
                 'email' => Type::nonNull(Type::string()),
                 'password' => Type::nonNull(Type::string()),
+                'sessionOnly' => Type::boolean(),
             ],
             'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $usersService) {
                 $email = $arguments['email'];
                 $password = $arguments['password'];
+                $sessionOnly = $arguments['sessionOnly'] ?? false;
 
                 if (!$user = $usersService->getUserByUsernameOrEmail($email)) {
                     $errorService->throw($settings->invalidLogin);
@@ -170,7 +172,7 @@ class UserService extends Component
                     ];
                 } else {
                     $this->_updateLastLogin($user);
-                    $token = $tokenService->create($user, $schemaId);
+                    $token = $tokenService->create($user, $schemaId, $sessionOnly);
                 }
 
                 return $this->getResponseFields($user, $schemaId, $token, $requiresTwoFactor);
@@ -190,11 +192,13 @@ class UserService extends Component
                         'username' => Type::string(),
                         'fullName' => Type::string(),
                         'preferredLanguage' => Type::string(),
+                        'sessionOnly' => Type::boolean(),
                     ],
                     $userArguments
                 ),
                 'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService) {
                     $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
+                    $sessionOnly = $arguments['sessionOnly'] ?? false;
 
                     if (!$schemaId) {
                         $errorService->throw($settings->invalidSchema);
@@ -206,7 +210,7 @@ class UserService extends Component
                         $errorService->throw($settings->userCreatedNotActivated);
                     }
 
-                    $token = $tokenService->create($user, $schemaId);
+                    $token = $tokenService->create($user, $schemaId, $sessionOnly);
                     return $this->getResponseFields($user, $schemaId, $token);
                 },
             ];
@@ -233,12 +237,14 @@ class UserService extends Component
                             'username' => Type::string(),
                             'fullName' => Type::string(),
                             'preferredLanguage' => Type::string(),
+                            'sessionOnly' => Type::boolean(),
                         ],
                         $userArguments
                     ),
                     'resolve' => function($source, array $arguments) use ($settings, $tokenService, $errorService, $userGroup) {
                         $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
+                        $sessionOnly = $arguments['sessionOnly'] ?? false;
 
                         if (!$schemaId) {
                             $errorService->throw($settings->invalidSchema);
@@ -250,7 +256,7 @@ class UserService extends Component
                             $errorService->throw($settings->userCreatedNotActivated);
                         }
 
-                        $token = $tokenService->create($user, $schemaId);
+                        $token = $tokenService->create($user, $schemaId, $sessionOnly);
                         return $this->getResponseFields($user, $schemaId, $token);
                     },
                 ];
