@@ -445,16 +445,31 @@ class SettingsController extends Controller
         $plugin = GraphqlAuthentication::$plugin;
         $currentSettings = $plugin->getSettings();
         $granularSchemas = $currentSettings->granularSchemas ?? [];
+        $currentGroupSettings = $granularSchemas[$groupKey] ?? [];
         $granularSchemas[$groupKey] = array_merge(
-            $granularSchemas[$groupKey] ?? [],
+            $currentGroupSettings,
             [
-                'schemaName' => $submittedGroup['schemaName'] ?? null,
-                'allowRegistration' => !empty($submittedGroup['allowRegistration']),
-                'siteId' => $submittedGroup['siteId'] ?? null,
-                'entryQueries' => $submittedGroup['entryQueries'] ?? [],
-                'entryMutations' => $submittedGroup['entryMutations'] ?? [],
-                'assetQueries' => $submittedGroup['assetQueries'] ?? [],
-                'assetMutations' => $submittedGroup['assetMutations'] ?? [],
+                'schemaName' => array_key_exists('schemaName', $submittedGroup)
+                    ? $submittedGroup['schemaName']
+                    : ($currentGroupSettings['schemaName'] ?? null),
+                'allowRegistration' => array_key_exists('allowRegistration', $submittedGroup)
+                    ? !empty($submittedGroup['allowRegistration'])
+                    : !empty($currentGroupSettings['allowRegistration']),
+                'siteId' => array_key_exists('siteId', $submittedGroup)
+                    ? $submittedGroup['siteId']
+                    : ($currentGroupSettings['siteId'] ?? null),
+                'entryQueries' => array_key_exists('entryQueries', $submittedGroup)
+                    ? $submittedGroup['entryQueries']
+                    : ($currentGroupSettings['entryQueries'] ?? []),
+                'entryMutations' => array_key_exists('entryMutations', $submittedGroup)
+                    ? $submittedGroup['entryMutations']
+                    : ($currentGroupSettings['entryMutations'] ?? []),
+                'assetQueries' => array_key_exists('assetQueries', $submittedGroup)
+                    ? $submittedGroup['assetQueries']
+                    : ($currentGroupSettings['assetQueries'] ?? []),
+                'assetMutations' => array_key_exists('assetMutations', $submittedGroup)
+                    ? $submittedGroup['assetMutations']
+                    : ($currentGroupSettings['assetMutations'] ?? []),
             ]
         );
 

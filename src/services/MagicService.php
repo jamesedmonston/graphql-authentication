@@ -95,10 +95,9 @@ class MagicService extends Component
                 $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $settings->schemaName])->scalar();
 
                 if ($settings->permissionType === 'multiple') {
-                    $userGroup = $user->getGroups()[0] ?? null;
+                    $schemaName = GraphqlAuthentication::$restrictionService->getSchemaNameForUser($user);
 
-                    if ($userGroup) {
-                        $schemaName = $settings->granularSchemas['group-' . $userGroup->id]['schemaName'] ?? null;
+                    if ($schemaName) {
                         $schemaId = GqlSchemaRecord::find()->select(['id'])->where(['name' => $schemaName])->scalar();
                     }
                 }

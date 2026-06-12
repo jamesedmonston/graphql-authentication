@@ -108,11 +108,7 @@ class Entry extends ElementResolver
                 if ($settings->permissionType === 'single') {
                     $siteId = $settings->siteId ?? null;
                 } else {
-                    $userGroup = $user ? ($user->getGroups()[0]->id ?? null) : null;
-
-                    if ($userGroup) {
-                        $siteId = $settings->granularSchemas["group-$userGroup"]['siteId'] ?? null;
-                    }
+                    $siteId = $user ? GraphqlAuthentication::$restrictionService->getSiteIdForUser($user) : null;
                 }
 
                 if ($siteId) {

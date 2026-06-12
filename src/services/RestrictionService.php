@@ -15,6 +15,7 @@ use craft\events\ModelEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\helpers\StringHelper;
 use craft\models\GqlSchema;
+use craft\models\UserGroup;
 use craft\services\Gql;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\FieldNode;
@@ -143,6 +144,86 @@ class RestrictionService extends Component
     public function shouldRestrictFields(): bool
     {
         return Craft::$app->requestedRoute === 'graphql/api';
+    }
+
+    /**
+     * Gets the best matching configured group for a user in multiple-schema mode.
+     *
+     * @param User $user
+     * @return UserGroup|null
+     */
+    public function getConfiguredUserGroup(User $user): ?UserGroup
+    {
+        $settings = GraphqlAuthentication::$settings;
+
+        if ($settings->permissionType !== 'multiple') {
+            return null;
+        }
+
+        $userGroups = $user->getGroups();
+
+        foreach ($userGroups as $userGroup) {
+            $groupSettings = $settings->granularSchemas['group-' . $userGroup->id] ?? [];
+
+            if (!empty($groupSettings['schemaName'])) {
+                return $userGroup;
+            }
+        }
+
+        foreach ($userGroups as $userGroup) {
+            $groupSettings = $settings->granularSchemas['group-' . $userGroup->id] ?? [];
+
+            if (!empty($groupSettings)) {
+                return $userGroup;
+            }
+        }
+
+        return $userGroups[0] ?? null;
+    }
+
+    /**
+     * Gets the active granular schema settings for a user.
+     *
+     * @param User $user
+     * @return array
+     */
+    public function getGranularSchemaForUser(User $user): array
+    {
+        $configuredGroup = $this->getConfiguredUserGroup($user);
+
+        if (!$configuredGroup) {
+            return [];
+        }
+
+        return GraphqlAuthentication::$settings->granularSchemas['group-' . $configuredGroup->id] ?? [];
+    }
+
+    /**
+     * Gets the schema name for a user in multiple-schema mode.
+     *
+     * @param User $user
+     * @return string|null
+     */
+    public function getSchemaNameForUser(User $user): ?string
+    {
+        return $this->getGranularSchemaForUser($user)['schemaName'] ?? null;
+    }
+
+    /**
+     * Gets the site restriction for a user in multiple-schema mode.
+     *
+     * @param User $user
+     * @return int|null
+     */
+    public function getSiteIdForUser(User $user): ?int
+    {
+        $siteId = $this->getGranularSchemaForUser($user)['siteId'] ?? null;
+
+        if ($siteId === '' || $siteId === null) {
+            return null;
+        }
+
+        return (int) $siteId;
     }
 
     /**
@@ -414,16 +495,12 @@ class RestrictionService extends Component
         }
 
         if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
+            $permissions = $this->getGranularSchemaForUser($user);
 
-            if ($userGroup) {
-                $permissions = $settings->granularSchemas["group-{$userGroup->id}"];
-
-                if ($type === 'query') {
-                    $authorOnlySections = $permissions['entryQueries'] ?? [];
-                } else {
-                    $authorOnlySections = $permissions['entryMutations'] ?? [];
-                }
+            if ($type === 'query') {
+                $authorOnlySections = $permissions['entryQueries'] ?? [];
+            } else {
+                $authorOnlySections = $permissions['entryMutations'] ?? [];
             }
         }
 
@@ -453,16 +530,12 @@ class RestrictionService extends Component
         }
 
         if ($settings->permissionType === 'multiple') {
-            $userGroup = $user->getGroups()[0] ?? null;
+            $permissions = $this->getGranularSchemaForUser($user);
 
-            if ($userGroup) {
-                $permissions = $settings->granularSchemas["group-{$userGroup->id}"];
-
-                if ($type === 'query') {
-                    $authorOnlyVolumes = $permissions['assetQueries'] ?? [];
-                } else {
-                    $authorOnlyVolumes = $permissions['assetMutations'] ?? [];
-                }
+            if ($type === 'query') {
+                $authorOnlyVolumes = $permissions['assetQueries'] ?? [];
+            } else {
+                $authorOnlyVolumes = $permissions['assetMutations'] ?? [];
             }
         }
 

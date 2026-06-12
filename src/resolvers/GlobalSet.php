@@ -35,11 +35,7 @@ class GlobalSet extends ElementResolver
                 $siteId = $settings->siteId ?? null;
             } else {
                 $user = GraphqlAuthentication::$tokenService->getUserFromToken();
-                $userGroup = $user->getGroups()[0]->id ?? null;
-
-                if ($userGroup) {
-                    $siteId = $settings->granularSchemas["group-$userGroup"]['siteId'] ?? null;
-                }
+                $siteId = $user ? GraphqlAuthentication::$restrictionService->getSiteIdForUser($user) : null;
             }
 
             if ($siteId) {

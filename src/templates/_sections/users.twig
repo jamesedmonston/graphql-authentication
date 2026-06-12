@@ -231,12 +231,37 @@
 
     <tbody>
       {% for row in userGroupsTable %}
+        {% set groupSettings = settings.granularSchemas[row.groupKey] ?? null %}
         <tr>
           <td>{{ row.name }}</td>
           <td>{{ row.schemaLabel }}</td>
           <td>{{ row.siteLabel }}</td>
           <td>{{ row.registrationLabel }}</td>
-          <td style="text-align: right"><a href="{{ url('graphql-authentication/settings/user-group/' ~ row.id) }}" class="btn btn small">Configure</a></td>
+          <td style="text-align: right">
+            {% if groupSettings is not empty %}
+              {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][schemaName]', groupSettings.schemaName ?? '') }}
+              {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][siteId]', groupSettings.siteId ?? '') }}
+              {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][allowRegistration]', (groupSettings.allowRegistration ?? false) ? 1 : 0) }}
+
+              {% for handle, allowed in groupSettings.entryQueries ?? {} %}
+                {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][entryQueries][' ~ handle ~ ']', allowed ? 1 : 0) }}
+              {% endfor %}
+
+              {% for handle, allowed in groupSettings.entryMutations ?? {} %}
+                {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][entryMutations][' ~ handle ~ ']', allowed ? 1 : 0) }}
+              {% endfor %}
+
+              {% for handle, allowed in groupSettings.assetQueries ?? {} %}
+                {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][assetQueries][' ~ handle ~ ']', allowed ? 1 : 0) }}
+              {% endfor %}
+
+              {% for handle, allowed in groupSettings.assetMutations ?? {} %}
+                {{ hiddenInput('granularSchemas[' ~ row.groupKey ~ '][assetMutations][' ~ handle ~ ']', allowed ? 1 : 0) }}
+              {% endfor %}
+            {% endif %}
+
+            <a href="{{ url('graphql-authentication/settings/user-group/' ~ row.id) }}" class="btn btn small">Configure</a>
+          </td>
         </tr>
       {% endfor %}
     </tbody>
