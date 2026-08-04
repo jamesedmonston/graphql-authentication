@@ -354,6 +354,11 @@ class TokenService extends Component
 
         $gqlService = Craft::$app->getGql();
         $now = new DateTimeImmutable();
+        $siteId = $settings->siteId;
+
+        if ($settings->permissionType === 'multiple') {
+            $siteId = GraphqlAuthentication::$restrictionService->getSiteIdForUser($user);
+        }
 
         $builder = $jwtConfig->builder()
             ->issuedBy(Craft::$app->id ?? UrlHelper::cpUrl())
@@ -365,6 +370,7 @@ class TokenService extends Component
             ->withClaim('groups', array_column($user->getGroups(), 'name'))
             ->withClaim('schema', $gqlService->getSchemaById($schemaId)->name)
             ->withClaim('schemaId', $schemaId)
+            ->withClaim('siteId', $siteId ? (int) $siteId : null)
             ->withClaim('admin', $user->admin);
 
         $event = new JwtCreateEvent([
