@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.0 - 2026-08-04
+
+### Changed
+
+- Added `siteId` property to JWT payloads
+
+### Fixed
+
+- Fixed granular schema permissions not saving correctly ([#182](https://github.com/jamesedmonston/graphql-authentication/issues/182))
+
 ## 3.1.0 - 2026-02-26
 
 ### Changed
